@@ -10,3 +10,4 @@ GettingStarted.html
 *.pyc
 mbed_config.h
 mbed_settings.py
+.mbed
