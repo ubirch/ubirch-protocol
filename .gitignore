@@ -1,0 +1,12 @@
+msgpack
+mbed-os/
+ubirch-mbed-crypto
+*.iml
+.idea
+cmake-*
+BUILD
+CMakeLists.txt
+GettingStarted.html
+*.pyc
+mbed_config.h
+mbed_settings.py
