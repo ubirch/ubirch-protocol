@@ -3,8 +3,8 @@
 ## Basic Message Format
 
 The ubirch protocol basic message format wraps the payload with an authentication header and a signature. 
-The header and payload are combined in a serialized [msgpack](https://msgpack.org) array. 
-The signature is attached a fixed length 64-byte array.
+The complete message, including header,payload and signature are combined in a serialized [msgpack](https://msgpack.org) 
+array. 
 
 ```
 +=========+======+================+=========+-----------+
@@ -57,7 +57,7 @@ MESSAGE 2:
 ## Checking the signature   
    
 The structure allows a recipient to take off the last 64 bytes of the message and check the signature of the
-message taking length - 67 bytes hashed with SHA256.
+message taking length - 67 bytes hashed with [SHA256](https://en.wikipedia.org/wiki/SHA-2).
 
 Trivial Example:
 

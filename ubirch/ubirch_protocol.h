@@ -40,17 +40,49 @@ typedef struct ubirch_protocol {
     mbedtls_sha256_context hash;
 } ubirch_protocol;
 
-static void
-ubirch_protocol_init(ubirch_protocol *proto, void *data, msgpack_packer_write callback,
-                     ubirch_protocol_sign sign, const unsigned char uuid[16]);
+/**
+ * Initialize a new ubirch protocol context.
+ *
+ * @param proto the ubirch protocol context
+ * @param data the data object buffer associated with the context
+ * @param callback the writer callback for writing data to network or buffer
+ * @param sign a callback used for signing a message
+ * @param uuid the uuid associated with the data
+ */
+static void ubirch_protocol_init(ubirch_protocol *proto, void *data, msgpack_packer_write callback,
+                                 ubirch_protocol_sign sign, const unsigned char uuid[16]);
 
+/**
+ * Create a new ubirch protocol context.
+ *
+ * @param data the data object buffer associated with the context
+ * @param callback the writer callback for writing data to network or buffer
+ * @param sign a callback used for signing a message
+ * @param uuid the uuid associated with the data
+ * @return a new initialized context
+ */
 static ubirch_protocol *ubirch_protocol_new(void *data, msgpack_packer_write callback,
                                             ubirch_protocol_sign sign, const unsigned char uuid[16]);
 
+/**
+ * Free memory for a ubirch protocol context.
+ * @param proto the protocol context
+ */
 static void ubirch_protocol_free(ubirch_protocol *proto);
 
+/**
+ * Start a new message. Clears out previous data and re-initialized the signature
+ * handler. Also writes the header data.
+ * @param proto the ubirch protocol context
+ * @param pk the msgpack packer used for serializing data
+ */
 static void ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk);
 
+/**
+ * Finish a message. Calculates the signature and attaches it to the message.
+ * @param proto the ubirch protocol context
+ * @param pk the msgpack packer used for serializing data
+ */
 static void ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk);
 
 static inline int ubirch_protocol_write(void *data, const char *buf, size_t len) {
@@ -60,7 +92,7 @@ static inline int ubirch_protocol_write(void *data, const char *buf, size_t len)
 }
 
 inline void ubirch_protocol_init(ubirch_protocol *proto, void *data, msgpack_packer_write callback,
-                     ubirch_protocol_sign sign, const unsigned char uuid[16]) {
+                                 ubirch_protocol_sign sign, const unsigned char uuid[16]) {
     proto->packer.data = data;
     proto->packer.callback = callback;
     proto->sign = sign;
@@ -81,7 +113,7 @@ inline void ubirch_protocol_free(ubirch_protocol *proto) {
 }
 
 inline void ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
-    if(proto == NULL || pk == NULL) return;
+    if (proto == NULL || pk == NULL) return;
 
     mbedtls_sha256_init(&proto->hash);
     mbedtls_sha256_starts(&proto->hash, 0);
