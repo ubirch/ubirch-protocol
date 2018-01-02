@@ -220,15 +220,21 @@ mbed test -n tests-ubirch*
 +-----------------+---------------+--------------------+--------+--------------------+-------------+
 | target          | platform_name | test suite         | result | elapsed_time (sec) | copy_method |
 +-----------------+---------------+--------------------+--------+--------------------+-------------+
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | OK     | 127.09             | default     |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | OK     | 24.27              | default     |
 +-----------------+---------------+--------------------+--------+--------------------+-------------+
 mbedgt: test suite results: 1 OK
 mbedgt: test case report:
-+-----------------+---------------+--------------------+---------------------------------+--------+--------+--------+--------------------+
-| target          | platform_name | test suite         | test case                       | passed | failed | result | elapsed_time (sec) |
-+-----------------+---------------+--------------------+---------------------------------+--------+--------+--------+--------------------+
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol chained message | 1      | 0      | OK     | 1.65               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol simple message  | 1      | 0      | OK     | 0.86               |
-+-----------------+---------------+--------------------+---------------------------------+--------+--------+--------+--------------------+
-mbedgt: test case results: 2 OK
++-----------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
+| target          | platform_name | test suite         | test case                              | passed | failed | result | elapsed_time (sec) |
++-----------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol init                   | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol message chained        | 1      | 0      | OK     | 1.64               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol message finish         | 1      | 0      | OK     | 0.52               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol message finish (fails) | 1      | 0      | OK     | 0.08               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol message simple         | 1      | 0      | OK     | 0.87               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol message start          | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol new                    | 1      | 0      | OK     | 0.04               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol write                  | 1      | 0      | OK     | 0.05               |
++-----------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
+mbedgt: test case results: 8 OK
 ```
