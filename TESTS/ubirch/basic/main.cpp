@@ -1,12 +1,12 @@
 #include <unity/unity.h>
 #include <ubirch/ubirch_protocol.h>
+#include <armnacl.h>
 #include <ubirch-mbed-crypto/source/Base64.h>
 
 #include "utest/utest.h"
 #include "greentea-client/test_env.h"
 
 static const char UUID[16] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'};
-static const char *const TEST_PAYLOAD = "0123456789";
 
 using namespace utest::v1;
 
@@ -24,14 +24,14 @@ static unsigned char public_key[crypto_sign_PUBLICKEYBYTES] = {
         0x8f, 0xfd, 0xaa, 0x55, 0x93, 0xe6, 0x3e, 0x6a
 };
 
-void ed25519_sign(const char *buf, size_t len, unsigned char signature[crypto_sign_BYTES]) {
+int ed25519_sign(const char *buf, size_t len, unsigned char signature[crypto_sign_BYTES]) {
     crypto_uint16 signedLength;
     unsigned char *signedMessage = new unsigned char[crypto_sign_BYTES + 32];
     crypto_sign(signedMessage, &signedLength, (const unsigned char *) buf, (crypto_uint16) len, private_key);
     memcpy(signature, signedMessage, crypto_sign_BYTES);
     free(signedMessage);
+    return 0;
 }
-
 
 void TestSimpleMessage() {
     char _key[20], _value[100];
@@ -47,8 +47,7 @@ void TestSimpleMessage() {
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     ubirch_protocol_start(proto, pk);
-    msgpack_pack_raw(pk, strlen(TEST_PAYLOAD));
-    msgpack_pack_raw_body(pk, TEST_PAYLOAD, strlen(TEST_PAYLOAD));
+    msgpack_pack_int(pk, 99);
     ubirch_protocol_finish(proto, pk);
 
     const char *encoded = base64.Encode(sbuf->data, sbuf->size, &encoded_size);
@@ -74,9 +73,10 @@ void TestChainedMessage() {
                                                  (const unsigned char *) UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
+    const char *message1 = "message 1";
     ubirch_protocol_start(proto, pk);
-    msgpack_pack_raw(pk, strlen(TEST_PAYLOAD));
-    msgpack_pack_raw_body(pk, TEST_PAYLOAD, strlen(TEST_PAYLOAD));
+    msgpack_pack_raw(pk, strlen(message1));
+    msgpack_pack_raw_body(pk, message1, strlen(message1));
     ubirch_protocol_finish(proto, pk);
 
     char *encoded = base64.Encode(sbuf->data, sbuf->size, &encoded_size);
@@ -88,9 +88,10 @@ void TestChainedMessage() {
     // clear buffer for next message
     msgpack_sbuffer_clear(sbuf);
 
+    const char *message2 = "message 2";
     ubirch_protocol_start(proto, pk);
-    msgpack_pack_raw(pk, strlen("CHAINED"));
-    msgpack_pack_raw_body(pk, "CHAINED", strlen("CHAINED"));
+    msgpack_pack_raw(pk, strlen(message2));
+    msgpack_pack_raw_body(pk, message2, strlen(message2));
     ubirch_protocol_finish(proto, pk);
 
     encoded = base64.Encode(sbuf->data, sbuf->size, &encoded_size);

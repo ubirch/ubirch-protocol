@@ -2,7 +2,36 @@
  * @file
  * @brief ubirch protocol implementation based on msgpack
  *
- * ...
+ * The basic ubirch protocol implementation based on msgpack.
+ * A ubirch protocol message consists of a header, payload and
+ * a signature. The signature is calculated from the streaming
+ * hash (SHA256) of the msgpack data in front of the signature,
+ * excluding the msgpack type marker for the signature.
+ *
+ * The generation of messages is similar to msgpack:
+ *
+ * ```
+ * // creata a standard msgpack stream buffer
+ * msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
+ * // create a ubirch protocol context from the buffer, its writer
+ * // and provide the signature function as well as the UUID
+ * ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign,
+ *                                              (const unsigned char *) UUID);
+ * // create a msgpack packer from the ubirch protocol
+ * msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+ *
+ * // pack a message by starting with the header
+ * ubirch_protocol_start(proto, pk);
+ * // add payload (must be a single element, use map/array for multiple data points)
+ * msgpack_pack_int(pk, 99);
+ * // finish the message (calculates signature)
+ * ubirch_protocol_finish(proto, pk);
+ * ```
+ * 
+ * The protocol context takes care of hashing and sending the data to
+ * the stream buffer. Instead of a stream buffer, the data may be
+ * written directly to the network using a custom write function instead of
+ * `msgpack_sbuffer_write`.
  *
  * @author Matthias L. Jugel
  * @date   2018-01-01
@@ -25,19 +54,31 @@
  */
 
 #include <msgpack.h>
-#include <armnacl.h>
 #include "sha256.h"
 
-#define UBIRCH_PROTOCOL_VERSION     0x0401
+#define UBIRCH_PROTOCOL_VERSION     0x0401  //!< current ubirch protocol version
+#define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes
 
-typedef void (*ubirch_protocol_sign)(const char *buf, size_t len, unsigned char signature[crypto_sign_BYTES]);
+/**
+ * The signature function type necessary to sign the message for the ubirch protocol.
+ * This function is called from #ubirch_protocol_finish
+ *
+ * @param buf the data to sign
+ * @param size_t len the length of the data buffer
+ * @param signature signature output (64 bytes)
+ */
+typedef int (*ubirch_protocol_sign)(const char *buf, size_t len, unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
 
+/**
+ * ubirch protocol context, which holds the underlying packer, the uuid and current and previous signature
+ * as well as the current hash.
+ */
 typedef struct ubirch_protocol {
-    msgpack_packer packer;
-    ubirch_protocol_sign sign;
-    unsigned char uuid[16];
-    unsigned char signature[crypto_sign_BYTES];
-    mbedtls_sha256_context hash;
+    msgpack_packer packer;                              //!< the underlying target packer
+    ubirch_protocol_sign sign;                          //!< the message signing function
+    unsigned char uuid[16];                             //!< the uuid of the sender (used to retrieve the keys)
+    unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]; //!< the current or previous signature of a message
+    mbedtls_sha256_context hash;                        //!< the streaming hash of the data to sign
 } ubirch_protocol;
 
 /**
@@ -83,8 +124,16 @@ static void ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk);
  * @param proto the ubirch protocol context
  * @param pk the msgpack packer used for serializing data
  */
-static void ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk);
+static int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk);
 
+/**
+ * The ubirch protocol msgpack writer. This writer takes care of updating the hash
+ * and writing original data to the underlying write callback.
+ * @param data the ubirch protocol context
+ * @param buf the data to writer and hash
+ * @param len the length of the data
+ * @return 0 if successful
+ */
 static inline int ubirch_protocol_write(void *data, const char *buf, size_t len) {
     ubirch_protocol *proto = (ubirch_protocol *) data;
     mbedtls_sha256_update(&proto->hash, (const unsigned char *) buf, len);
@@ -133,15 +182,19 @@ inline void ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
     msgpack_pack_raw_body(pk, proto->signature, sizeof(proto->signature));
 }
 
-inline void ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
-    if (proto == NULL || pk == NULL) return;
+inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
+    if (proto == NULL || pk == NULL) return 1;
 
     unsigned char sha256sum[32];
     mbedtls_sha256_finish(&proto->hash, sha256sum);
-    proto->sign((const char *) sha256sum, sizeof(sha256sum), proto->signature);
+    if(proto->sign((const char *) sha256sum, sizeof(sha256sum), proto->signature)) {
+        return 1;
+    }
 
     // 5 add signature hash
-    msgpack_pack_raw(pk, crypto_sign_BYTES);
-    msgpack_pack_raw_body(pk, proto->signature, crypto_sign_BYTES);
+    msgpack_pack_raw(pk, UBIRCH_PROTOCOL_SIGN_SIZE);
+    msgpack_pack_raw_body(pk, proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
+
+    return 0;
 }
 
