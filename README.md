@@ -127,7 +127,7 @@ written directly to the network using a custom write function instead of
 
 ### Chained Message Example
 
-> ⚠ Chained messages include the signature of the previous message
+> ⚠  Chained messages include the signature of the previous message
 > to create a safe chain of verifyable messages. You need to keep the
 > ubirch protocol context alive to create a message chain.  
 
@@ -199,8 +199,9 @@ Building and testing for [mbed](https://mbed.com):
 
 ```bash
 mbed new .
-mbed target UBIRCH
+mbed target UBRIDGE # set your own target here
 mbed toolchain GCC_ARM
+mbed update         # to download the dependencies
 mbed compile --library
 ```
 
