@@ -90,7 +90,7 @@ msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
 // create a ubirch protocol context from the buffer, its writer
 // and provide the signature function as well as the UUID
 ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign,
-                                          (const unsigned char *) UUID);
+                                             (const unsigned char *) UUID);
 // create a msgpack packer from the ubirch protocol
 msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
