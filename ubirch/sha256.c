@@ -24,13 +24,7 @@
  *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
 
-//#if !defined(MBEDTLS_CONFIG_FILE)
-//#include "mbedtls/config.h"
-//#else
-//#include MBEDTLS_CONFIG_FILE
-//#endif
-//
-//#if defined(MBEDTLS_SHA256_C)
+#if !defined(MBEDTLS_CONFIG_FILE)
 
 #include "sha256.h"
 
@@ -455,4 +449,4 @@ int mbedtls_sha256_self_test( int verbose )
 
 #endif /* MBEDTLS_SELF_TEST */
 
-//#endif /* MBEDTLS_SHA256_C */
+#endif /* MBEDTLS_CONFIG_FILE */

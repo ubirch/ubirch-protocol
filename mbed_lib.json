@@ -1,0 +1,5 @@
+{
+  "name": "ubirch-protocol",
+  "macros": ["MBEDTLS_CONFIG_FILE=\"ubirch/mbedtls.h\""]
+
+}

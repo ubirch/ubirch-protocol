@@ -74,7 +74,7 @@ using the `ubirch_protocol_start()` function and signing it with `ubirch_protoco
     
 ## Simple Message Example
 
-```
+```c
 // creata a standard msgpack stream buffer
 msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
 // create a ubirch protocol context from the buffer, its writer
@@ -124,7 +124,7 @@ written directly to the network using a custom write function instead of
 The example is very similar to above, except that the ubirch protocol
 context is not deleted after use.
 
-```
+```c
 // create buffer, writer, ubirch protocol context and packer
 msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
 ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign,

@@ -54,8 +54,12 @@
  */
 
 #include <msgpack.h>
-#include "sha256.h"
 
+#ifdef MBEDTLS_CONFIG_FILE
+#include <mbedtls/sha256.h>
+#else
+#include "sha256.h"
+#endif
 #define UBIRCH_PROTOCOL_VERSION     0x0401  //!< current ubirch protocol version
 #define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes
 

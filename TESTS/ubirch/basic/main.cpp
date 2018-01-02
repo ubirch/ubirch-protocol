@@ -1,7 +1,7 @@
 #include <unity/unity.h>
 #include <ubirch/ubirch_protocol.h>
 #include <armnacl.h>
-#include <ubirch-mbed-crypto/source/Base64.h>
+#include <mbedtls/base64.h>
 
 #include "utest/utest.h"
 #include "greentea-client/test_env.h"
@@ -34,12 +34,13 @@ int ed25519_sign(const char *buf, size_t len, unsigned char signature[crypto_sig
 }
 
 void TestSimpleMessage() {
-    char _key[20], _value[100];
-    Base64 base64;
+    char _key[20], _value[300];
     size_t encoded_size;
 
-    const char *encoded_pubkey = base64.Encode((const char *) public_key, crypto_sign_PUBLICKEYBYTES, &encoded_size);
-    greentea_send_kv("publicKey", encoded_pubkey);
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size, public_key,
+                          crypto_sign_PUBLICKEYBYTES);
+    greentea_send_kv("publicKey", _value);
 
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
     ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign,
@@ -50,8 +51,10 @@ void TestSimpleMessage() {
     msgpack_pack_int(pk, 99);
     ubirch_protocol_finish(proto, pk);
 
-    const char *encoded = base64.Encode(sbuf->data, sbuf->size, &encoded_size);
-    greentea_send_kv("checkMessage", encoded, encoded_size);
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          (unsigned char *) sbuf->data, sbuf->size);
+    greentea_send_kv("checkMessage", _value, encoded_size);
 
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
@@ -61,12 +64,13 @@ void TestSimpleMessage() {
 }
 
 void TestChainedMessage() {
-    char _key[20], _value[100];
-    Base64 base64;
+    char _key[20], _value[300];
     size_t encoded_size;
 
-    const char *encoded_pubkey = base64.Encode((const char *) public_key, crypto_sign_PUBLICKEYBYTES, &encoded_size);
-    greentea_send_kv("publicKey", encoded_pubkey);
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size, public_key,
+                          crypto_sign_PUBLICKEYBYTES);
+    greentea_send_kv("publicKey", _value);
 
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
     ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign,
@@ -79,8 +83,10 @@ void TestChainedMessage() {
     msgpack_pack_raw_body(pk, message1, strlen(message1));
     ubirch_protocol_finish(proto, pk);
 
-    char *encoded = base64.Encode(sbuf->data, sbuf->size, &encoded_size);
-    greentea_send_kv("checkMessage", encoded, encoded_size);
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          (unsigned char *) sbuf->data, sbuf->size);
+    greentea_send_kv("checkMessage", _value, encoded_size);
 
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
     TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
@@ -94,8 +100,10 @@ void TestChainedMessage() {
     msgpack_pack_raw_body(pk, message2, strlen(message2));
     ubirch_protocol_finish(proto, pk);
 
-    encoded = base64.Encode(sbuf->data, sbuf->size, &encoded_size);
-    greentea_send_kv("checkMessage", encoded, encoded_size);
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          (unsigned char *) sbuf->data, sbuf->size);
+    greentea_send_kv("checkMessage", _value, encoded_size);
 
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
     TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "chained signature verification failed");
