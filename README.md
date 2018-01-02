@@ -1,5 +1,15 @@
 # ubirch protocol
 
+1. [Basic Message Format](#basic-message-format)
+    1. [Field Types](#field-types)
+2. [Checking the Signature](#checking-the-signature) 
+3. [API](#api)
+    1. [Simple Message Example](#simple-message-example)
+    2. [Chained Message Example](#chained-message-example)
+4. [Building](#building)
+5. [Testing](#testing)
+          
+
 ## Basic Message Format
 
 The ubirch protocol basic message format wraps the payload with an authentication header and a signature. 
@@ -27,12 +37,12 @@ An example is below, with the UUID (`abcdefghijklmnop`) and a subsequent message
 signature:
 
 
-## Checking the signature   
+## Checking the Signature   
    
 The structure allows a recipient to take off the last 64 bytes of the message and check the signature of the
 message taking length - 67 bytes hashed with [SHA256](https://en.wikipedia.org/wiki/SHA-2).
 
-Trivial Example:
+Trivial Example (Python):
 
 ```python
 import msgpack
@@ -58,7 +68,7 @@ except Exception as e:
 
 Case must be taken, unpacking the message structure, to ensure no data beyond the limits is read.
 
-# API
+## API
 
 The ubirch protocol API is derived from the msgpack API, adding a context similar to the buffer 
 implementations (`sbuffer`), which wraps the packer to hash the data. A message is then created
@@ -72,7 +82,7 @@ using the `ubirch_protocol_start()` function and signing it with `ubirch_protoco
 - **`ubirch_protocol_finish(proto, packer)`** 
     finish the message, signing the header and payload.
     
-## Simple Message Example
+### Simple Message Example
 
 ```c
 // creata a standard msgpack stream buffer
@@ -101,7 +111,7 @@ the stream buffer. Instead of a stream buffer, the data may be
 written directly to the network using a custom write function instead of
 `msgpack_sbuffer_write`.
 
-### Example: binary output 
+#### Example: binary output 
 ```
 00000000: 95cd 0401 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
 00000010: 6c6d 6e6f 70da 0040 0000 0000 0000 0000  lmnop..@........
@@ -115,7 +125,7 @@ written directly to the network using a custom write function instead of
 00000090: e5e5 c453 b496 0d80 c0cc 3f08            ...S......?.
 ```
 
-## Chained Message Example
+### Chained Message Example
 
 > ⚠ Chained messages include the signature of the previous message
 > to create a safe chain of verifyable messages. You need to keep the
@@ -181,4 +191,43 @@ ubirch_protocol_free(proto);
 00000080: 4be9 2ec1 98b9 c7e3 07d3 8753 2617 a316  K..........S&...
 00000090: 1098 9744 5f92 54a4 a2d7 19d1 d13b 57af  ...D_.T......;W.
 000000a0: 0f3b a9a2 0a                             .;...
+```
+
+## Building
+
+Building and testing for [mbed](https://mbed.com):
+
+```bash
+mbed new .
+mbed target UBIRCH
+mbed toolchain GCC_ARM
+mbed compile --library
+```
+
+## Testing
+
+Tests are run using the [mbed](https://mbed.com) test infrastructure. They require python host tests.
+
+```bash
+pip install -r requirements.txt 
+mbed test -n tests-ubirch*
+```
+
+### Test Output
+
+```
++-----------------+---------------+--------------------+--------+--------------------+-------------+
+| target          | platform_name | test suite         | result | elapsed_time (sec) | copy_method |
++-----------------+---------------+--------------------+--------+--------------------+-------------+
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | OK     | 127.09             | default     |
++-----------------+---------------+--------------------+--------+--------------------+-------------+
+mbedgt: test suite results: 1 OK
+mbedgt: test case report:
++-----------------+---------------+--------------------+---------------------------------+--------+--------+--------+--------------------+
+| target          | platform_name | test suite         | test case                       | passed | failed | result | elapsed_time (sec) |
++-----------------+---------------+--------------------+---------------------------------+--------+--------+--------+--------------------+
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol chained message | 1      | 0      | OK     | 1.65               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol simple message  | 1      | 0      | OK     | 0.86               |
++-----------------+---------------+--------------------+---------------------------------+--------+--------+--------+--------------------+
+mbedgt: test case results: 2 OK
 ```

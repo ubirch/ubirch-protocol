@@ -1,0 +1,2 @@
+ed25519 >= 1.4
+msgpack-python >= 0.4.8
