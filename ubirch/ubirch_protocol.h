@@ -57,6 +57,8 @@
 
 #ifdef MBEDTLS_CONFIG_FILE
 #include <mbedtls/sha256.h>
+#include <mbed-os/features/mbedtls/inc/mbedtls/sha256.h>
+
 #else
 #include "sha256.h"
 #endif
@@ -127,6 +129,7 @@ static void ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk);
  * Finish a message. Calculates the signature and attaches it to the message.
  * @param proto the ubirch protocol context
  * @param pk the msgpack packer used for serializing data
+ * @return 0 if successful, 1 if either packer or protocol are NULL, 2 if used before ubirch_protocol_start
  */
 static int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk);
 
@@ -149,6 +152,7 @@ inline void ubirch_protocol_init(ubirch_protocol *proto, void *data, msgpack_pac
     proto->packer.data = data;
     proto->packer.callback = callback;
     proto->sign = sign;
+    proto->hash.is224 = -1;
     memcpy(proto->uuid, uuid, 16);
 }
 
@@ -188,11 +192,12 @@ inline void ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
 
 inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
     if (proto == NULL || pk == NULL) return 1;
+    if(proto->hash.is224 == -1) return 2;
 
     unsigned char sha256sum[32];
     mbedtls_sha256_finish(&proto->hash, sha256sum);
     if(proto->sign((const char *) sha256sum, sizeof(sha256sum), proto->signature)) {
-        return 1;
+        return 3;
     }
 
     // 5 add signature hash
