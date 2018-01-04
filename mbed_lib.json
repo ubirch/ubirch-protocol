@@ -1,5 +1,5 @@
 {
   "name": "ubirch-protocol",
-  "macros": ["MBEDTLS_CONFIG_FILE=\"ubirch/mbedtls.h\""]
+  "macros": ["MBEDTLS_CONFIG_FILE=\"ubirch/digest/mbedtls.h\""]
 
 }
