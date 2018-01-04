@@ -2,7 +2,7 @@
 #include <ubirch/ubirch_protocol.h>
 #include <armnacl.h>
 #include <mbedtls/base64.h>
-#include <mbed-os/features/mbedtls/inc/mbedtls/sha256.h>
+#include <mbedtls/sha256.h>
 
 #include "utest/utest.h"
 #include "greentea-client/test_env.h"
