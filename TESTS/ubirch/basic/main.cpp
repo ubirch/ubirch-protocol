@@ -52,7 +52,7 @@ void TestProtocolNew() {
 
     TEST_ASSERT_EQUAL_PTR(dummybuffer, proto->packer.data);
     TEST_ASSERT_EQUAL_PTR(msgpack_sbuffer_write, proto->packer.callback);
-    TEST_ASSERT_EQUAL_HEX16(proto_chained, proto.version);
+    TEST_ASSERT_EQUAL_HEX16(proto_chained, proto->version);
     TEST_ASSERT_EQUAL_PTR(ed25519_sign, proto->sign);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(proto->uuid, UUID, 16);
 
