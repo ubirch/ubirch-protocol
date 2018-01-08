@@ -213,31 +213,50 @@ mbed compile --library
 Tests are run using the [mbed](https://mbed.com) test infrastructure. They require python host tests.
 
 ```bash
-pip install -r requirements.txt 
+pip install -r requirements.txt
+mbed update 
 mbed test -n tests-ubirch*
 ```
 
 ### Test Output
 
+Includes tests for the [ubirch-mbed-nacl-cm0](https://github.com/ubirch/ubirch-mbed-nacl-cm0) dependency.
+
 ```
-+------------------+---------------+--------------------+--------+--------------------+-------------+
-| target           | platform_name | test suite         | result | elapsed_time (sec) | copy_method |
-+------------------+---------------+--------------------+--------+--------------------+-------------+
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | OK     | 26.27              | default     |
-+------------------+---------------+--------------------+--------+--------------------+-------------+
-mbedgt: test suite results: 1 OK
++------------------+---------------+----------------------------------------------+--------+--------------------+-------------+
+| target           | platform_name | test suite                                   | result | elapsed_time (sec) | copy_method |
++------------------+---------------+----------------------------------------------+--------+--------------------+-------------+
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic                           | OK     | 28.45              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-crypto-hash       | OK     | 119.65             | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-crypto-hashblocks | OK     | 130.79             | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-crypto-sign       | OK     | 286.05             | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-crypto-verify     | OK     | 20.69              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-stack-hash        | OK     | 20.67              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-stack-hashblocks  | OK     | 20.84              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-stack-sign        | OK     | 158.42             | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-stack-verify      | OK     | 23.07              | default     |
++------------------+---------------+----------------------------------------------+--------+--------------------+-------------+
+mbedgt: test suite results: 9 OK
 mbedgt: test case report:
-+------------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
-| target           | platform_name | test suite         | test case                              | passed | failed | result | elapsed_time (sec) |
-+------------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol init                   | 1      | 0      | OK     | 0.05               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol message chained        | 1      | 0      | OK     | 2.47               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol message finish         | 1      | 0      | OK     | 1.94               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol message finish (fails) | 1      | 0      | OK     | 0.07               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol message simple         | 1      | 0      | OK     | 1.28               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol message start          | 1      | 0      | OK     | 0.07               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol new                    | 1      | 0      | OK     | 0.05               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol write                  | 1      | 0      | OK     | 0.05               |
-+------------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
-mbedgt: test case results: 8 OK
++------------------+---------------+----------------------------------------------+----------------------------------------+--------+--------+--------+--------------------+
+| target           | platform_name | test suite                                   | test case                              | passed | failed | result | elapsed_time (sec) |
++------------------+---------------+----------------------------------------------+----------------------------------------+--------+--------+--------+--------------------+
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic                           | ubirch protocol init                   | 1      | 0      | OK     | 0.05               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic                           | ubirch protocol message chained        | 1      | 0      | OK     | 2.47               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic                           | ubirch protocol message finish         | 1      | 0      | OK     | 0.95               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic                           | ubirch protocol message finish (fails) | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic                           | ubirch protocol message simple         | 1      | 0      | OK     | 1.28               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic                           | ubirch protocol message start          | 1      | 0      | OK     | 0.06               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic                           | ubirch protocol new                    | 1      | 0      | OK     | 0.05               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic                           | ubirch protocol write                  | 1      | 0      | OK     | 0.05               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-crypto-hash       | Test crypto-hash                       | 1      | 0      | OK     | 99.1               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-crypto-hashblocks | Test crypto-hashblocks                 | 1      | 0      | OK     | 110.61             |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-crypto-sign       | Test crypto-sign                       | 1      | 0      | OK     | 265.44             |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-crypto-verify     | Test crypto-verify                     | 1      | 0      | OK     | 1.25               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-stack-hash        | Test stack-crypto-hash                 | 1      | 0      | OK     | 1.43               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-stack-hashblocks  | Test stack-crypto-hashblocks           | 1      | 0      | OK     | 1.11               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-stack-sign        | Test stack-crypto-sign                 | 1      | 0      | OK     | 135.89             |
+| NRF52_DK-GCC_ARM | NRF52_DK      | ubirch-mbed-nacl-cm0-tests-stack-verify      | Test stack-crypto-verify               | 1      | 0      | OK     | 0.67               |
++------------------+---------------+----------------------------------------------+----------------------------------------+--------+--------+--------+--------------------+
+mbedgt: test case results: 16 OK
 ```
