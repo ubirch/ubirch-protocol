@@ -37,21 +37,23 @@ int ed25519_sign(const char *buf, size_t len, unsigned char signature[crypto_sig
 void TestProtocolInit() {
     char dummybuffer[10];
     ubirch_protocol proto = {};
-    ubirch_protocol_init(&proto, dummybuffer, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol_init(&proto, proto_chained, dummybuffer, msgpack_sbuffer_write, ed25519_sign, UUID);
 
-    TEST_ASSERT_EQUAL_PTR(proto.packer.data, dummybuffer);
-    TEST_ASSERT_EQUAL_PTR(proto.packer.callback, msgpack_sbuffer_write);
-    TEST_ASSERT_EQUAL_PTR(proto.sign, ed25519_sign);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(proto.uuid, UUID, 16);
+    TEST_ASSERT_EQUAL_PTR(dummybuffer, proto.packer.data);
+    TEST_ASSERT_EQUAL_PTR(msgpack_sbuffer_write, proto.packer.callback);
+    TEST_ASSERT_EQUAL_HEX16(proto_chained, proto.version);
+    TEST_ASSERT_EQUAL_PTR(ed25519_sign, proto.sign);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(UUID, proto.uuid, 16);
 }
 
 void TestProtocolNew() {
     char dummybuffer[10];
-    ubirch_protocol *proto = ubirch_protocol_new(dummybuffer, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_chained, dummybuffer, msgpack_sbuffer_write, ed25519_sign, UUID);
 
-    TEST_ASSERT_EQUAL_PTR(proto->packer.data, dummybuffer);
-    TEST_ASSERT_EQUAL_PTR(proto->packer.callback, msgpack_sbuffer_write);
-    TEST_ASSERT_EQUAL_PTR(proto->sign, ed25519_sign);
+    TEST_ASSERT_EQUAL_PTR(dummybuffer, proto->packer.data);
+    TEST_ASSERT_EQUAL_PTR(msgpack_sbuffer_write, proto->packer.callback);
+    TEST_ASSERT_EQUAL_HEX16(proto_chained, proto.version);
+    TEST_ASSERT_EQUAL_PTR(ed25519_sign, proto->sign);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(proto->uuid, UUID, 16);
 
     ubirch_protocol_free(proto);
@@ -59,7 +61,7 @@ void TestProtocolNew() {
 
 void TestProtocolWrite() {
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_chained, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     // intialize the protocol hash manually
@@ -89,7 +91,7 @@ void TestProtocolWrite() {
 
 void TestProtocolMessageStart() {
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_chained, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     ubirch_protocol_start(proto, pk);
@@ -99,7 +101,7 @@ void TestProtocolMessageStart() {
     TEST_ASSERT_EQUAL_HEX_MESSAGE(0x95, sbuf->data[0], "msgpack format wrong (expected 5-array)");
 
     const unsigned char expected_version[3] = {
-            0xcd, UBIRCH_PROTOCOL_VERSION >> 8, UBIRCH_PROTOCOL_VERSION & 0xff
+            0xcd, 0, UBIRCH_PROTOCOL_VERSION << 4 | UBIRCH_PROTOCOL_CHAINED
     };
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_version, sbuf->data + 1, 3, "protocol version wrong");
     const unsigned char expected_uuid[16] = {
@@ -117,10 +119,10 @@ void TestProtocolMessageStart() {
     unsigned char sha256sum[32];
     mbedtls_sha256_finish(&proto->hash, sha256sum);
     unsigned char expected_hash[32] = {
-            0xe4, 0x05, 0x2b, 0xec, 0x43, 0xed, 0x88, 0x91,
-            0x86, 0x3d, 0xf0, 0x3e, 0xe2, 0x33, 0xba, 0x65,
-            0x25, 0x3b, 0x30, 0x01, 0xb3, 0xce, 0xb9, 0xa8,
-            0x67, 0xa7, 0x8e, 0xad, 0xf4, 0x9b, 0xec, 0xc4,
+            0x2f, 0xe5, 0x92, 0x3e, 0xca, 0xb7, 0x26, 0xd0,
+            0x34, 0x4e, 0x80, 0xec, 0xb7, 0x49, 0x99, 0x74,
+            0xac, 0x88, 0xb0, 0xfe, 0x27, 0x8c, 0x51, 0x98,
+            0xaa, 0x38, 0x05, 0x83, 0x69, 0x4d, 0x54, 0x7d,
     };
     TEST_ASSERT_EQUAL_HEX8_ARRAY(expected_hash, sha256sum, sizeof(sha256sum));
 
@@ -130,14 +132,14 @@ void TestProtocolMessageStart() {
 
 void TestProtocolMessageFinishWithoutStart() {
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_chained, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     // add some dummy data without start
     msgpack_pack_int(pk, 2498);
 
     int finish_ok = ubirch_protocol_finish(proto, pk);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(2, finish_ok, "message finish without start must fail");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-2, finish_ok, "message finish without start must fail");
 
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
@@ -145,7 +147,7 @@ void TestProtocolMessageFinishWithoutStart() {
 
 void TestProtocolMessageFinish() {
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_chained, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     ubirch_protocol_start(proto, pk);
@@ -156,20 +158,19 @@ void TestProtocolMessageFinish() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(158, sbuf->size, "message length wrong");
 
     const unsigned char expected_message[158] = {
-        0x95, 0xcd, 0x04, 0x01, 0xb0, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b,
-        0x6c, 0x6d, 0x6e, 0x6f, 0x70, 0xda, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xcd, 0x09, 0xc2, 0xda, 0x00, 0x40, 0x79, 0xdf,
-        0xb7, 0x7d, 0x0f, 0x7d, 0xc9, 0x0f, 0x35, 0xc9, 0x6a, 0x1b, 0xb9, 0x43, 0x33, 0xc2, 0x6f, 0x37,
-        0x7f, 0xe9, 0x22, 0x14, 0xc1, 0xca, 0xc8, 0x4e, 0x6f, 0x5f, 0xc4, 0xb7, 0xd7, 0x08, 0xef, 0x7b,
-        0x4e, 0x23, 0x90, 0xe8, 0xb2, 0x74, 0x7a, 0xf7, 0x38, 0x7b, 0x20, 0x7f, 0x0b, 0xb8, 0x84, 0xcf,
-        0xdc, 0x50, 0x5a, 0x9c, 0x86, 0x66, 0xe0, 0x5e, 0xaf, 0x32, 0x8c, 0xf1, 0x39, 0x0d
+            0x95, 0xcd, 0x00, 0x13, 0xb0, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d,
+            0x6e, 0x6f, 0x70, 0xda, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xcd, 0x09,
+            0xc2, 0xda, 0x00, 0x40, 0x71, 0xb6, 0x18, 0xed, 0x6b, 0x28, 0x9f, 0x0b, 0x42, 0x6c, 0x19, 0xaa, 0xb2, 0xf4,
+            0x53, 0x01, 0x99, 0xf4, 0x86, 0x2d, 0xee, 0xc2, 0xb2, 0xcf, 0xa0, 0x86, 0x31, 0xdd, 0x59, 0xa4, 0xff, 0x78,
+            0x4f, 0x89, 0x11, 0xb0, 0xeb, 0x8e, 0x10, 0x1d, 0xcd, 0xe8, 0xc5, 0x82, 0x4a, 0x17, 0x97, 0x10, 0x1a, 0x6e,
+            0x9b, 0xdf, 0x5a, 0x8b, 0x3a, 0x24, 0x74, 0x25, 0x80, 0x94, 0x00, 0x95, 0x02, 0x04,
     };
 
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, sbuf->data, sbuf->size, "message serialization failed");
-    
+
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
 }
@@ -184,7 +185,7 @@ void TestSimpleMessage() {
     greentea_send_kv("publicKey", _value);
 
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_chained, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     ubirch_protocol_start(proto, pk);
@@ -213,7 +214,7 @@ void TestChainedMessage() {
     greentea_send_kv("publicKey", _value);
 
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_chained, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     const char *message1 = "message 1";
@@ -265,7 +266,8 @@ int main() {
             Case("ubirch protocol message simple", TestSimpleMessage, greentea_case_failure_abort_handler),
             Case("ubirch protocol message chained", TestChainedMessage, greentea_case_failure_abort_handler),
             Case("ubirch protocol message start", TestProtocolMessageStart, greentea_case_failure_abort_handler),
-            Case("ubirch protocol message finish (fails)", TestProtocolMessageFinishWithoutStart, greentea_case_failure_abort_handler),
+            Case("ubirch protocol message finish (fails)", TestProtocolMessageFinishWithoutStart,
+                 greentea_case_failure_abort_handler),
             Case("ubirch protocol message finish", TestProtocolMessageFinish, greentea_case_failure_abort_handler),
     };
 

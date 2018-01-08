@@ -56,12 +56,25 @@
 #include <msgpack.h>
 
 #ifdef MBEDTLS_CONFIG_FILE
+
 #include <mbedtls/sha256.h>
+
 #else
 #include "digest/sha256.h"
 #endif
-#define UBIRCH_PROTOCOL_VERSION     0x0401  //!< current ubirch protocol version
+
+#define UBIRCH_PROTOCOL_VERSION     1       //!< current ubirch protocol version
+#define UBIRCH_PROTOCOL_SIMPLE      0x01    //!< simple protocol without signatures (unsafe)
+#define UBIRCH_PROTOCOL_SIGNED      0x02    //!< signed messages (unchained)
+#define UBIRCH_PROTOCOL_CHAINED     0x03    //!< chained signed messages
+
 #define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes
+
+enum ubirch_protocol_variant {
+    proto_simple = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_SIMPLE),
+    proto_signed = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_SIGNED),
+    proto_chained = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_CHAINED)
+};
 
 /**
  * The signature function type necessary to sign the message for the ubirch protocol.
@@ -80,6 +93,7 @@ typedef int (*ubirch_protocol_sign)(const char *buf, size_t len, unsigned char s
 typedef struct ubirch_protocol {
     msgpack_packer packer;                              //!< the underlying target packer
     ubirch_protocol_sign sign;                          //!< the message signing function
+    uint16_t version;                                   //!< the specific used protocol version
     unsigned char uuid[16];                             //!< the uuid of the sender (used to retrieve the keys)
     unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]; //!< the current or previous signature of a message
     mbedtls_sha256_context hash;                        //!< the streaming hash of the data to sign
@@ -89,24 +103,28 @@ typedef struct ubirch_protocol {
  * Initialize a new ubirch protocol context.
  *
  * @param proto the ubirch protocol context
+ * @param variant protocol variant
  * @param data the data object buffer associated with the context
  * @param callback the writer callback for writing data to network or buffer
  * @param sign a callback used for signing a message
  * @param uuid the uuid associated with the data
  */
-static void ubirch_protocol_init(ubirch_protocol *proto, void *data, msgpack_packer_write callback,
+static void ubirch_protocol_init(ubirch_protocol *proto, ubirch_protocol_variant variant,
+                                 void *data, msgpack_packer_write callback,
                                  ubirch_protocol_sign sign, const unsigned char uuid[16]);
 
 /**
  * Create a new ubirch protocol context.
  *
+ * @param variant protocol variant
  * @param data the data object buffer associated with the context
  * @param callback the writer callback for writing data to network or buffer
  * @param sign a callback used for signing a message
  * @param uuid the uuid associated with the data
  * @return a new initialized context
  */
-static ubirch_protocol *ubirch_protocol_new(void *data, msgpack_packer_write callback,
+static ubirch_protocol *ubirch_protocol_new(ubirch_protocol_variant variant,
+                                            void *data, msgpack_packer_write callback,
                                             ubirch_protocol_sign sign, const unsigned char uuid[16]);
 
 /**
@@ -127,7 +145,10 @@ static void ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk);
  * Finish a message. Calculates the signature and attaches it to the message.
  * @param proto the ubirch protocol context
  * @param pk the msgpack packer used for serializing data
- * @return 0 if successful, 1 if either packer or protocol are NULL, 2 if used before ubirch_protocol_start
+ * @return 0 if successful
+ * @return -1 if either packer or protocol are NULL
+ * @return -2 if used before ubirch_protocol_start
+ * @return -3 if the signing failed
  */
 static int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk);
 
@@ -141,24 +162,29 @@ static int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk);
  */
 static inline int ubirch_protocol_write(void *data, const char *buf, size_t len) {
     ubirch_protocol *proto = (ubirch_protocol *) data;
-    mbedtls_sha256_update(&proto->hash, (const unsigned char *) buf, len);
+    if (proto->version & proto_signed) {
+        mbedtls_sha256_update(&proto->hash, (const unsigned char *) buf, len);
+    }
     return proto->packer.callback(proto->packer.data, buf, len);
 }
 
-inline void ubirch_protocol_init(ubirch_protocol *proto, void *data, msgpack_packer_write callback,
+inline void ubirch_protocol_init(ubirch_protocol *proto, ubirch_protocol_variant variant,
+                                 void *data, msgpack_packer_write callback,
                                  ubirch_protocol_sign sign, const unsigned char uuid[16]) {
     proto->packer.data = data;
     proto->packer.callback = callback;
     proto->sign = sign;
     proto->hash.is224 = -1;
+    proto->version = variant;
     memcpy(proto->uuid, uuid, 16);
 }
 
-inline ubirch_protocol *ubirch_protocol_new(void *data, msgpack_packer_write callback,
+inline ubirch_protocol *ubirch_protocol_new(ubirch_protocol_variant variant,
+                                            void *data, msgpack_packer_write callback,
                                             ubirch_protocol_sign sign, const unsigned char uuid[16]) {
     ubirch_protocol *proto = (ubirch_protocol *) calloc(1, sizeof(ubirch_protocol));
     if (!proto) { return NULL; }
-    ubirch_protocol_init(proto, data, callback, sign, uuid);
+    ubirch_protocol_init(proto, variant, data, callback, sign, uuid);
 
     return proto;
 }
@@ -170,37 +196,42 @@ inline void ubirch_protocol_free(ubirch_protocol *proto) {
 inline void ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
     if (proto == NULL || pk == NULL) return;
 
-    mbedtls_sha256_init(&proto->hash);
-    mbedtls_sha256_starts(&proto->hash, 0);
+    if (proto->version & proto_signed) {
+        mbedtls_sha256_init(&proto->hash);
+        mbedtls_sha256_starts(&proto->hash, 0);
+    }
 
     // the message consists of 3 header elements, the payload and (not included) the signature
     msgpack_pack_array(pk, 5);
 
     // 1 - protocol version
-    msgpack_pack_fix_uint16(pk, UBIRCH_PROTOCOL_VERSION);
+    msgpack_pack_fix_uint16(pk, proto->version);
 
     // 2 - device ID
     msgpack_pack_raw(pk, 16);
     msgpack_pack_raw_body(pk, proto->uuid, sizeof(proto->uuid));
 
-    // 3 the last signature
-    msgpack_pack_raw(pk, sizeof(proto->signature));
-    msgpack_pack_raw_body(pk, proto->signature, sizeof(proto->signature));
+    // 3 the last signature (if chained)
+    if (proto->version & proto_chained) {
+        msgpack_pack_raw(pk, sizeof(proto->signature));
+        msgpack_pack_raw_body(pk, proto->signature, sizeof(proto->signature));
+    }
 }
 
 inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
-    if (proto == NULL || pk == NULL) return 1;
-    if(proto->hash.is224 == -1) return 2;
+    if (proto == NULL || pk == NULL) return -1;
+    if (proto->version & proto_signed) {
+        if (proto->hash.is224 == -1) return -2;
+        unsigned char sha256sum[32];
+        mbedtls_sha256_finish(&proto->hash, sha256sum);
+        if (proto->sign((const char *) sha256sum, sizeof(sha256sum), proto->signature)) {
+            return -3;
+        }
 
-    unsigned char sha256sum[32];
-    mbedtls_sha256_finish(&proto->hash, sha256sum);
-    if(proto->sign((const char *) sha256sum, sizeof(sha256sum), proto->signature)) {
-        return 3;
+        // 5 add signature hash
+        msgpack_pack_raw(pk, UBIRCH_PROTOCOL_SIGN_SIZE);
+        msgpack_pack_raw_body(pk, proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
     }
-
-    // 5 add signature hash
-    msgpack_pack_raw(pk, UBIRCH_PROTOCOL_SIGN_SIZE);
-    msgpack_pack_raw_body(pk, proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
 
     return 0;
 }

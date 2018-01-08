@@ -17,15 +17,19 @@ The complete message, including header,payload and signature are combined in a s
 array. 
 
 ```
-+=========+======+================+=========+-----------+
-| VERSION | UUID | PREV-SIGNATURE | PAYLOAD | SIGNATURE |
-+=========+======+================+=========+-----------+
-= ➔ data used for signature (4 elements)
++=========+======+==================+=========+-------------+
+| VERSION | UUID | [PREV-SIGNATURE] | PAYLOAD | [SIGNATURE] |
++=========+======+==================+=========+-------------+
+=   ➔ data used for signature (4 elements)
+[]  ➔ optional fields, depending on lower 4 bit of version
 ```
 
 #### Field Types
 
 - **VERSION** - [16 bit Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family)
+    - `000000000001|0001` - version 1, simple message without signatures, `[VE, ID, PL]`
+    - `000000000001|0010` - version 1, signed message without chained signatures, `[VE, ID, PL, SI]`
+    - `000000000001|0011` - version 1, signed message with chained signatures, `[VE, ID, PS, PL, SI]`
 - **UUID** - [128 bit, 16-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)   
 - **PREV-SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)
 - **PAYLOAD** - ANY msgpack type (incl. raw alternative data)
@@ -113,16 +117,16 @@ written directly to the network using a custom write function instead of
 
 #### Example: binary output 
 ```
-00000000: 95cd 0401 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
+00000000: 95cd 0013 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
 00000010: 6c6d 6e6f 70da 0040 0000 0000 0000 0000  lmnop..@........
 00000020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00000050: 0000 0000 0000 0000 63da 0040 a541 ec82  ........c..@.A..
-00000060: 440d 1861 8c04 c0de 40e2 85a2 b73f 5a24  D..a....@....?Z$
-00000070: 13e5 9be2 851d 20f1 2d82 1d37 3dd2 0623  ...... .-..7=..#
-00000080: bdb7 e33f 6818 448b 9237 5e5e 7db9 cf1f  ...?h.D..7^^}...
-00000090: e5e5 c453 b496 0d80 c0cc 3f08            ...S......?.
+00000050: 0000 0000 0000 0000 63da 0040 1206 a337  ........c..@...7
+00000060: 1d51 9dff c879 666d cf13 6dd8 d5af 2b10  .Q...yfm..m...+.
+00000070: 337c 8552 3574 4c23 688d 0dc8 10b9 1ed4  3|.R5tL#h.......
+00000080: 1634 7ca4 482a 48c9 4eee 881c 3015 1303  .4|.H*H.N...0...
+00000090: b94f 7166 c379 0034 c35b c407            .Oqf.y.4.[..
 ```
 
 ### Chained Message Example
@@ -137,8 +141,8 @@ context is not deleted after use.
 ```c
 // create buffer, writer, ubirch protocol context and packer
 msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-ubirch_protocol *proto = ubirch_protocol_new(sbuf, msgpack_sbuffer_write, ed25519_sign,
-                                             (const unsigned char *) UUID);
+ubirch_protocol *proto = ubirch_protocol_new(proto_chained,
+                                             sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
 msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
 // FIRST MESSAGE
@@ -165,32 +169,32 @@ ubirch_protocol_free(proto);
 
 #### MESSAGE 1: binary output:
 ```
-00000000: 95cd 0401 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
+00000000: 95cd 0013 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
 00000010: 6c6d 6e6f 70da 0040 0000 0000 0000 0000  lmnop..@........
 00000020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000050: 0000 0000 0000 0000 a96d 6573 7361 6765  .........message
-00000060: 2031 da00 4075 6f6c 2e17 5b5c ae74 63ea   1..@uol..[\.tc.
-00000070: c471 141f d0e7 8bc8 0c62 e2fa 8d5c 329a  .q.......b...\2.
-00000080: 048c 11ee f720 7c7a a611 0334 d123 0618  ..... |z...4.#..
-00000090: 78d6 9c0b 2ef0 7ca1 ce26 86c1 ede2 3f0c  x.....|..&....?.
-000000a0: 57a0 8507 00                             W....
+00000060: 2031 da00 4038 8ce9 3fe9 fde3 0006 3582   1..@8..?.....5.
+00000070: ad33 6ad1 410b 7e4d d955 1400 5dd6 a690  .3j.A.~M.U..]...
+00000080: 82c3 25d8 e8ff 9d4f 6b3d 1131 7a3b a1b3  ..%....Ok=.1z;..
+00000090: 76d2 7d3f 1ba7 35c7 5b68 cfc8 57bd bf41  v.}?..5.[h..W..A
+000000a0: 1674 837f 05                             .t...
 ```
 
 #### MESSAGE 2: binary output
 ```
-00000000: 95cd 0401 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
-00000010: 6c6d 6e6f 70da 0040 756f 6c2e 175b 5cae  lmnop..@uol..[\.
-00000020: 7463 eac4 7114 1fd0 e78b c80c 62e2 fa8d  tc..q.......b...
-00000030: 5c32 9a04 8c11 eef7 207c 7aa6 1103 34d1  \2...... |z...4.
-00000040: 2306 1878 d69c 0b2e f07c a1ce 2686 c1ed  #..x.....|..&...
-00000050: e23f 0c57 a085 0700 a96d 6573 7361 6765  .?.W.....message
-00000060: 2032 da00 40dc 9073 f135 bd9d d8ee ca6e   2..@..s.5.....n
-00000070: 27e0 e716 7da7 bbc5 5752 2f22 96f8 d13f  '...}...WR/"...?
-00000080: 4be9 2ec1 98b9 c7e3 07d3 8753 2617 a316  K..........S&...
-00000090: 1098 9744 5f92 54a4 a2d7 19d1 d13b 57af  ...D_.T......;W.
-000000a0: 0f3b a9a2 0a                             .;...
+00000000: 95cd 0013 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
+00000010: 6c6d 6e6f 70da 0040 388c e93f e9fd e300  lmnop..@8..?....
+00000020: 0635 82ad 336a d141 0b7e 4dd9 5514 005d  .5..3j.A.~M.U..]
+00000030: d6a6 9082 c325 d8e8 ff9d 4f6b 3d11 317a  .....%....Ok=.1z
+00000040: 3ba1 b376 d27d 3f1b a735 c75b 68cf c857  ;..v.}?..5.[h..W
+00000050: bdbf 4116 7483 7f05 a96d 6573 7361 6765  ..A.t....message
+00000060: 2032 da00 404d d420 0c77 1142 c0b9 4e12   2..@M. .w.B..N.
+00000070: 9605 626e f3e5 19be 2f8d ffb6 dc29 1598  ..bn..../....)..
+00000080: 4014 fb93 36c7 7422 64fd 68b8 e3ff cd5d  @...6.t"d.h....]
+00000090: 38e6 93b4 f8ab 4199 09f4 9136 ed73 dce2  8.....A....6.s..
+000000a0: cd6d 89f0 06                             .m...
 ```
 
 ## Building
@@ -217,24 +221,24 @@ mbed test -n tests-ubirch*
 ### Test Output
 
 ```
-+-----------------+---------------+--------------------+--------+--------------------+-------------+
-| target          | platform_name | test suite         | result | elapsed_time (sec) | copy_method |
-+-----------------+---------------+--------------------+--------+--------------------+-------------+
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | OK     | 24.27              | default     |
-+-----------------+---------------+--------------------+--------+--------------------+-------------+
++------------------+---------------+--------------------+--------+--------------------+-------------+
+| target           | platform_name | test suite         | result | elapsed_time (sec) | copy_method |
++------------------+---------------+--------------------+--------+--------------------+-------------+
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | OK     | 26.27              | default     |
++------------------+---------------+--------------------+--------+--------------------+-------------+
 mbedgt: test suite results: 1 OK
 mbedgt: test case report:
-+-----------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
-| target          | platform_name | test suite         | test case                              | passed | failed | result | elapsed_time (sec) |
-+-----------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol init                   | 1      | 0      | OK     | 0.06               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol message chained        | 1      | 0      | OK     | 1.64               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol message finish         | 1      | 0      | OK     | 0.52               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol message finish (fails) | 1      | 0      | OK     | 0.08               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol message simple         | 1      | 0      | OK     | 0.87               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol message start          | 1      | 0      | OK     | 0.06               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol new                    | 1      | 0      | OK     | 0.04               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-basic | ubirch protocol write                  | 1      | 0      | OK     | 0.05               |
-+-----------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
++------------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
+| target           | platform_name | test suite         | test case                              | passed | failed | result | elapsed_time (sec) |
++------------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol init                   | 1      | 0      | OK     | 0.05               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol message chained        | 1      | 0      | OK     | 2.47               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol message finish         | 1      | 0      | OK     | 1.94               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol message finish (fails) | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol message simple         | 1      | 0      | OK     | 1.28               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol message start          | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol new                    | 1      | 0      | OK     | 0.05               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-basic | ubirch protocol write                  | 1      | 0      | OK     | 0.05               |
++------------------+---------------+--------------------+----------------------------------------+--------+--------+--------+--------------------+
 mbedgt: test case results: 8 OK
 ```
