@@ -220,8 +220,6 @@ mbed test -n tests-ubirch*
 
 ### Test Output
 
-Tests for the [ubirch-mbed-nacl-cm0](https://github.com/ubirch/ubirch-mbed-nacl-cm0) included:
-
 ```
 +------------------+---------------+----------------------+--------+--------------------+-------------+
 | target           | platform_name | test suite           | result | elapsed_time (sec) | copy_method |
