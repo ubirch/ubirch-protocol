@@ -230,6 +230,7 @@ void TestChainedMessage() {
 
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
     TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "chained protocol variant failed");
 
     // clear buffer for next message
     msgpack_sbuffer_clear(sbuf);
@@ -247,6 +248,7 @@ void TestChainedMessage() {
 
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
     TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "chained signature verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "chained protocol variant failed");
 
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
@@ -260,15 +262,22 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
 
 int main() {
     Case cases[] = {
-            Case("ubirch protocol init", TestProtocolInit, greentea_case_failure_abort_handler),
-            Case("ubirch protocol new", TestProtocolNew, greentea_case_failure_abort_handler),
-            Case("ubirch protocol write", TestProtocolWrite, greentea_case_failure_abort_handler),
-            Case("ubirch protocol message simple", TestSimpleMessage, greentea_case_failure_abort_handler),
-            Case("ubirch protocol message chained", TestChainedMessage, greentea_case_failure_abort_handler),
-            Case("ubirch protocol message start", TestProtocolMessageStart, greentea_case_failure_abort_handler),
-            Case("ubirch protocol message finish (fails)", TestProtocolMessageFinishWithoutStart,
-                 greentea_case_failure_abort_handler),
-            Case("ubirch protocol message finish", TestProtocolMessageFinish, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] init",
+                 TestProtocolInit, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] new",
+                 TestProtocolNew, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] write",
+                 TestProtocolWrite, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] message simple",
+                 TestSimpleMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] message chained",
+                 TestChainedMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] message start",
+                 TestProtocolMessageStart, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] message finish (fails)",
+                 TestProtocolMessageFinishWithoutStart, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] message finish",
+                 TestProtocolMessageFinish, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
