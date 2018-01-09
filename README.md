@@ -9,6 +9,28 @@
 4. [Building](#building)
 5. [Testing](#testing)
           
+The ubirch-protocol is a protocol to ensure the integrity and identity of data
+flowing through the data acquisition and transformation networks. An implementation by 
+[ubirch](http://ubirch.com) handles data verification, and forwarding as well as blockchain 
+transactions to lock data points in time for proofable logs.
+
+> **Why individually signed data?** Without signatures on data, any sensor value stored in the blockchain is
+> trash. Without proof of identity (owner) and verification of integrity (unchanged) data may just have come anywhere and be modified in transit or on
+> backend servers.  
+
+#### License 
+
+The protocol and its implementation are publicized under the [Apache License 2.0](LICENSE).
+
+We are grateful for the insights and support by [Erik Tews](https://www.datenzone.de) and 
+[Andreas Schuler](http://schulerdev.de/).
+
+#### Contact
+
+* [ubirch GmbH](https://ubirch.com)
+* Twitter: [@ubirch_iot](https://twitter.com/ubirch_iot)
+
+----              
 
 ## Basic Message Format
 
