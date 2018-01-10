@@ -2,7 +2,6 @@
 #include <ubirch/ubirch_protocol.h>
 #include <armnacl.h>
 #include <mbedtls/base64.h>
-#include <mbedtls/sha256.h>
 
 #include "utest/utest.h"
 #include "greentea-client/test_env.h"
@@ -254,6 +253,44 @@ void TestChainedMessage() {
     ubirch_protocol_free(proto);
 }
 
+void TestChainedStaticMessage() {
+    char _key[20], _value[300];
+    size_t encoded_size;
+
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size, public_key,
+                          crypto_sign_PUBLICKEYBYTES);
+    greentea_send_kv("publicKey", _value);
+
+    msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
+    ubirch_protocol *proto = ubirch_protocol_new(proto_chained, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+
+    for(int i = 0; i < 5; i++) {
+        const char *staticValue = "STATIC";
+        ubirch_protocol_start(proto, pk);
+        msgpack_pack_raw(pk, strlen(staticValue));
+        msgpack_pack_raw_body(pk, staticValue, strlen(staticValue));
+        ubirch_protocol_finish(proto, pk);
+
+        memset(_value, 0, sizeof(_value));
+        mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                              (unsigned char *) sbuf->data, sbuf->size);
+        greentea_send_kv("checkMessage", _value, encoded_size);
+
+        greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+        TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "chained signature verification failed");
+        TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "chained protocol variant failed");
+
+        // clear buffer for next message
+        msgpack_sbuffer_clear(sbuf);
+    }
+
+    msgpack_packer_free(pk);
+    ubirch_protocol_free(proto);
+
+}
+
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
     GREENTEA_SETUP(600, "ProtocolTests");
     return greentea_test_setup_handler(number_of_cases);
@@ -278,6 +315,8 @@ int main() {
                  TestProtocolMessageFinishWithoutStart, greentea_case_failure_abort_handler),
             Case("ubirch protocol [chained] message finish",
                  TestProtocolMessageFinish, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] static message",
+                 TestChainedStaticMessage, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
