@@ -6,6 +6,7 @@
 3. [API](#api)
     1. [Simple Message Example](#simple-message-example)
     2. [Chained Message Example](#chained-message-example)
+    3. [Key Registration](#key-registration)
 4. [Building](#building)
 5. [Testing](#testing)
           
@@ -217,6 +218,16 @@ ubirch_protocol_free(proto);
 00000090: 38e6 93b4 f8ab 4199 09f4 9136 ed73 dce2  8.....A....6.s..
 000000a0: cd6d 89f0 06                             .m...
 ```
+
+## Key Registration
+
+Devices must register at the key service to make their existence known.
+The key registration message is the first step and simply published a key
+with some meta-data to the key service. It will later be used for looking
+up keys for a certain device, i.e. when doing an initial trust hand shake.
+
+- **`msgpack_pack_key_register(packer, uuid, pubkey, algorithm, created, validNotBefore, validNotAfter, prevPubKey)`**
+    creates a msgpack message that can be used to register a given public key with the key service
 
 ## Building
 
