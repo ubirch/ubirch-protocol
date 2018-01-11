@@ -53,6 +53,13 @@
  * ```
  */
 
+#ifndef UBIRCH_PROTOCOL_H
+#define UBIRCH_PROTOCOL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <msgpack.h>
 
 #ifdef MBEDTLS_CONFIG_FILE
@@ -212,7 +219,7 @@ inline int ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
     }
 
     // the message consists of 3 header elements, the payload and (not included) the signature
-    switch(proto->version) {
+    switch (proto->version) {
         case proto_plain:
             msgpack_pack_array(pk, 3);
             break;
@@ -265,3 +272,8 @@ inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
     return 0;
 }
 
+#ifdef __cplusplus
+}
+#endif
+
+#endif //UBIRCH_PROTOCOL_H
