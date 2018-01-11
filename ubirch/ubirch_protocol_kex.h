@@ -50,11 +50,11 @@ extern "C" {
  * @code{.json}
  * {
  *      "deviceID": "...",
- *      "pubKey": "...".
- *      "algorithm": "ed25519"
+ *      "pubKey": "...",
+ *      "algorithm": "ed25519",
  *      "created": 1234567890,
  *      "validNotBefore": 1234567890,
- *      "validNotAfter": 1234567899
+ *      "validNotAfter": 1234567899,
  *      "prevPubKey": "..."
  * }
  * @endcode

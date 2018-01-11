@@ -229,6 +229,19 @@ up keys for a certain device, i.e. when doing an initial trust hand shake.
 - **`msgpack_pack_key_register(packer, uuid, pubkey, algorithm, created, validNotBefore, validNotAfter, prevPubKey)`**
     creates a msgpack message that can be used to register a given public key with the key service
 
+These messages directly translate into `JSON`:
+```json
+{
+     "deviceID": "...",
+     "pubKey": "...",
+     "algorithm": "ed25519",
+     "created": 1234567890,
+     "validNotBefore": 1234567890,
+     "validNotAfter": 1234567899,
+     "prevPubKey": "..."
+}
+```
+
 ## Building
 
 Building and testing for [mbed](https://mbed.com):
