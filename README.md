@@ -219,7 +219,7 @@ ubirch_protocol_free(proto);
 000000a0: cd6d 89f0 06                             .m...
 ```
 
-## Key Registration
+### Key Registration
 
 Devices must register at the key service to make their existence known.
 The key registration message is the first step and simply published a key
