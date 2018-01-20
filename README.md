@@ -232,7 +232,7 @@ up keys for a certain device, i.e. when doing an initial trust hand shake.
 These messages directly translate into `JSON`:
 ```json
 {
-     "deviceID": "...",
+     "hwDeviceID": "...",
      "pubKey": "...",
      "algorithm": "ed25519",
      "created": 1234567890,

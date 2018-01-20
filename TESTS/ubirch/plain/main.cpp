@@ -2,8 +2,6 @@
 #include <ubirch/ubirch_protocol.h>
 #include <armnacl.h>
 #include <mbedtls/base64.h>
-#include <mbedtls/sha256.h>
-#include <mbed-os/features/mbedtls/inc/mbedtls/sha256.h>
 
 #include "utest/utest.h"
 #include "greentea-client/test_env.h"
@@ -71,7 +69,7 @@ void TestProtocolWrite() {
     unsigned char expected_data[] = {0xcd, 0x09, 0xb9};
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_data), sbuf->size, "written data does not match");
     TEST_ASSERT_EQUAL_HEX8_ARRAY(expected_data, sbuf->data, sizeof(expected_data));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, proto->hash.is224, "SHA256 must not be initialized");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, proto->hash.is384, "sha512 must not be initialized");
 
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
@@ -84,7 +82,7 @@ void TestProtocolMessageStart() {
 
     TEST_ASSERT_EQUAL_INT(0, ubirch_protocol_start(proto, pk));
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, proto->hash.is224, "SHA256 must not be initialized");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, proto->hash.is384, "sha512 must not be initialized");
     TEST_ASSERT_EQUAL_INT_MESSAGE(21, sbuf->size, "header size wrong");
     TEST_ASSERT_EQUAL_HEX_MESSAGE(0x93, sbuf->data[0], "msgpack format wrong (expected 3-array)");
 
