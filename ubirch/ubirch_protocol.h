@@ -53,6 +53,9 @@
  * ```
  */
 
+#ifndef UBIRCH_PROTOCOL_H
+#define UBIRCH_PROTOCOL_H
+
 #include <msgpack.h>
 
 #ifdef MBEDTLS_CONFIG_FILE
@@ -265,3 +268,4 @@ inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
     return 0;
 }
 
+#endif // UBIRCH_PROTOCOL_H
