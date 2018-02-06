@@ -67,7 +67,7 @@ signature:
 ## Checking the Signature   
    
 The structure allows a recipient to take off the last 64 bytes of the message and check the signature of the
-message taking length - 67 bytes hashed with [SHA256](https://en.wikipedia.org/wiki/SHA-2).
+message taking length - 67 bytes hashed with [SHA512](https://en.wikipedia.org/wiki/SHA-2).
 
 Trivial Example (Python, chained message type):
 
@@ -77,7 +77,7 @@ import ed25519
 import hashlib
 
 publicKey = "7c76c47c5161d0a03e7ae987010f324b875c23da813132cf8ffdaa5593e63e6a"
-messageHex = "95cd0401b06162636465666768696a6b6c6d6e6f70da0040161c4d0e934e80fe0fd7be40a5971752e190868665ff135a8da24b97b709847919a10972d8dd53c49c376ae12b641b5a2c9c70cb3565dd426d37b998816d7105a7434841494e4544da0040c6ea0d8398a708050f49e9150879f0f216173ba372bd41c4e72f956d39896c02d632073eefd5f7860dd6d83ca970c84e5dc75121f288c2aad7a17dd5f056bf05"
+messageHex = "95cd0012b06162636465666768696a6b6c6d6e6f700063da00404eb006a2756ebc06549eef2b322ee950b159fbe21c38f8afd363d822afff2027b3e2e77074709225e5a38ce1d12a2dd4c4ca2359116b992ceac28321d2c17003"
 message = messageHex.decode('hex')
 
 vk = ed25519.VerifyingKey(publicKey, encoding='hex')
@@ -86,7 +86,7 @@ unpacked = msgpack.unpackb(message)
 signature = unpacked[4]
 try:
     tohash = message[0:-67]
-    hash = hashlib.sha256(tohash).digest()
+    hash = hashlib.sha512(tohash).digest()
     vk.verify(signature, hash)
     print "message signature verified"
 except Exception as e:
@@ -139,16 +139,16 @@ written directly to the network using a custom write function instead of
 
 #### Example: binary output 
 ```
-00000000: 95cd 0013 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
+00000000: 96cd 0013 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
 00000010: 6c6d 6e6f 70da 0040 0000 0000 0000 0000  lmnop..@........
 00000020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00000050: 0000 0000 0000 0000 63da 0040 7f5a 441d  ........c..@.ZD.
-00000060: b8fa ec60 3c5a 5fcc 90cd ac07 23b5 79c1  ...`<Z_.....#.y.
-00000070: 6d30 7ca3 7273 702f 907b 4392 75f6 23a6  m0|.rsp/.{C.u.#.
-00000080: b914 3f77 a927 fcb2 a926 693b 014e 3d30  ..?w.'...&i;.N=0
-00000090: 8301 6f82 a466 bb6c 1c3b df0f            ..o..f.l.;..
+00000050: 0000 0000 0000 0000 0063 da00 40b0 d504  .........c..@...
+00000060: f311 c934 7b81 bac5 a648 4609 4edc fcb8  ...4{....HF.N...
+00000070: 89c4 3c6c 3b6e b63d 487f 8603 daf1 aae4  ..<l;n.=H.......
+00000080: 2fba f873 7d92 e848 77a2 e0a1 bac9 304e  /..s}..Hw.....0N
+00000090: 7098 2c8c b96b 80a6 4544 ffb8 01         p.,..k..ED...
 ```
 
 ### Chained Message Example
@@ -191,32 +191,32 @@ ubirch_protocol_free(proto);
 
 #### MESSAGE 1: binary output:
 ```
-00000000: 95cd 0013 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
+00000000: 96cd 0013 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
 00000010: 6c6d 6e6f 70da 0040 0000 0000 0000 0000  lmnop..@........
 00000020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00000050: 0000 0000 0000 0000 a96d 6573 7361 6765  .........message
-00000060: 2031 da00 40da 16dd ecb5 b3ab 2d57 e70f   1..@.......-W..
-00000070: 4bef 50ae 16f9 da06 0367 79fa d087 87cf  K.P......gy.....
-00000080: 34f0 bd00 9521 a456 5d2d f2f7 5f7f 5e32  4....!.V]-.._.^2
-00000090: bdc5 9538 120a 2789 b73e 8eef 4759 0876  ...8..'..>..GY.v
-000000a0: 0681 2500 02                             ..%..
+00000050: 0000 0000 0000 0000 00a9 6d65 7373 6167  ..........messag
+00000060: 6520 31da 0040 7d8d ffc7 3a07 5a1f bdbe  e 1..@}...:.Z...
+00000070: a2a5 3976 60d7 783e d006 c139 7ff7 632e  ..9v`.x>...9..c.
+00000080: 5a84 99a5 b1a2 e985 6a5d 58a8 5e2f 2c2b  Z.......j]X.^/,+
+00000090: 5717 bd0b 1755 5f6d 9f85 cb53 b455 03ae  W....U_m...S.U..
+000000a0: 9e12 738e 330c                           ..s.3.
 ```
 
 #### MESSAGE 2: binary output
 ```
-00000000: 95cd 0013 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
-00000010: 6c6d 6e6f 70da 0040 da16 ddec b5b3 ab2d  lmnop..@.......-
-00000020: 57e7 0f4b ef50 ae16 f9da 0603 6779 fad0  W..K.P......gy..
-00000030: 8787 cf34 f0bd 0095 21a4 565d 2df2 f75f  ...4....!.V]-.._
-00000040: 7f5e 32bd c595 3812 0a27 89b7 3e8e ef47  .^2...8..'..>..G
-00000050: 5908 7606 8125 0002 a96d 6573 7361 6765  Y.v..%...message
-00000060: 2032 da00 4050 ec0c ccf9 3f72 0e3f c12e   2..@P....?r.?..
-00000070: 78db 949c 11bd be32 7db3 254b dea0 926e  x......2}.%K...n
-00000080: ce35 c6f0 7846 aa2c 6382 790f 5008 c828  .5..xF.,c.y.P..(
-00000090: 9983 5697 f20d 13b5 bf1e 224b b442 46d6  ..V......."K.BF.
-000000a0: 1087 fed5 03                             .....
+00000000: 96cd 0013 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
+00000010: 6c6d 6e6f 70da 0040 7d8d ffc7 3a07 5a1f  lmnop..@}...:.Z.
+00000020: bdbe a2a5 3976 60d7 783e d006 c139 7ff7  ....9v`.x>...9..
+00000030: 632e 5a84 99a5 b1a2 e985 6a5d 58a8 5e2f  c.Z.......j]X.^/
+00000040: 2c2b 5717 bd0b 1755 5f6d 9f85 cb53 b455  ,+W....U_m...S.U
+00000050: 03ae 9e12 738e 330c 00a9 6d65 7373 6167  ....s.3...messag
+00000060: 6520 32da 0040 7296 a621 0200 f88e 68a8  e 2..@r..!....h.
+00000070: ae91 b4a9 5604 163c fb3c 0b98 c933 d6bb  ....V..<.<...3..
+00000080: d603 bcbf 8838 f3a3 e99c 5726 bbea f133  .....8....W&...3
+00000090: 056c a420 f780 d783 0486 e245 6aed 20e5  .l. .......Ej. .
+000000a0: 62dd 5361 f20b                           b.Sa..
 ```
 
 ### Key Registration
@@ -232,13 +232,14 @@ up keys for a certain device, i.e. when doing an initial trust hand shake.
 These messages directly translate into `JSON`:
 ```json
 {
-     "hwDeviceID": "...",
-     "pubKey": "...",
-     "algorithm": "ed25519",
-     "created": 1234567890,
-     "validNotBefore": 1234567890,
-     "validNotAfter": 1234567899,
-     "prevPubKey": "..."
+    "algorithm": "ECC_ED25519",
+    "created": 1234567890,
+    "hwDeviceID": "... (convert to UUID style)",
+    "previousPubKeyId": "(convert to base64, optional)",
+    "pubKey": "... (convert to base64)",
+    "pubKeyId": "(convert to base64, optional)",
+    "validNotAfter": 1234567899,
+    "validNotBefore": 1234567890
 }
 ```
 
