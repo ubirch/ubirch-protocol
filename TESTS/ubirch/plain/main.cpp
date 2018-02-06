@@ -2,8 +2,6 @@
 #include <ubirch/ubirch_protocol.h>
 #include <armnacl.h>
 #include <mbedtls/base64.h>
-#include <mbedtls/sha256.h>
-#include <mbed-os/features/mbedtls/inc/mbedtls/sha256.h>
 
 #include "utest/utest.h"
 #include "greentea-client/test_env.h"
@@ -31,7 +29,7 @@ int ed25519_sign(const char *buf, size_t len, unsigned char signature[crypto_sig
     unsigned char *signedMessage = new unsigned char[crypto_sign_BYTES + 32];
     crypto_sign(signedMessage, &signedLength, (const unsigned char *) buf, (crypto_uint16) len, private_key);
     memcpy(signature, signedMessage, crypto_sign_BYTES);
-    free(signedMessage);
+    delete[] signedMessage;
     return 0;
 }
 
@@ -71,7 +69,7 @@ void TestProtocolWrite() {
     unsigned char expected_data[] = {0xcd, 0x09, 0xb9};
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_data), sbuf->size, "written data does not match");
     TEST_ASSERT_EQUAL_HEX8_ARRAY(expected_data, sbuf->data, sizeof(expected_data));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, proto->hash.is224, "SHA256 must not be initialized");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, proto->hash.is384, "sha512 must not be initialized");
 
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
@@ -84,9 +82,9 @@ void TestProtocolMessageStart() {
 
     TEST_ASSERT_EQUAL_INT(0, ubirch_protocol_start(proto, pk));
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, proto->hash.is224, "SHA256 must not be initialized");
-    TEST_ASSERT_EQUAL_INT_MESSAGE(21, sbuf->size, "header size wrong");
-    TEST_ASSERT_EQUAL_HEX_MESSAGE(0x93, sbuf->data[0], "msgpack format wrong (expected 3-array)");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, proto->hash.is384, "sha512 must not be initialized");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(22, sbuf->size, "header size wrong");
+    TEST_ASSERT_EQUAL_HEX_MESSAGE(0x94, sbuf->data[0], "msgpack format wrong (expected 4-array)");
 
     const unsigned char expected_version[3] = {
             0xcd, 0, UBIRCH_PROTOCOL_VERSION << 4 | UBIRCH_PROTOCOL_PLAIN
@@ -135,11 +133,11 @@ void TestProtocolMessageFinish() {
     int finish_ok = ubirch_protocol_finish(proto, pk);
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, finish_ok, "message finish failed");
-    TEST_ASSERT_EQUAL_INT_MESSAGE(24, sbuf->size, "message length wrong");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(25, sbuf->size, "message length wrong");
 
-    const unsigned char expected_message[24] = {
-            0x93, 0xcd, 0x00, 0x11, 0xb0, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d,
-            0x6e, 0x6f, 0x70, 0xcd, 0x09, 0xc2,
+    const unsigned char expected_message[25] = {
+            0x94, 0xcd, 0x00, 0x11, 0xb0, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d,
+            0x6e, 0x6f, 0x70, 0x00, 0xcd, 0x09, 0xc2,
     };
 
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, sbuf->data, sbuf->size, "message serialization failed");

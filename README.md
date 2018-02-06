@@ -6,6 +6,7 @@
 3. [API](#api)
     1. [Simple Message Example](#simple-message-example)
     2. [Chained Message Example](#chained-message-example)
+    3. [Key Registration](#key-registration)
 4. [Building](#building)
 5. [Testing](#testing)
           
@@ -143,11 +144,11 @@ written directly to the network using a custom write function instead of
 00000020: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00000050: 0000 0000 0000 0000 63da 0040 1206 a337  ........c..@...7
-00000060: 1d51 9dff c879 666d cf13 6dd8 d5af 2b10  .Q...yfm..m...+.
-00000070: 337c 8552 3574 4c23 688d 0dc8 10b9 1ed4  3|.R5tL#h.......
-00000080: 1634 7ca4 482a 48c9 4eee 881c 3015 1303  .4|.H*H.N...0...
-00000090: b94f 7166 c379 0034 c35b c407            .Oqf.y.4.[..
+00000050: 0000 0000 0000 0000 63da 0040 7f5a 441d  ........c..@.ZD.
+00000060: b8fa ec60 3c5a 5fcc 90cd ac07 23b5 79c1  ...`<Z_.....#.y.
+00000070: 6d30 7ca3 7273 702f 907b 4392 75f6 23a6  m0|.rsp/.{C.u.#.
+00000080: b914 3f77 a927 fcb2 a926 693b 014e 3d30  ..?w.'...&i;.N=0
+00000090: 8301 6f82 a466 bb6c 1c3b df0f            ..o..f.l.;..
 ```
 
 ### Chained Message Example
@@ -196,26 +197,49 @@ ubirch_protocol_free(proto);
 00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 00000050: 0000 0000 0000 0000 a96d 6573 7361 6765  .........message
-00000060: 2031 da00 4038 8ce9 3fe9 fde3 0006 3582   1..@8..?.....5.
-00000070: ad33 6ad1 410b 7e4d d955 1400 5dd6 a690  .3j.A.~M.U..]...
-00000080: 82c3 25d8 e8ff 9d4f 6b3d 1131 7a3b a1b3  ..%....Ok=.1z;..
-00000090: 76d2 7d3f 1ba7 35c7 5b68 cfc8 57bd bf41  v.}?..5.[h..W..A
-000000a0: 1674 837f 05                             .t...
+00000060: 2031 da00 40da 16dd ecb5 b3ab 2d57 e70f   1..@.......-W..
+00000070: 4bef 50ae 16f9 da06 0367 79fa d087 87cf  K.P......gy.....
+00000080: 34f0 bd00 9521 a456 5d2d f2f7 5f7f 5e32  4....!.V]-.._.^2
+00000090: bdc5 9538 120a 2789 b73e 8eef 4759 0876  ...8..'..>..GY.v
+000000a0: 0681 2500 02                             ..%..
 ```
 
 #### MESSAGE 2: binary output
 ```
 00000000: 95cd 0013 b061 6263 6465 6667 6869 6a6b  .....abcdefghijk
-00000010: 6c6d 6e6f 70da 0040 388c e93f e9fd e300  lmnop..@8..?....
-00000020: 0635 82ad 336a d141 0b7e 4dd9 5514 005d  .5..3j.A.~M.U..]
-00000030: d6a6 9082 c325 d8e8 ff9d 4f6b 3d11 317a  .....%....Ok=.1z
-00000040: 3ba1 b376 d27d 3f1b a735 c75b 68cf c857  ;..v.}?..5.[h..W
-00000050: bdbf 4116 7483 7f05 a96d 6573 7361 6765  ..A.t....message
-00000060: 2032 da00 404d d420 0c77 1142 c0b9 4e12   2..@M. .w.B..N.
-00000070: 9605 626e f3e5 19be 2f8d ffb6 dc29 1598  ..bn..../....)..
-00000080: 4014 fb93 36c7 7422 64fd 68b8 e3ff cd5d  @...6.t"d.h....]
-00000090: 38e6 93b4 f8ab 4199 09f4 9136 ed73 dce2  8.....A....6.s..
-000000a0: cd6d 89f0 06                             .m...
+00000010: 6c6d 6e6f 70da 0040 da16 ddec b5b3 ab2d  lmnop..@.......-
+00000020: 57e7 0f4b ef50 ae16 f9da 0603 6779 fad0  W..K.P......gy..
+00000030: 8787 cf34 f0bd 0095 21a4 565d 2df2 f75f  ...4....!.V]-.._
+00000040: 7f5e 32bd c595 3812 0a27 89b7 3e8e ef47  .^2...8..'..>..G
+00000050: 5908 7606 8125 0002 a96d 6573 7361 6765  Y.v..%...message
+00000060: 2032 da00 4050 ec0c ccf9 3f72 0e3f c12e   2..@P....?r.?..
+00000070: 78db 949c 11bd be32 7db3 254b dea0 926e  x......2}.%K...n
+00000080: ce35 c6f0 7846 aa2c 6382 790f 5008 c828  .5..xF.,c.y.P..(
+00000090: 9983 5697 f20d 13b5 bf1e 224b b442 46d6  ..V......."K.BF.
+000000a0: 1087 fed5 03                             .....
+```
+
+### Key Registration
+
+Devices must register at the key service to make their existence known.
+The key registration message is the first step and simply published a key
+with some meta-data to the key service. It will later be used for looking
+up keys for a certain device, i.e. when doing an initial trust hand shake.
+
+- **`msgpack_pack_key_register(packer, uuid, pubkey, algorithm, created, validNotBefore, validNotAfter, prevPubKey)`**
+    creates a msgpack message that can be used to register a given public key with the key service
+
+These messages directly translate into `JSON`:
+```json
+{
+     "hwDeviceID": "...",
+     "pubKey": "...",
+     "algorithm": "ed25519",
+     "created": 1234567890,
+     "validNotBefore": 1234567890,
+     "validNotAfter": 1234567899,
+     "prevPubKey": "..."
+}
 ```
 
 ## Building
