@@ -20,8 +20,8 @@ class CryptoProtocolTests(BaseHostTest):
             unpacked = msgpack.unpackb(message)
             protocolVariant = unpacked[0] & 0x000F
             if protocolVariant == 2 or protocolVariant == 3:
-                if protocolVariant == 2: signature = unpacked[3]
-                if protocolVariant == 3: signature = unpacked[4]
+                if protocolVariant == 2: signature = unpacked[4]
+                if protocolVariant == 3: signature = unpacked[5]
                 tohash = message[0:-67]
                 hash = hashlib.sha512(tohash).digest()
                 self.log("hash      : " + hash.encode('hex'))

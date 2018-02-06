@@ -108,6 +108,7 @@ typedef struct ubirch_protocol {
     msgpack_packer packer;                              //!< the underlying target packer
     ubirch_protocol_sign sign;                          //!< the message signing function
     uint16_t version;                                   //!< the specific used protocol version
+    unsigned int type;                                  //!< the payload type (0 - unspecified, app specific)
     unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE];      //!< the uuid of the sender (used to retrieve the keys)
     unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]; //!< the current or previous signature of a message
     mbedtls_sha512_context hash;                        //!< the streaming hash of the data to sign
@@ -224,13 +225,13 @@ inline int ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
     // the message consists of 3 header elements, the payload and (not included) the signature
     switch (proto->version) {
         case proto_plain:
-            msgpack_pack_array(pk, 3);
-            break;
-        case proto_signed:
             msgpack_pack_array(pk, 4);
             break;
-        case proto_chained:
+        case proto_signed:
             msgpack_pack_array(pk, 5);
+            break;
+        case proto_chained:
+            msgpack_pack_array(pk, 6);
             break;
         default:
             return -3;
@@ -248,6 +249,9 @@ inline int ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
         msgpack_pack_raw(pk, sizeof(proto->signature));
         msgpack_pack_raw_body(pk, proto->signature, sizeof(proto->signature));
     }
+
+    // 4 the payload type
+    msgpack_pack_int(pk, proto->type);
 
     proto->status = UBIRCH_PROTOCOL_STARTED;
     return 0;
