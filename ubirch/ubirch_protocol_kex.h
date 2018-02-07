@@ -1,0 +1,98 @@
+/*!
+ * @file
+ * @brief ubirch protocol key exchange
+ *
+ * Key registration and key exchange messages. These messages
+ * allow the registration of device keys as well as aid in the
+ * processor of creating a trust relationship between devices,
+ * or backend services.
+ *
+ * @author Matthias L. Jugel
+ * @date   2018-01-11
+ *
+ * @copyright &copy; 2018 ubirch GmbH (https://ubirch.com)
+ *
+ * ```
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ```
+ */
+
+#ifndef UBIRCH_PROTOCOL_KEX_H
+#define UBIRCH_PROTOCOL_KEX_H
+
+#include "ubirch_protocol.h"
+#include "../msgpack/msgpack.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define UBIRCH_KEX_ALG_ECC_ED25519  "ECC_ED25519"
+
+#define UBIRCH_KEX_ALGORITHM        "algorithm"
+#define UBIRCH_KEX_CREATED          "created"
+#define UBIRCH_KEX_UUID             "hwDeviceId"
+#define UBIRCH_KEX_PREV_PUBKEY_ID   "previousPubKeyId"
+#define UBIRCH_KEX_PUBKEY           "pubKey"
+#define UBIRCH_KEX_PUBKEY_ID        "pubKeyId"
+#define UBIRCH_KEX_VALID_NOT_AFTER  "validNotAfter"
+#define UBIRCH_KEX_VALID_NOT_BEFORE "validNotBefore"
+
+typedef struct ubirch_key_info {
+    char *algorithm;
+    unsigned int created;
+    unsigned char hwDeviceId[UBIRCH_PROTOCOL_UUID_SIZE];
+    char *previousPubKeyId;
+    unsigned char pubKey[UBIRCH_PROTOCOL_PUBKEY_SIZE];
+    char *pubKeyId;
+    unsigned int validNotAfter;
+    unsigned int validNotBefore;
+} ubirch_key_info;
+
+/**
+ * Create a key registration message. This message consists of a map of entries
+ * with the keys defined in @refitem proto_register_keys
+ *
+ * Sending this message to the key server will register an untrusted key.
+ * A key exchange must be initiated with the server to create a trust
+ * relationship between the device the key belongs to and the backend
+ * service.
+ *
+ * The message must be signed by the public key.
+ *
+ * The msgpack structure can be converted into a json message:
+ * @code{.json}
+ * {
+ *      "algorithm": "ECC_ED25519",
+ *      "created": 1234567890,
+ *      "hwDeviceID": "... (convert to UUID style)",
+ *      "previousPubKeyId": "(convert to base64, optional)",
+ *      "pubKey": "... (convert to base64)",
+ *      "pubKeyId": "(convert to base64, optional)",
+ *      "validNotAfter": 1234567899,
+ *      "validNotBefore": 1234567890
+ * }
+ * @endcode
+ *
+ * The function uses the msgpack interface.
+ *
+ * @param pk the msgpack packer
+ * @param info the registration structure
+ */
+int msgpack_pack_key_register(msgpack_packer *pk, ubirch_key_info *info);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
