@@ -37,7 +37,8 @@ int ed25519_sign(const char *buf, size_t len, unsigned char signature[crypto_sig
 void TestProtocolInit() {
     char dummybuffer[10];
     ubirch_protocol proto = {};
-    ubirch_protocol_init(&proto, proto_signed, dummybuffer, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol_init(&proto, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
+                         dummybuffer, msgpack_sbuffer_write, ed25519_sign, UUID);
 
     TEST_ASSERT_EQUAL_PTR(dummybuffer, proto.packer.data);
     TEST_ASSERT_EQUAL_PTR(msgpack_sbuffer_write, proto.packer.callback);
@@ -48,7 +49,8 @@ void TestProtocolInit() {
 
 void TestProtocolNew() {
     char dummybuffer[10];
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, dummybuffer, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                 dummybuffer, msgpack_sbuffer_write, ed25519_sign, UUID);
 
     TEST_ASSERT_EQUAL_PTR(dummybuffer, proto->packer.data);
     TEST_ASSERT_EQUAL_PTR(msgpack_sbuffer_write, proto->packer.callback);
@@ -61,7 +63,8 @@ void TestProtocolNew() {
 
 void TestProtocolWrite() {
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     // intialize the protocol hash manually
@@ -92,7 +95,8 @@ void TestProtocolWrite() {
 
 void TestProtocolMessageStart() {
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     TEST_ASSERT_NOT_NULL_MESSAGE(sbuf, "sbuf NULL");
@@ -130,7 +134,8 @@ void TestProtocolMessageStart() {
 
 void TestProtocolMessageFinishWithoutStart() {
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     // add some dummy data without start
@@ -146,7 +151,8 @@ void TestProtocolMessageFinishWithoutStart() {
 
 void TestProtocolMessageFinish() {
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     ubirch_protocol_start(proto, pk);
@@ -181,7 +187,8 @@ void TestSimpleMessage() {
     greentea_send_kv("publicKey", _value);
 
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     ubirch_protocol_start(proto, pk);

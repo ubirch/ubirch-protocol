@@ -83,6 +83,7 @@ extern "C" {
 #define UBIRCH_PROTOCOL_INITIALIZED 1       //!< protocol is initialized
 #define UBIRCH_PROTOCOL_STARTED     2       //!< protocol has started
 
+#define UBIRCH_PROTOCOL_TYPE_BIN 0x00       //!< payload is undefined and binary
 
 typedef enum ubirch_protocol_variant {
     proto_plain = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_PLAIN),
@@ -120,27 +121,31 @@ typedef struct ubirch_protocol {
  *
  * @param proto the ubirch protocol context
  * @param variant protocol variant
+ * @param data_type the payload data type indicator (0 - binary)
  * @param data the data object buffer associated with the context
  * @param callback the writer callback for writing data to network or buffer
  * @param sign a callback used for signing a message
  * @param uuid the uuid associated with the data
  */
-static void ubirch_protocol_init(ubirch_protocol *proto,  ubirch_protocol_variant variant,
-                                 void *data, msgpack_packer_write callback, ubirch_protocol_sign sign,
+static void ubirch_protocol_init(ubirch_protocol *proto, ubirch_protocol_variant variant,
+                                 unsigned int data_type, void *data,
+                                 msgpack_packer_write callback, ubirch_protocol_sign sign,
                                  const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE]);
 
 /**
  * Create a new ubirch protocol context.
  *
  * @param variant protocol variant
+ * @param data_type the payload data type indicator (0 - binary)
  * @param data the data object buffer associated with the context
  * @param callback the writer callback for writing data to network or buffer
  * @param sign a callback used for signing a message
  * @param uuid the uuid associated with the data
  * @return a new initialized context
  */
-static ubirch_protocol *ubirch_protocol_new( ubirch_protocol_variant variant,
-                                            void *data, msgpack_packer_write callback, ubirch_protocol_sign sign,
+static ubirch_protocol *ubirch_protocol_new(ubirch_protocol_variant variant,
+                                            unsigned int data_type, void *data,
+                                            msgpack_packer_write callback, ubirch_protocol_sign sign,
                                             const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE]);
 
 /**
@@ -188,23 +193,26 @@ static inline int ubirch_protocol_write(void *data, const char *buf, size_t len)
 }
 
 inline void ubirch_protocol_init(ubirch_protocol *proto, enum ubirch_protocol_variant variant,
-                                 void *data, msgpack_packer_write callback, ubirch_protocol_sign sign,
+                                 unsigned int data_type, void *data,
+                                 msgpack_packer_write callback, ubirch_protocol_sign sign,
                                  const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE]) {
     proto->packer.data = data;
     proto->packer.callback = callback;
     proto->sign = sign;
     proto->hash.is384 = -1;
     proto->version = variant;
+    proto->type = data_type;
     memcpy(proto->uuid, uuid, UBIRCH_PROTOCOL_UUID_SIZE);
     proto->status = UBIRCH_PROTOCOL_INITIALIZED;
 }
 
 inline ubirch_protocol *ubirch_protocol_new(enum ubirch_protocol_variant variant,
-                                            void *data, msgpack_packer_write callback, ubirch_protocol_sign sign,
+                                            unsigned int data_type, void *data,
+                                            msgpack_packer_write callback, ubirch_protocol_sign sign,
                                             const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE]) {
     ubirch_protocol *proto = (ubirch_protocol *) calloc(1, sizeof(ubirch_protocol));
     if (!proto) { return NULL; }
-    ubirch_protocol_init(proto, variant, data, callback, sign, uuid);
+    ubirch_protocol_init(proto, variant, data_type, data, callback, sign, uuid);
 
     return proto;
 }

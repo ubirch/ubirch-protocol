@@ -6,7 +6,8 @@
 3. [API](#api)
     1. [Simple Message Example](#simple-message-example)
     2. [Chained Message Example](#chained-message-example)
-    3. [Key Registration](#key-registration)
+    3. [Message Responses](#message-responses)
+    4. [Key Registration](#key-registration)    
 4. [Building](#building)
 5. [Testing](#testing)
           
@@ -116,7 +117,7 @@ using the `ubirch_protocol_start()` function and signing it with `ubirch_protoco
 msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
 // create a ubirch protocol context from the buffer, its writer
 // and provide the signature function as well as the UUID
-ubirch_protocol *proto = ubirch_protocol_new(proto_chained, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+ubirch_protocol *proto = ubirch_protocol_new(proto_chained, 0, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
 // create a msgpack packer from the ubirch protocol
 msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
@@ -163,7 +164,7 @@ context is not deleted after use.
 ```c
 // create buffer, writer, ubirch protocol context and packer
 msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-ubirch_protocol *proto = ubirch_protocol_new(proto_chained,
+ubirch_protocol *proto = ubirch_protocol_new(proto_chained, 0,
                                              sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
 msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
@@ -219,6 +220,11 @@ ubirch_protocol_free(proto);
 000000a0: 62dd 5361 f20b                           b.Sa..
 ```
 
+### Message Responses
+
+Message responses will have the same structure as normal message, but use the signature of the original message
+in place of the previous signature (for the chained message protocol). This ties the request and response together.
+ 
 ### Key Registration
 
 Devices must register at the key service to make their existence known.
