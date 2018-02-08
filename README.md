@@ -41,9 +41,9 @@ The complete message, including header,payload and signature are combined in a s
 array. 
 
 ```
-+=========+======+==================+=========+-------------+
-| VERSION | UUID | [PREV-SIGNATURE] | PAYLOAD | [SIGNATURE] |
-+=========+======+==================+=========+-------------+
++=========+======+==================+======+=========+-------------+
+| VERSION | UUID | [PREV-SIGNATURE] | TYPE | PAYLOAD | [SIGNATURE] |
++=========+======+==================+======+=========+-------------+
 =   ➔ data used for signature (4 elements)
 []  ➔ optional fields, depending on lower 4 bit of version
 ```
@@ -56,6 +56,7 @@ array.
     - `000000000001|0011` - version 1, signed message with chained signatures, `[VE, ID, PS, PL, SI]`
 - **UUID** - [128 bit, 16-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)   
 - **PREV-SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)
+- **TYPE** - [Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family) (1 byte 0x00 if unknown)
 - **PAYLOAD** - ANY msgpack type (incl. raw alternative data)
 - **SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family) 
   ([ED25519](https://ed25519.cr.yp.to) signature, 64 bytes)
