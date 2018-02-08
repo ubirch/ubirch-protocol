@@ -51,9 +51,9 @@ array.
 #### Field Types
 
 - **VERSION** - [16 bit Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family)
-    - `000000000001|0001` - version 1, simple message without signatures, `[VE, ID, PL]`
-    - `000000000001|0010` - version 1, signed message without chained signatures, `[VE, ID, PL, SI]`
-    - `000000000001|0011` - version 1, signed message with chained signatures, `[VE, ID, PS, PL, SI]`
+    - `000000000001|0001` - version 1, simple message without signatures, `[VE, ID, TY, PL]`
+    - `000000000001|0010` - version 1, signed message without chained signatures, `[VE, ID, TY, PL, SI]`
+    - `000000000001|0011` - version 1, signed message with chained signatures, `[VE, ID, PS, TY, PL, SI]`
 - **UUID** - [128 bit, 16-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)   
 - **PREV-SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)
 - **TYPE** - [Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family) (1 byte 0x00 if unknown)
