@@ -103,8 +103,8 @@ implementations (`sbuffer`), which wraps the packer to hash the data. A message 
 using the `ubirch_protocol_start()` function and signing it with `ubirch_protocol_finish()`.
 
 
-- **`ubirch_protocol_new(data, writer, sign, uuid)`** creates a new protocol context with the provided data and writer. Additionally a sign 
-    function and a uuid are necessary.
+- **`ubirch_protocol_new(variant, type, data, writer, sign, uuid)`** creates a new protocol context with the provided 
+    variant (plain, signed, chained), data type, data and writer. Additionally a sign function and a uuid are necessary. 
 - **`ubirch_protocol_start(proto, packer)`** 
     start a new message using the ubirch protocol context and the provided msgpack packer.
 - **`ubirch_protocol_finish(proto, packer)`** 
@@ -117,6 +117,7 @@ using the `ubirch_protocol_start()` function and signing it with `ubirch_protoco
 msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
 // create a ubirch protocol context from the buffer, its writer
 // and provide the signature function as well as the UUID
+// create variant chained and data type 0 (unknown, binary)
 ubirch_protocol *proto = ubirch_protocol_new(proto_chained, 0, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
 // create a msgpack packer from the ubirch protocol
 msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
