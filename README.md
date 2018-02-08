@@ -60,7 +60,7 @@ array.
 - **PAYLOAD** - ANY msgpack type (incl. raw alternative data)
 - **SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family) 
   ([ED25519](https://ed25519.cr.yp.to) signature, 64 bytes)
-   > Calculated over the [SHA256](https://en.wikipedia.org/wiki/SHA-2) of the binary representation of previous fields.
+   > Calculated over the [SHA512](https://en.wikipedia.org/wiki/SHA-2) of the binary representation of previous fields.
 
 An example is below, with the UUID (`abcdefghijklmnop`) and a subsequent message containing the chained previous
 signature:
