@@ -1,5 +1,10 @@
 {
   "name": "ubirch-protocol",
-  "macros": ["MBEDTLS_CONFIG_FILE=\"ubirch/digest/mbedtls.h\""]
-
+  "config": {
+    "mbedtls": {
+      "help": "Which SHA512 implementation to use.",
+      "macro_name": "MBEDTLS_CONFIG_FILE",
+      "value": "\"ubirch/digest/config.h\""
+    }
+  }
 }

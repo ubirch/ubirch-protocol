@@ -262,6 +262,18 @@ mbed update         # to download the dependencies
 mbed compile --library
 ```
 
+If you don't want to use the mbedtls digest function, use the mbed configuration system:
+```json
+{
+   "target_overrides": {
+      "*": {
+         "ubirch-protocol.mbedtls": null
+      }
+   }
+}
+```
+This will disable mbedtls sha512 and use the digest provided with ubirch-protocol.
+
 ## Testing
 
 Tests are run using the [mbed](https://mbed.com) test infrastructure. They require python host tests.

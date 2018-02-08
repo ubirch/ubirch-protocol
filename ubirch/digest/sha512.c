@@ -26,8 +26,6 @@
 
 #if !defined(MBEDTLS_CONFIG_FILE)
 
-#if defined(MBEDTLS_SHA512_C)
-
 #include "sha512.h"
 
 #if defined(_MSC_VER) || defined(__WATCOMC__)
@@ -506,7 +504,5 @@ exit:
 }
 
 #endif /* MBEDTLS_SELF_TEST */
-
-#endif /* MBEDTLS_SHA512_C */
 
 #endif

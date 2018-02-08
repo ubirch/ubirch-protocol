@@ -6,6 +6,8 @@
 #define MBEDTLS_SHA512_C    1
 #define MBEDTLS_BASE64_C    1
 
+#ifdef MBEDTLS_CONFIG_FILE
 #include <mbedtls/check_config.h>
+#endif
 
 #endif //MBEDTLS_H
