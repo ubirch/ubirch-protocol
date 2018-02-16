@@ -234,10 +234,13 @@ The key registration message is the first step and simply published a key
 with some meta-data to the key service. It will later be used for looking
 up keys for a certain device, i.e. when doing an initial trust hand shake.
 
-- **`msgpack_pack_key_register(packer, uuid, pubkey, algorithm, created, validNotBefore, validNotAfter, prevPubKey)`**
-    creates a msgpack message that can be used to register a given public key with the key service
+- **`int msgpack_pack_key_register(msgpack_packer *pk, ubirch_key_info *info)`**
+    creates a msgpack message that can be used to register a given public key with the key service.
+    
+The info struct has fields for all necessary parts of a registration packet. All fields are mandatory, except
+`previousPubKeyId` and `pubKeyId`.     
 
-These messages directly translate into `JSON`:
+A key registration message is a msgpack map which can be directly converted to `JSON`:
 ```json
 {
     "algorithm": "ECC_ED25519",
@@ -249,6 +252,42 @@ These messages directly translate into `JSON`:
     "validNotAfter": 1234567899,
     "validNotBefore": 1234567890
 }
+```
+> Some values are binary and should be converted to base64 or an ASCII UUID style in JSON.
+
+As the registration packet must be signed by the owner of the key, use the following way of wrapping it in a
+ubirch protocol message:
+
+```c
+// create buffer, protocol and packer
+msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
+ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_REG,
+                                             sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+
+// start the ubirch protocol message
+ubirch_protocol_start(proto, pk);
+
+// create key registration info
+ubirch_key_info info = {};
+info.algorithm = const_cast<char *>(UBIRCH_KEX_ALG_ECC_ED25519);
+info.created = timestamp;
+memcpy(info.hwDeviceId, UUID, sizeof(UUID));
+memcpy(info.pubKey, public_key, sizeof(public_key));
+info.validNotAfter = NOTAFTERTIMESTAMP;
+info.validNotBefore = NOTBEFORTIMESTAMP;
+msgpack_pack_key_register(pk, &info);
+
+// finish the ubirch protocol message
+ubirch_protocol_finish(proto, pk);
+
+// send the data
+sendPacket(sbuf->data, sbuf->size);
+
+// free allocated ressources
+msgpack_packer_free(pk);
+ubirch_protocol_free(proto);
+msgpack_sbuffer_free(sbuf);
 ```
 
 ## Building
