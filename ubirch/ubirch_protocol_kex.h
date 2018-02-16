@@ -68,8 +68,6 @@ typedef struct ubirch_key_info {
  * relationship between the device the key belongs to and the backend
  * service.
  *
- * The message must be signed by the public key.
- *
  * The msgpack structure can be converted into a json message:
  * @code{.json}
  * {
@@ -84,12 +82,34 @@ typedef struct ubirch_key_info {
  * }
  * @endcode
  *
+ * The message must be signed by the public key.
+ *
+ * @code{.c}
+ * msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
+ * ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_REG,
+ *                                              sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+ * msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+ * ubirch_protocol_start(proto, pk);
+ *
+ * // initialize the key register info struct
+ * ...
+ * // create the packet
+ * msgpack_pack_key_register(pk, &info);
+ * // finish the complete message
+ * ubirch_protocol_finish(proto, pk);
+ *
+ * msgpack_packer_free(pk);
+ * ubirch_protocol_free(proto);
+ * msgpack_sbuffer_free(sbuf);
+ * @endcode
  * The function uses the msgpack interface.
  *
  * @param pk the msgpack packer
  * @param info the registration structure
  */
 int msgpack_pack_key_register(msgpack_packer *pk, ubirch_key_info *info);
+
+
 
 #ifdef __cplusplus
 }
