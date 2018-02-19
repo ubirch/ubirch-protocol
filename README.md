@@ -48,7 +48,7 @@ array.
 []  ➔ optional fields, depending on lower 4 bit of version
 ```
 
-#### Field Types
+### Field Types
 
 - **VERSION** - [16 bit Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family)
     - `000000000001|0001` - version 1, simple message without signatures, `[VE, ID, TY, PL]`
@@ -64,6 +64,17 @@ array.
 
 An example is below, with the UUID (`abcdefghijklmnop`) and a subsequent message containing the chained previous
 signature:
+
+#### Payload Type
+
+| Payload Type | Description |
+|--------------|-------------|
+| `0x00` (`00`)| binary, or unknown payload type |
+| `0x01` (`01`)| generic sensor message (json type key/value map) |
+| `0x54` (`84`)| trackle message packet |
+| `0x55` (`85`)| trackle message response |
+
+
 
 
 ## Checking the Signature   
