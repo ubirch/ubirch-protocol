@@ -127,7 +127,7 @@ inline int ed25519_verify_key(const unsigned char *data, const size_t len,
 
 inline int ed25519_verify(const unsigned char *data, const size_t len,
                               const unsigned char signature[crypto_sign_BYTES]) {
-    return ed25519_verify_key(data, len, signature, ed25519_secret_key);
+    return ed25519_verify_key(data, len, signature, ed25519_public_key);
 }
 
 #ifdef __cplusplus
