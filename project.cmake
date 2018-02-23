@@ -7,7 +7,7 @@ add_executable(tests-basic
 target_link_libraries(tests-basic mbed-ubirch-protocol)
 
 add_custom_target(run-tests
-        COMMAND mbed test -v -n tests-ubirch* --profile ${MBED_BUILD_PROFILE}
+        COMMAND mbed test -n tests-ubirch* --profile ${MBED_BUILD_PROFILE}
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 
 add_custom_target(run-tests-for-deps

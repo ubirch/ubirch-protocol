@@ -60,6 +60,10 @@
 extern "C" {
 #endif
 
+#ifndef MSGPACK_ZONE_CHUNK_SIZE
+#define MSGPACK_ZONE_CHUNK_SIZE 128
+#endif
+
 #include <msgpack.h>
 
 #ifdef MBEDTLS_CONFIG_FILE
@@ -98,9 +102,21 @@ typedef enum ubirch_protocol_variant {
  *
  * @param buf the data to sign
  * @param size_t len the length of the data buffer
- * @param signature signature output (64 bytes)
+ * @param signature signature output (64 byte)
  */
-typedef int (*ubirch_protocol_sign)(const char *buf, size_t len, unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
+typedef int (*ubirch_protocol_sign)(const unsigned char *buf, const size_t len,
+                                    unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
+
+/**
+ * The verification function to check the validity of the message.
+ * This function is called from #ubirch_protocol_verify
+ *
+ * @param buf the data to verify
+ * @param size_t the length of the data buffer
+ * @param signature the signature to check the dsata with (64 byte)
+ */
+typedef int (*ubirch_protocol_check)(const unsigned char *buf, const size_t len,
+                                     const unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
 
 /**
  * ubirch protocol context, which holds the underlying packer, the uuid and current and previous signature
@@ -176,6 +192,16 @@ static int ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk);
  * @return -3 if the signing failed
  */
 static int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk);
+/**
+ * Verify a messages signature.
+ * This function requires 256 bytes of heap memory to v
+ * @param unpacker the unpacker containing the data
+ * @param verify the private key to use for verification
+ * @return 0 if the verification is successful
+ * @return -1 if the signature verification has failed
+ * @return -2 if the message length is wrong (too short to actually to a check)
+ */
+static int ubirch_protocol_verify(msgpack_unpacker *unpacker, ubirch_protocol_check verify);
 
 /**
  * The ubirch protocol msgpack writer. This writer takes care of updating the hash
@@ -274,7 +300,7 @@ inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
     if (proto->version == proto_signed || proto->version == proto_chained) {
         unsigned char sha512sum[UBIRCH_PROTOCOL_HASH_SIZE];
         mbedtls_sha512_finish(&proto->hash, sha512sum);
-        if (proto->sign((const char *) sha512sum, sizeof(sha512sum), proto->signature)) {
+        if (proto->sign(sha512sum, sizeof(sha512sum), proto->signature)) {
             return -3;
         }
 
@@ -286,6 +312,24 @@ inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
     proto->status = UBIRCH_PROTOCOL_INITIALIZED;
 
     return 0;
+}
+
+inline int ubirch_protocol_verify(msgpack_unpacker *unpacker, ubirch_protocol_check verify) {
+    const size_t msgpack_sig_length = UBIRCH_PROTOCOL_SIGN_SIZE + 3;
+    const size_t message_size = msgpack_unpacker_message_size(unpacker);
+
+    // make sure we have something to check, if it is just the signature, fail
+    if (message_size <= msgpack_sig_length) return -2;
+
+    // hash the message data
+    unsigned char *data = (unsigned char *) (unpacker->buffer + unpacker->off);
+    unsigned char sha512sum[UBIRCH_PROTOCOL_HASH_SIZE];
+    mbedtls_sha512(data, message_size - msgpack_sig_length, sha512sum, 0);
+
+    // get a pointer to the signature
+    unsigned char *signature = data + (message_size - UBIRCH_PROTOCOL_SIGN_SIZE);
+
+    return verify(sha512sum, UBIRCH_PROTOCOL_HASH_SIZE, signature);
 }
 
 #ifdef __cplusplus
