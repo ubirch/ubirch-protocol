@@ -104,7 +104,7 @@ typedef enum ubirch_protocol_variant {
  * @param size_t len the length of the data buffer
  * @param signature signature output (64 byte)
  */
-typedef int (*ubirch_protocol_sign)(const unsigned char *buf, const size_t len,
+typedef int (*ubirch_protocol_sign)(const unsigned char *buf, size_t len,
                                     unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
 
 /**
@@ -115,7 +115,7 @@ typedef int (*ubirch_protocol_sign)(const unsigned char *buf, const size_t len,
  * @param size_t the length of the data buffer
  * @param signature the signature to check the dsata with (64 byte)
  */
-typedef int (*ubirch_protocol_check)(const unsigned char *buf, const size_t len,
+typedef int (*ubirch_protocol_check)(const unsigned char *buf, size_t len,
                                      const unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
 
 /**
