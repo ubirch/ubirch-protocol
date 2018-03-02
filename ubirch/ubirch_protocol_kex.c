@@ -21,7 +21,6 @@
  * limitations under the License.
  * ```
  */
-#include <msgpack/msgpack.h>
 #include "ubirch_protocol_kex.h"
 
 static const char *proto_reg_key_algorithm = UBIRCH_KEX_ALGORITHM;

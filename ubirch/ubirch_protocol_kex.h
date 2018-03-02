@@ -31,7 +31,7 @@
 #define UBIRCH_PROTOCOL_KEX_H
 
 #include "ubirch_protocol.h"
-#include "../msgpack/msgpack.h"
+#include <msgpack.h>
 
 #ifdef __cplusplus
 extern "C" {
