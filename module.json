@@ -17,7 +17,7 @@
   },
   "license": "Apache 2.0",
   "dependencies": {
-    "ubirch-mbed-nacl-cm0": "ubirch/ubirch-mbed-nacl-cm0#v1.0.1",
+    "ubirch-mbed-nacl-cm0": "ubirch/ubirch-mbed-nacl-cm0#v1.0.2",
     "ubirch-mbed-msgpack": "ubirch/ubirch-mbed-msgpack#v1.0.0"
   },
   "extraIncludes": [
