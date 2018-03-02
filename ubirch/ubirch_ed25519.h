@@ -67,6 +67,18 @@ static int ed25519_sign_key(const unsigned char *data, size_t len, unsigned char
 static int ed25519_verify(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES]);
 
 /**
+ * Function to verify a data buffer with the provided signature and the given public key.
+ * @param data the buffer with the data to verify
+ * @param len the length of the data buffer
+ * @param signature a buffer with the corresponding signature
+ * @param public_key the public key to verify with
+ * @return 0 on success
+ * @return -1 if the verification failed
+ */
+int ed25519_verify_key(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES],
+                       const unsigned char public_key[crypto_sign_PUBLICKEYBYTES]);
+
+/**
  * Function to verify a data buffer with the given public key and the provided signature.
  * @param data the buffer with the data to verify
  * @param len the length of the data buffer
@@ -92,13 +104,11 @@ inline int ed25519_sign_key(const unsigned char *data, size_t len, unsigned char
     return 0;
 }
 
-inline int ed25519_sign(const unsigned char *data, const size_t len,
-                        unsigned char signature[crypto_sign_BYTES]) {
+inline int ed25519_sign(const unsigned char *data, size_t len, unsigned char signature[crypto_sign_BYTES]) {
     return ed25519_sign_key(data, len, signature, ed25519_secret_key);
 }
 
-inline int ed25519_verify_key(const unsigned char *data, const size_t len,
-                          const unsigned char signature[crypto_sign_BYTES],
+inline int ed25519_verify_key(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES],
                               const unsigned char public_key[crypto_sign_PUBLICKEYBYTES]) {
     crypto_uint16 smlen = (crypto_uint16) (crypto_sign_BYTES + len);
     crypto_uint16 mlen;
@@ -125,8 +135,7 @@ inline int ed25519_verify_key(const unsigned char *data, const size_t len,
     return ret;
 }
 
-inline int ed25519_verify(const unsigned char *data, const size_t len,
-                              const unsigned char signature[crypto_sign_BYTES]) {
+inline int ed25519_verify(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES]) {
     return ed25519_verify_key(data, len, signature, ed25519_public_key);
 }
 
