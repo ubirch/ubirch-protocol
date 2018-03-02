@@ -22,5 +22,6 @@
   },
   "extraIncludes": [
     "ubirch"
-  ]
+  ],
+  "lib": "./ubirch"
 }
