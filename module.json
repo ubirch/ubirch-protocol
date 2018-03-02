@@ -1,0 +1,23 @@
+{
+  "name": "ubirch-mbed-protocol",
+  "version": "0.9.0",
+  "description": "ubirch Protocol",
+  "keywords": [
+    "nacl",
+    "ed25519",
+    "curve25519",
+    "ubirch",
+    "protocol"
+  ],
+  "author": "Matthias L. Jugel <matthias.jugel@ubirch.com>",
+  "homepage": "https://github.com/ubirch/ubirch-protocol",
+  "repository": {
+    "url": "git@github.com:ubirch/ubirch-protocol.git",
+    "type": "git"
+  },
+  "license": "Apache 2.0",
+  "dependencies": {},
+  "extraIncludes": [
+    "ubirch"
+  ]
+}
