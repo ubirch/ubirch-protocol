@@ -88,7 +88,8 @@ extern "C" {
 #define UBIRCH_PROTOCOL_STARTED     2       //!< protocol has started
 
 #define UBIRCH_PROTOCOL_TYPE_BIN 0x00       //!< payload is undefined and binary
-#define UBIRCH_PROTOCOL_TYPE_REG 0x01       //!< patload is defined as key register message
+#define UBIRCH_PROTOCOL_TYPE_REG 0x01       //!< payload is defined as key register message
+#define UBIRCH_PROTOCOL_TYPE_HSK 0x02       //!< payload is a key handshake message
 
 typedef enum ubirch_protocol_variant {
     proto_plain = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_PLAIN),
