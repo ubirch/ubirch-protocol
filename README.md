@@ -325,6 +325,33 @@ If you don't want to use the mbedtls digest function, use the mbed configuration
 ```
 This will disable mbedtls sha512 and use the digest provided with ubirch-protocol.
 
+### Bosch XDK
+
+If you would like to include this library in the Bosch XDK SDK use the provided `BoschXDK110.mk` Makefile:
+
+```bash
+make -f BoschXDK110.mk dist
+```
+
+This creates a distribution directory `BUILD/xdk/ubirch-protocol`, which can be included into the 3rd part libraries
+directory of SDK (edit the following files):
+
+`SDK/xdk110/Common/application.mk`:
+- add `UBIRCH_LIBRARY_DIR = $(BCDS_LIBRARIES_PATH)/ubirch-protocol`
+- add to `BCDS_XDK_EXT_INCLUDES`
+	```
+	-isystem $(UBIRCH_LIBRARY_DIR)/msgpack \
+	-isystem $(UBIRCH_LIBRARY_DIR)/nacl \
+	-isystem $(UBIRCH_LIBRARY_DIR) \
+	```
+`SDK/xdk110/Common/Libraries.mk`"
+- add to `BCDS_THIRD_PARTY_LIBS`
+	```
+	$(UBIRCH_LIBRARY_DIR)/ubirch_protocol.a
+	```
+
+Now you can include and use the `ubirch_protocol.h`, `msgpack` functionality and of course our `NaCL` port.
+
 ## Testing
 
 Tests are run using the [mbed](https://mbed.com) test infrastructure. They require python host tests.
