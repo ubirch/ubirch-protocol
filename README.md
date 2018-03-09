@@ -352,7 +352,8 @@ directory of SDK `SDK/xdk110/Libraries` and edit the config file roughly followi
 
 Now you can include and use the `ubirch_protocol.h`, `msgpack` functionality and of course our `NaCL` port.
 
-> Just like the TLS library in XDK, this is preliminary as the TRNG of the XDK is not enabled.
+> Just like the TLS library in XDK, this is preliminary as the TRNG of the XDK is not enabled. 
+> [See known issues](http://xdk.bosch-connectivity.com/xdk_docs/html/_known_issues.html).
 
 ## Testing
 
