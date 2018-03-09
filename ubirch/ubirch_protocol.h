@@ -64,7 +64,15 @@ extern "C" {
 #define MSGPACK_ZONE_CHUNK_SIZE 128
 #endif
 
+// we use an mbed port of msgpack which tries to include arpa/inet.h if __MBED__ is not defined
+// so we fake it here, if we compile for another system. It does not have any other impact.
+#ifndef __MBED__
+#define __MBED__
 #include <msgpack.h>
+#undef __MBED__
+#else
+#include <msgpack.h>
+#endif
 
 #ifdef MBEDTLS_CONFIG_FILE
 
