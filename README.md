@@ -334,23 +334,25 @@ make -f BoschXDK110.mk dist
 ```
 
 This creates a distribution directory `BUILD/xdk/ubirch-protocol`, which can be included into the 3rd part libraries
-directory of SDK (edit the following files):
+directory of SDK `SDK/xdk110/Libraries` and edit the config file roughly following [this guide](https://xdk.bosch-connectivity.com/documents/37728/286250/XDK110_Library_Guide.pdf):
 
-`SDK/xdk110/Common/application.mk`:
-- add `UBIRCH_LIBRARY_DIR = $(BCDS_LIBRARIES_PATH)/ubirch-protocol`
-- add to `BCDS_XDK_EXT_INCLUDES`
+* `SDK/xdk110/Common/application.mk`:
+	- add `UBIRCH_LIBRARY_DIR = $(BCDS_LIBRARIES_PATH)/ubirch-protocol`
+	- add to `BCDS_XDK_EXT_INCLUDES`
 	```
 	-isystem $(UBIRCH_LIBRARY_DIR)/msgpack \
 	-isystem $(UBIRCH_LIBRARY_DIR)/nacl \
 	-isystem $(UBIRCH_LIBRARY_DIR) \
 	```
-`SDK/xdk110/Common/Libraries.mk`"
-- add to `BCDS_THIRD_PARTY_LIBS`
+* `SDK/xdk110/Common/Libraries.mk`"
+	- add to `BCDS_THIRD_PARTY_LIBS`
 	```
 	$(UBIRCH_LIBRARY_DIR)/ubirch_protocol.a
 	```
 
 Now you can include and use the `ubirch_protocol.h`, `msgpack` functionality and of course our `NaCL` port.
+
+> Just like the TLS library in XDK, this is preliminary as the TRNG of the XDK is not enabled.
 
 ## Testing
 
