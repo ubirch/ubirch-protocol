@@ -11,5 +11,5 @@ add_custom_target(run-tests
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 
 add_custom_target(run-tests-for-deps
-        COMMAND mbed test -n ubirch\\* --profile ${MBED_BUILD_PROFILE}
+        COMMAND mbed test -n ubirch* --profile ${MBED_BUILD_PROFILE}
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
