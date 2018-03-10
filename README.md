@@ -303,6 +303,16 @@ msgpack_sbuffer_free(sbuf);
 
 ## Building
 
+
+The library depends on [`msgpack-c`](https://os.mbed.com/users/yihui/code/msgpack/) and the ubirch 
+[`NaCL`](https://github.com/ubirch/ubirch-mbed-nacl-cm0) (based on [µNaCl](https://munacl.cryptojedi.org/), ECC ED25519)
+implementation. 
+
+> The `NaCL` port requires a random number generator. Two generators for the `Nordic nRF52` and the `NXP K82F` are
+> provided with the port. See `ubirch-mbed-nacl-cm0/source/randombytes.h` for a function prototype to implement.
+
+### mbed
+
 Building and testing for [mbed](https://mbed.com):
 
 ```bash
