@@ -344,7 +344,7 @@ directory of SDK `SDK/xdk110/Libraries` and edit the config file roughly followi
 	-isystem $(UBIRCH_LIBRARY_DIR)/nacl \
 	-isystem $(UBIRCH_LIBRARY_DIR) \
 	```
-* `SDK/xdk110/Common/Libraries.mk`"
+* `SDK/xdk110/Common/Libraries.mk`
 	- add to `BCDS_THIRD_PARTY_LIBS`
 	```
 	$(UBIRCH_LIBRARY_DIR)/ubirch_protocol.a
