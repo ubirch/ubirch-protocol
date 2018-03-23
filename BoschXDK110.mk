@@ -26,7 +26,8 @@ NACL_DEPS= ubirch-mbed-nacl-cm0/source/nacl/crypto_sign/ge25519.h \
            ubirch-mbed-nacl-cm0/source/nacl/crypto_sign/sc25519.h \
 		   ubirch-mbed-nacl-cm0/source/nacl/include/bigint.h \
 		   ubirch-mbed-nacl-cm0/source/nacl/include/fe25519.h \
-		   ubirch-mbed-nacl-cm0/source/nacl/armnacl.h
+		   ubirch-mbed-nacl-cm0/source/nacl/armnacl.h \
+		   ubirch-mbed-nacl-cm0/source/randombytes/randombytes.h
 
 NACL_OBJS = ubirch-mbed-nacl-cm0/source/nacl/crypto_hash/sha512.o \
 			ubirch-mbed-nacl-cm0/source/nacl/crypto_hashblocks/sha512.o \
@@ -36,8 +37,8 @@ NACL_OBJS = ubirch-mbed-nacl-cm0/source/nacl/crypto_hash/sha512.o \
 			ubirch-mbed-nacl-cm0/source/nacl/crypto_verify/verify.o \
 			ubirch-mbed-nacl-cm0/source/nacl/shared/bigint.o \
 			ubirch-mbed-nacl-cm0/source/nacl/shared/consts.o \
-			ubirch-mbed-nacl-cm0/source/nacl/shared/fe25519.o
-
+			ubirch-mbed-nacl-cm0/source/nacl/shared/fe25519.o \
+			ubirch-mbed-nacl-cm0/source/randombytes/randombytes.o
 # ubirch-protocol dependencies and objects
 UBIRCH_DEPS = ubirch/digest/sha512.h ubirch/digest/config.h \
 			  ubirch/ubirch_protocol.h ubirch/ubirch_protocol_kex.h ubirch/ubirch_ed25519.h
