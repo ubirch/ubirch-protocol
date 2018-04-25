@@ -365,6 +365,10 @@ Now you can include and use the `ubirch_protocol.h`, `msgpack` functionality and
 > Just like the TLS library in XDK, this is preliminary as the TRNG of the XDK is not enabled. 
 > [See known issues](http://xdk.bosch-connectivity.com/xdk_docs/html/_known_issues.html).
 
+You will need to add a function with the signature `void randombytes(unsigned char *x,unsigned long long xlen);`
+to your code.  **Do not use the dummy function found in the NaCL library file named `randombytes.c`** It does not 
+provide random numbers!
+
 ## Testing
 
 Tests are run using the [mbed](https://mbed.com) test infrastructure. They require python host tests.
