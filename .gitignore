@@ -11,3 +11,6 @@ GettingStarted.html
 mbed_config.h
 mbed_settings.py
 .mbed
+.DS_Store
+yotta_modules
+yotta_targets
