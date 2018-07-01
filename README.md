@@ -70,7 +70,8 @@ signature:
 | Payload Type | Description |
 |--------------|-------------|
 | `0x00` (`00`)| binary, or unknown payload type |
-| `0x01` (`01`)| generic sensor message (json type key/value map) |
+| `0x01` (`01`)| key registration message |
+| `0x53` (`83`)| generic sensor message (json type key/value map) |
 | `0x54` (`84`)| trackle message packet |
 | `0x55` (`85`)| trackle message response |
 
