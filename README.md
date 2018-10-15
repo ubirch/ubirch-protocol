@@ -69,12 +69,12 @@ signature:
 
 | Payload Type | Description |
 |--------------|-------------|
-| `0x00` (`00`)| binary, or unknown payload type |
-| `0x01` (`01`)| key registration message |
-| `0x32` (`50`)| ubirch standard sensor message (msgpack) |
-| `0x53` (`83`)| generic sensor message (json type key/value map) |
-| `0x54` (`84`)| trackle message packet |
-| `0x55` (`85`)| ubirch/trackle message response |
+| `0x00` (`00`)| [binary, or unknown payload type](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#binary-or-unknown-payload-type) |
+| `0x01` (`01`)| [key registration message](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#key-registration-message) |
+| `0x32` (`50`)| [ubirch standard sensor message (msgpack)](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#ubirch-standard-sensor-message) |
+| `0x53` (`83`)| [generic sensor message (json type key/value map)](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#generic-sensor-message) |
+| `0x54` (`84`)| [trackle message packet](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#trackle-message-packet) |
+| `0x55` (`85`)| [ubirch/trackle message response](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#ubirch-trackle-message-response) |
 
 ## Checking the Signature   
    
