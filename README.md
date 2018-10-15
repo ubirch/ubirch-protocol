@@ -76,9 +76,6 @@ signature:
 | `0x54` (`84`)| trackle message packet |
 | `0x55` (`85`)| ubirch/trackle message response |
 
-
-
-
 ## Checking the Signature   
    
 The structure allows a recipient to take off the last 64 bytes of the message and check the signature of the
