@@ -71,9 +71,10 @@ signature:
 |--------------|-------------|
 | `0x00` (`00`)| binary, or unknown payload type |
 | `0x01` (`01`)| key registration message |
+| `0x32` (`50`)| ubirch standard sensor message (msgpack) |
 | `0x53` (`83`)| generic sensor message (json type key/value map) |
 | `0x54` (`84`)| trackle message packet |
-| `0x55` (`85`)| trackle message response |
+| `0x55` (`85`)| ubirch/trackle message response |
 
 
 
@@ -282,7 +283,7 @@ ubirch_protocol_start(proto, pk);
 
 // create key registration info
 ubirch_key_info info = {};
-info.algorithm = const_cast<char *>(UBIRCH_KEX_ALG_ECC_ED25519);
+info.algorithm = (char *)(UBIRCH_KEX_ALG_ECC_ED25519);
 info.created = timestamp;
 memcpy(info.hwDeviceId, UUID, sizeof(UUID));
 memcpy(info.pubKey, public_key, sizeof(public_key));

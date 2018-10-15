@@ -25,6 +25,7 @@
 #ifndef UBIRCH_PROTOCOL_ED25519_H
 #define UBIRCH_PROTOCOL_ED25519_H
 
+#include <string.h>
 #include <armnacl.h>
 
 #ifdef __cplusplus
@@ -75,7 +76,7 @@ static int ed25519_verify(const unsigned char *data, size_t len, const unsigned 
  * @return 0 on success
  * @return -1 if the verification failed
  */
-int ed25519_verify_key(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES],
+static int ed25519_verify_key(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES],
                        const unsigned char public_key[crypto_sign_PUBLICKEYBYTES]);
 
 /**
