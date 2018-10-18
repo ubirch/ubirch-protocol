@@ -23,19 +23,23 @@ todo
 todo
 ## ubirch standard sensor message
 
-single timestamp, single value
+The ubirch standard message payload is based on the 
+[msgpack array format](https://github.com/msgpack/msgpack/blob/master/spec.md#array-format-family)
+and can have multiple implementations, like listed below:
+ 
+- single timestamp, single value
 ```
 array[timestamp,value]
 ```
-single timestamp, multiple values (m)
+- single timestamp, multiple values (m)
 ```
 array[timestamp,value(1),value(2),...,value(m)]
 ```
-multiple (n) single timestamp, single value
+- multiple (n) single timestamp, single value
 ```
 array(n)[array[timestamp(1),value(1)],array[timestamp(2),value(2)]...array[timestamp(n),value(n)]]
 ```
-multiple (n) single timestamp, multiple values (m)
+- multiple (n) single timestamp, multiple values (m)
 ```
 array(n)[array[timestamp(1),value(1,1),value(1,2),...,value(1,m)],array[timestamp(2),value(2,1),value(2,2),...,value(2,m)],..,array[timestamp(n),value(n,1),value(n,2),...,value(n,m)]]
 ```
@@ -46,5 +50,16 @@ todo
 ## trackle message packet
 todo
 ## ubirch trackle message response
-todo
-##### ubirch standard sensor message payload
+
+The ubirch message response payload is base on the 
+[msgpack map format](https://github.com/msgpack/msgpack/blob/master/spec.md#map-format-family),
+and can have one or more key value pairs, like listed below:
+
+- single key value pair
+```
+map{"key": value}
+```
+- multiple (n) key value pairs
+```
+map{"key(1)": value(1),"key(2)": value(2),...,"key(n)": value(n)}
+```
