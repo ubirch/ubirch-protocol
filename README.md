@@ -129,7 +129,7 @@ msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
 // create a ubirch protocol context from the buffer, its writer
 // and provide the signature function as well as the UUID
 // create variant chained and data type 0 (unknown, binary)
-ubirch_protocol *proto = ubirch_protocol_new(proto_chained, 0, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+ubirch_protocol *proto = ubirch_protocol_new(proto_signed, 0, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
 // create a msgpack packer from the ubirch protocol
 msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
@@ -139,10 +139,13 @@ ubirch_protocol_start(proto, pk);
 msgpack_pack_int(pk, 99);
 // finish the message (calculates signature)
 ubirch_protocol_finish(proto, pk);
-
-// free packer and protocol
+//
+// SEND THE MESSAGE (sbuf->data, sbuf->size)
+//
+// free packer and protocol and sbuffer
 msgpack_packer_free(pk);
 ubirch_protocol_free(proto); 
+msgpack_sbuffer_free(sbuf);
 ```
 
 The protocol context takes care of hashing and sending the data to
@@ -185,21 +188,28 @@ ubirch_protocol_start(proto, pk);
 msgpack_pack_raw(pk, strlen(TEST_PAYLOAD));
 msgpack_pack_raw_body(pk, TEST_PAYLOAD, strlen(TEST_PAYLOAD));
 ubirch_protocol_finish(proto, pk);
-
+// STORE THE SIGNATURE (proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE)
 // clear buffer for next message
+//
+// SEND THE MESSAGE (sbuf->data, sbuf->size)
+//
 msgpack_sbuffer_clear(sbuf);
 
 // SECOND MESSAGE
+// load the previos signature
+memcpy(proto->signature,PREVIOUS_SIGNATURE, UBIRCH_PROTOCOL_SIGN_SIZE);
 ubirch_protocol_start(proto, pk);
 msgpack_pack_raw(pk, strlen("CHAINED"));
 msgpack_pack_raw_body(pk, "CHAINED", strlen("CHAINED"));
 ubirch_protocol_finish(proto, pk);
-
-// ... keep on sending
-
-// free packer and protocol
+// STORE THE SIGNATURE (proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE)
+//
+// .. KEEP ON SENDING THE MESSAGE (sbuf->data, sbuf->size)
+//
+// free packer and protocol and sbuffer
 msgpack_packer_free(pk);
 ubirch_protocol_free(proto); 
+msgpack_sbuffer_free(sbuf);
 ```
 
 #### MESSAGE 1: binary output:
