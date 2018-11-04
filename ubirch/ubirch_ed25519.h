@@ -25,7 +25,15 @@
 #ifndef UBIRCH_PROTOCOL_ED25519_H
 #define UBIRCH_PROTOCOL_ED25519_H
 
+#ifndef ESP_PLATFORM
 #include <armnacl.h>
+#else
+
+#include <sodium.h>
+#include <string.h>
+
+typedef unsigned long long int crypto_uint16;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,19 +83,8 @@ static int ed25519_verify(const unsigned char *data, size_t len, const unsigned 
  * @return 0 on success
  * @return -1 if the verification failed
  */
-int ed25519_verify_key(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES],
+static int ed25519_verify_key(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES],
                        const unsigned char public_key[crypto_sign_PUBLICKEYBYTES]);
-
-/**
- * Function to verify a data buffer with the given public key and the provided signature.
- * @param data the buffer with the data to verify
- * @param len the length of the data buffer
- * @param signature a buffer with the corresponding signature
- * @param public_key the public key to use for verification
- * @return 0 on success
- * @return -1 if the verification failed
- */
-static int ed25519_verify(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES]);
 
 inline int ed25519_sign_key(const unsigned char *data, size_t len, unsigned char signature[crypto_sign_BYTES],
                             const unsigned char secret_key[crypto_sign_SECRETKEYBYTES]) {
