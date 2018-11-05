@@ -382,14 +382,17 @@ mbed test -n tests-ubirch*
 
 ### Test Output
 
+### [NRF52-DK](https://www.nordicsemi.com/eng/Products/Bluetooth-low-energy/nRF52-DK)
+
+
 ```
 +------------------+---------------+----------------------+--------+--------------------+-------------+
 | target           | platform_name | test suite           | result | elapsed_time (sec) | copy_method |
 +------------------+---------------+----------------------+--------+--------------------+-------------+
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | OK     | 51.61              | default     |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-kex     | OK     | 26.65              | default     |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | OK     | 28.55              | default     |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | OK     | 37.76              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | OK     | 52.47              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-kex     | OK     | 22.36              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | OK     | 24.12              | default     |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | OK     | 31.64              | default     |
 +------------------+---------------+----------------------+--------+--------------------+-------------+
 mbedgt: test suite results: 4 OK
 mbedgt: test case report:
@@ -397,33 +400,81 @@ mbedgt: test case report:
 | target           | platform_name | test suite           | test case                                        | passed | failed | result | elapsed_time (sec) |
 +------------------+---------------+----------------------+--------------------------------------------------+--------+--------+--------+--------------------+
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] init                   | 1      | 0      | OK     | 0.05               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] message chained        | 1      | 0      | OK     | 2.43               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] message chained        | 1      | 0      | OK     | 4.46               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] message finish         | 1      | 0      | OK     | 0.94               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] message finish (fails) | 1      | 0      | OK     | 0.09               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] message simple         | 1      | 0      | OK     | 1.28               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] message start          | 1      | 0      | OK     | 0.08               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] new                    | 1      | 0      | OK     | 0.05               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] static message         | 1      | 0      | OK     | 12.27              |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] write                  | 1      | 0      | OK     | 0.05               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-kex     | ubirch protocol [kex] init                       | 1      | 0      | OK     | 0.06               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-kex     | ubirch protocol [kex] register signed            | 1      | 0      | OK     | 0.91               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] message finish (fails) | 1      | 0      | OK     | 0.08               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] message simple         | 1      | 0      | OK     | 2.29               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] message start          | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] new                    | 1      | 0      | OK     | 0.06               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] static message         | 1      | 0      | OK     | 17.4               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-chained | ubirch protocol [chained] write                  | 1      | 0      | OK     | 0.06               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-kex     | ubirch protocol [kex] init                       | 1      | 0      | OK     | 0.05               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-kex     | ubirch protocol [kex] register signed            | 1      | 0      | OK     | 0.92               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] init                     | 1      | 0      | OK     | 0.05               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] message (unsupported)    | 1      | 0      | OK     | 0.08               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] message finish           | 1      | 0      | OK     | 0.07               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] message finish (fails)   | 1      | 0      | OK     | 0.07               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] message simple           | 1      | 0      | OK     | 0.15               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] message finish (fails)   | 1      | 0      | OK     | 0.08               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] message simple           | 1      | 0      | OK     | 1.15               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] message start            | 1      | 0      | OK     | 0.07               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] new                      | 1      | 0      | OK     | 0.06               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] write                    | 1      | 0      | OK     | 0.06               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] init                    | 1      | 0      | OK     | 0.07               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] message finish          | 1      | 0      | OK     | 2.2                |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-plain   | ubirch protocol [plain] write                    | 1      | 0      | OK     | 0.05               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] init                    | 1      | 0      | OK     | 0.06               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] message finish          | 1      | 0      | OK     | 2.23               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] message finish (fails)  | 1      | 0      | OK     | 0.08               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] message signed          | 1      | 0      | OK     | 2.42               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] message start           | 1      | 0      | OK     | 0.06               |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] message verify          | 1      | 0      | OK     | 2.2                |
-| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] new                     | 1      | 0      | OK     | 0.05               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] message signed          | 1      | 0      | OK     | 2.45               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] message start           | 1      | 0      | OK     | 0.07               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] message verify          | 1      | 0      | OK     | 2.22               |
+| NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] new                     | 1      | 0      | OK     | 0.06               |
 | NRF52_DK-GCC_ARM | NRF52_DK      | tests-ubirch-signed  | ubirch protocol [signed] write                   | 1      | 0      | OK     | 0.07               |
 +------------------+---------------+----------------------+--------------------------------------------------+--------+--------+--------+--------------------+
+mbedgt: test case results: 27 OK
+mbedgt: completed in 132.32 sec
 ```
 
+### UBRIDGE (K82F)
 
+```
++-----------------+---------------+----------------------+--------+--------------------+-------------+
+| target          | platform_name | test suite           | result | elapsed_time (sec) | copy_method |
++-----------------+---------------+----------------------+--------+--------------------+-------------+
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | OK     | 52.52              | default     |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-kex     | OK     | 32.91              | default     |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | OK     | 26.94              | default     |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | OK     | 30.33              | default     |
++-----------------+---------------+----------------------+--------+--------------------+-------------+
+mbedgt: test suite results: 4 OK
+mbedgt: test case report:
++-----------------+---------------+----------------------+--------------------------------------------------+--------+--------+--------+--------------------+
+| target          | platform_name | test suite           | test case                                        | passed | failed | result | elapsed_time (sec) |
++-----------------+---------------+----------------------+--------------------------------------------------+--------+--------+--------+--------------------+
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] init                   | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message chained        | 1      | 0      | OK     | 3.65               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message finish         | 1      | 0      | OK     | 0.55               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message finish (fails) | 1      | 0      | OK     | 0.08               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message simple         | 1      | 0      | OK     | 1.88               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message start          | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] new                    | 1      | 0      | OK     | 0.05               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] static message         | 1      | 0      | OK     | 12.44              |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] write                  | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-kex     | ubirch protocol [kex] init                       | 1      | 0      | OK     | 0.05               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-kex     | ubirch protocol [kex] register signed            | 1      | 0      | OK     | 0.53               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] init                     | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message (unsupported)    | 1      | 0      | OK     | 0.07               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message finish           | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message finish (fails)   | 1      | 0      | OK     | 0.08               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message simple           | 1      | 0      | OK     | 1.14               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message start            | 1      | 0      | OK     | 0.07               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] new                      | 1      | 0      | OK     | 0.05               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] write                    | 1      | 0      | OK     | 0.07               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] init                    | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message finish          | 1      | 0      | OK     | 1.24               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message finish (fails)  | 1      | 0      | OK     | 0.08               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message signed          | 1      | 0      | OK     | 1.79               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message start           | 1      | 0      | OK     | 0.07               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message verify          | 1      | 0      | OK     | 1.24               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] new                     | 1      | 0      | OK     | 0.05               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] write                   | 1      | 0      | OK     | 0.06               |
++-----------------+---------------+----------------------+--------------------------------------------------+--------+--------+--------+--------------------+
+mbedgt: test case results: 27 OK
+mbedgt: completed in 144.24 sec
+```
