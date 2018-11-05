@@ -1,7 +1,6 @@
 msgpack
 mbed-os/
 ubirch-mbed-crypto
-*.iml
 .idea
 cmake-*
 BUILD
@@ -14,3 +13,5 @@ mbed_settings.py
 .DS_Store
 yotta_modules
 yotta_targets
+.mbedls-*
+mbed-os.lib
