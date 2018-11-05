@@ -1,5 +1,6 @@
 import base64
 import hashlib
+from time import sleep
 
 import msgpack
 
@@ -27,6 +28,9 @@ class CryptoProtocolTests(BaseHostTest):
                 self.log("hash      : " + hash.encode('hex'))
                 self.log("public key: " + self.vk.to_bytes().encode('hex'))
                 self.vk.verify(signature, hash)
+            # sometimes the python script is too fast, looks like the DUT is
+            # not ready to accept the response then :(
+            sleep(1)
             self.send_kv("verify", protocolVariant)
         except Exception as e:
             self.send_kv("error", e.message)
