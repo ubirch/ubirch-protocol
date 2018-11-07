@@ -24,8 +24,7 @@
  *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
 
-#if !defined(MBEDTLS_CONFIG_FILE) && !defined(__ESP32__)
-
+#if !defined(MBEDTLS_CONFIG_FILE) || defined(ESP_PLATFORM)
 
 #include "sha512.h"
 
