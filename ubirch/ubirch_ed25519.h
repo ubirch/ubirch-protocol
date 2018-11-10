@@ -25,15 +25,8 @@
 #ifndef UBIRCH_PROTOCOL_ED25519_H
 #define UBIRCH_PROTOCOL_ED25519_H
 
-#ifndef ESP_PLATFORM
 #include <armnacl.h>
-#else
-
-#include <sodium.h>
 #include <string.h>
-
-typedef unsigned long long int crypto_uint16;
-#endif
 
 #ifdef __cplusplus
 extern "C" {
