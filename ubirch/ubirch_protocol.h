@@ -74,18 +74,11 @@ extern "C" {
 #include <msgpack.h>
 #endif
 
-//#if defined(MBEDTLS_CONFIG_FILE)
-//
-//#include <mbedtls/sha512.h>
-//
-//#elif defined(ESP_PLATFORM)
-//
-//#include "digest/sha512.h"
-//
-//#else
+#if defined(MBEDTLS_CONFIG_FILE)
+#include <mbedtls/sha512.h>
+#else
 #include "digest/sha512.h"
-//
-//#endif
+#endif
 
 #define UBIRCH_PROTOCOL_VERSION     1       //!< current ubirch protocol version
 #define UBIRCH_PROTOCOL_PLAIN       0x01    //!< plain protocol without signatures (unsafe)

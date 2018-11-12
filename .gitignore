@@ -1,7 +1,6 @@
 msgpack
 mbed-os/
 ubirch-mbed-crypto
-*.iml
 .idea
 cmake-*
 BUILD

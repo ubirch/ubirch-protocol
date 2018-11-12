@@ -27,6 +27,7 @@
 
 #include <string.h>
 #include <armnacl.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -78,17 +79,6 @@ static int ed25519_verify(const unsigned char *data, size_t len, const unsigned 
  */
 static int ed25519_verify_key(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES],
                        const unsigned char public_key[crypto_sign_PUBLICKEYBYTES]);
-
-/**
- * Function to verify a data buffer with the given public key and the provided signature.
- * @param data the buffer with the data to verify
- * @param len the length of the data buffer
- * @param signature a buffer with the corresponding signature
- * @param public_key the public key to use for verification
- * @return 0 on success
- * @return -1 if the verification failed
- */
-static int ed25519_verify(const unsigned char *data, size_t len, const unsigned char signature[crypto_sign_BYTES]);
 
 inline int ed25519_sign_key(const unsigned char *data, size_t len, unsigned char signature[crypto_sign_BYTES],
                             const unsigned char secret_key[crypto_sign_SECRETKEYBYTES]) {

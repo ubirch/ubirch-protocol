@@ -1,4 +1,4 @@
-add_executable(tests-basic
+add_library(tests-basic
         TESTS/ubirch/plain/main.cpp
         TESTS/ubirch/signed/main.cpp
         TESTS/ubirch/chained/main.cpp
