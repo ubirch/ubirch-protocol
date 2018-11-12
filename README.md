@@ -56,7 +56,7 @@ array.
     - `000000000001|0011` - version 1, signed message with chained signatures, `[VE, ID, PS, TY, PL, SI]`
 - **UUID** - [128 bit, 16-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)   
 - **PREV-SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)
-- **TYPE** - [Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family) (1 byte 0x00 if unknown)
+- **TYPE** - [Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family) (1 byte 0x00 if unknown, see [Payload Type](#payload-type))
 - **PAYLOAD** - ANY msgpack type (incl. raw alternative data)
 - **SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family) 
   ([ED25519](https://ed25519.cr.yp.to) signature, 64 bytes)
@@ -69,14 +69,12 @@ signature:
 
 | Payload Type | Description |
 |--------------|-------------|
-| `0x00` (`00`)| binary, or unknown payload type |
-| `0x01` (`01`)| key registration message |
-| `0x53` (`83`)| generic sensor message (json type key/value map) |
-| `0x54` (`84`)| trackle message packet |
-| `0x55` (`85`)| trackle message response |
-
-
-
+| `0x00` (`00`)| [binary, or unknown payload type](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#binary-or-unknown-payload-type) |
+| `0x01` (`01`)| [key registration message](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#key-registration-message) |
+| `0x32` (`50`)| [ubirch standard sensor message (msgpack)](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#ubirch-standard-sensor-message) |
+| `0x53` (`83`)| [generic sensor message (json type key/value map)](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#generic-sensor-message) |
+| `0x54` (`84`)| [trackle message packet](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#trackle-message-packet) |
+| `0x55` (`85`)| [ubirch/trackle message response](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#ubirch-trackle-message-response) |
 
 ## Checking the Signature   
    
@@ -131,7 +129,7 @@ msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
 // create a ubirch protocol context from the buffer, its writer
 // and provide the signature function as well as the UUID
 // create variant chained and data type 0 (unknown, binary)
-ubirch_protocol *proto = ubirch_protocol_new(proto_chained, 0, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+ubirch_protocol *proto = ubirch_protocol_new(proto_signed, 0, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
 // create a msgpack packer from the ubirch protocol
 msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
@@ -141,10 +139,13 @@ ubirch_protocol_start(proto, pk);
 msgpack_pack_int(pk, 99);
 // finish the message (calculates signature)
 ubirch_protocol_finish(proto, pk);
-
-// free packer and protocol
+//
+// SEND THE MESSAGE (sbuf->data, sbuf->size)
+//
+// free packer and protocol and sbuffer
 msgpack_packer_free(pk);
 ubirch_protocol_free(proto); 
+msgpack_sbuffer_free(sbuf);
 ```
 
 The protocol context takes care of hashing and sending the data to
@@ -187,21 +188,28 @@ ubirch_protocol_start(proto, pk);
 msgpack_pack_raw(pk, strlen(TEST_PAYLOAD));
 msgpack_pack_raw_body(pk, TEST_PAYLOAD, strlen(TEST_PAYLOAD));
 ubirch_protocol_finish(proto, pk);
-
+// STORE THE SIGNATURE (proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE)
 // clear buffer for next message
+//
+// SEND THE MESSAGE (sbuf->data, sbuf->size)
+//
 msgpack_sbuffer_clear(sbuf);
 
 // SECOND MESSAGE
+// load the previos signature
+memcpy(proto->signature,PREVIOUS_SIGNATURE, UBIRCH_PROTOCOL_SIGN_SIZE);
 ubirch_protocol_start(proto, pk);
 msgpack_pack_raw(pk, strlen("CHAINED"));
 msgpack_pack_raw_body(pk, "CHAINED", strlen("CHAINED"));
 ubirch_protocol_finish(proto, pk);
-
-// ... keep on sending
-
-// free packer and protocol
+// STORE THE SIGNATURE (proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE)
+//
+// .. KEEP ON SENDING THE MESSAGE (sbuf->data, sbuf->size)
+//
+// free packer and protocol and sbuffer
 msgpack_packer_free(pk);
 ubirch_protocol_free(proto); 
+msgpack_sbuffer_free(sbuf);
 ```
 
 #### MESSAGE 1: binary output:
@@ -282,7 +290,7 @@ ubirch_protocol_start(proto, pk);
 
 // create key registration info
 ubirch_key_info info = {};
-info.algorithm = const_cast<char *>(UBIRCH_KEX_ALG_ECC_ED25519);
+info.algorithm = (char *)(UBIRCH_KEX_ALG_ECC_ED25519);
 info.created = timestamp;
 memcpy(info.hwDeviceId, UUID, sizeof(UUID));
 memcpy(info.pubKey, public_key, sizeof(public_key));

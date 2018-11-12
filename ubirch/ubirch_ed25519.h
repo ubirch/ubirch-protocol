@@ -25,6 +25,7 @@
 #ifndef UBIRCH_PROTOCOL_ED25519_H
 #define UBIRCH_PROTOCOL_ED25519_H
 
+#include <string.h>
 #include <armnacl.h>
 #include <string.h>
 

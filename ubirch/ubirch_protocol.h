@@ -74,10 +74,8 @@ extern "C" {
 #include <msgpack.h>
 #endif
 
-#if defined(MBEDTLS_CONFIG_FILE) || defined(ESP_PLATFORM)
-
+#if defined(MBEDTLS_CONFIG_FILE)
 #include <mbedtls/sha512.h>
-
 #else
 #include "digest/sha512.h"
 #endif
