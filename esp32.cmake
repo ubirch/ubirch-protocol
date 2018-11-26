@@ -1,0 +1,13 @@
+set(COMPONENT_SRCS
+        ubirch/ubirch_protocol_kex.c
+        ubirch/digest/sha512.c
+        )
+set(COMPONENT_ADD_INCLUDEDIRS
+        ubirch
+        ubirch/digest
+        )
+set(COMPONENT_REQUIRES
+        ubirch-mbed-msgpack
+        ubirch-mbed-nacl-cm0
+        )
+register_component()
