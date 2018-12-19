@@ -1,3 +1,5 @@
+![ubirch logo](https://ubirch.de/wp-content/uploads/2018/10/cropped-uBirch_Logo.png)
+
 # ubirch protocol
 
 1. [Basic Message Format](#basic-message-format)
@@ -377,6 +379,15 @@ Now you can include and use the `ubirch_protocol.h`, `msgpack` functionality and
 You will need to add a function with the signature `void randombytes(unsigned char *x,unsigned long long xlen);`
 to your code.  **Do not use the dummy function found in the NaCL library file named `randombytes.c`** It does not 
 provide random numbers!
+
+### ESP32
+
+To use this library in your ESP32 project, you can add it as a git submodule
+to your components directory:
+
+```bash
+git submodule add
+```
 
 ## Testing
 
