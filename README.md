@@ -157,12 +157,12 @@ written directly to the network using a custom write function instead of
 
 #### Example: binary output 
 ```
-0000000 cd95 1200 61b0 6362 6564 6766 6968 6b6a
-0000010 6d6c 6f6e 0070 da63 4000 b04e a206 6e75
-0000020 06bc 9e54 2bef 2e32 50e9 59b1 e2fb 381c
-0000030 aff8 63d3 22d8 ffaf 2720 e2b3 70e7 7074
-0000040 2592 a3e5 e18c 2ad1 d42d cac4 5923 6b11
-0000050 2c99 c2ea 2183 c1d2 0370
+00000000  95 cd 00 12 b0 61 62 63  64 65 66 67 68 69 6a 6b  |.....abcdefghijk|
+00000010  6c 6d 6e 6f 70 00 63 da  00 40 4e b0 06 a2 75 6e  |lmnop.c..@N...un|
+00000020  bc 06 54 9e ef 2b 32 2e  e9 50 b1 59 fb e2 1c 38  |..T..+2..P.Y...8|
+00000030  f8 af d3 63 d8 22 af ff  20 27 b3 e2 e7 70 74 70  |...c.".. '...ptp|
+00000040  92 25 e5 a3 8c e1 d1 2a  2d d4 c4 ca 23 59 11 6b  |.%.....*-...#Y.k|
+00000050  99 2c ea c2 83 21 d2 c1  70 03                    |.,...!..p.|
 ```
 
 ### Chained Message Example
