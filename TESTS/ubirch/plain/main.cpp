@@ -53,6 +53,7 @@ void TestProtocolWrite() {
 
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
+    msgpack_sbuffer_free(sbuf);
 }
 
 void TestProtocolMessageStart() {
@@ -64,18 +65,17 @@ void TestProtocolMessageStart() {
     TEST_ASSERT_EQUAL_INT(0, ubirch_protocol_start(proto, pk));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(-1, proto->hash.is384, "sha512 must not be initialized");
-    TEST_ASSERT_EQUAL_INT_MESSAGE(22, sbuf->size, "header size wrong");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(21, sbuf->size, "header size wrong");
     TEST_ASSERT_EQUAL_HEX_MESSAGE(0x94, sbuf->data[0], "msgpack format wrong (expected 4-array)");
 
-    const unsigned char expected_version[3] = {
-            0xcd, 0, UBIRCH_PROTOCOL_VERSION << 4 | UBIRCH_PROTOCOL_PLAIN
-    };
-    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_version, sbuf->data + 1, 3, "protocol version wrong");
-    TEST_ASSERT_EQUAL_HEX_MESSAGE(0xb0, sbuf->data[4], "message uuid marker wrong");
-    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, sbuf->data + 5, 16, "message uuid wrong");
+    const int expected_version = UBIRCH_PROTOCOL_VERSION << 4 | UBIRCH_PROTOCOL_PLAIN;
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(&expected_version, sbuf->data + 1, 1, "protocol version wrong");
+    TEST_ASSERT_EQUAL_HEX_MESSAGE(0xc4, sbuf->data[2], "message uuid marker wrong");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, sbuf->data + 4, 16, "message uuid wrong");
 
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
+    msgpack_sbuffer_free(sbuf);
 }
 
 void TestProtocolUnsupported() {
@@ -88,6 +88,7 @@ void TestProtocolUnsupported() {
     
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
+    msgpack_sbuffer_free(sbuf);
 }
 
 void TestProtocolMessageFinishWithoutStart() {
@@ -104,6 +105,7 @@ void TestProtocolMessageFinishWithoutStart() {
 
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
+    msgpack_sbuffer_free(sbuf);
 }
 
 void TestProtocolMessageFinish() {
@@ -113,14 +115,14 @@ void TestProtocolMessageFinish() {
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
 
     TEST_ASSERT_EQUAL_INT(0, ubirch_protocol_start(proto, pk));
-    msgpack_pack_int(pk, 2498);
+    TEST_ASSERT_EQUAL_INT(0, msgpack_pack_int16(pk, 2498));
     int finish_ok = ubirch_protocol_finish(proto, pk);
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, finish_ok, "message finish failed");
-    TEST_ASSERT_EQUAL_INT_MESSAGE(25, sbuf->size, "message length wrong");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(24, sbuf->size, "message length wrong");
 
     const unsigned char expected_message[25] = {
-            0x94, 0xcd, 0x00, 0x11, 0xb0, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d,
+            0x94, 0x21, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d,
             0x6e, 0x6f, 0x70, 0x00, 0xcd, 0x09, 0xc2,
     };
 
@@ -128,6 +130,7 @@ void TestProtocolMessageFinish() {
 
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
+    msgpack_sbuffer_free(sbuf);
 }
 
 void TestSimpleMessage() {
@@ -150,6 +153,7 @@ void TestSimpleMessage() {
 
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
+    msgpack_sbuffer_free(sbuf);
 
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
     TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "message verification failed");

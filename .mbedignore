@@ -3,3 +3,11 @@ cmake-*
 yotta*
 .yotta*
 
+# fix unsed parts from msgpack-c library
+msgpack-c/ci/*
+msgpack-c/erb/*
+msgpack-c/example/*
+msgpack-c/external/*
+msgpack-c/fuzz/*
+msgpack-c/test/*
+
