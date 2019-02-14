@@ -80,7 +80,7 @@ extern "C" {
 #include "digest/sha512.h"
 #endif
 
-#define UBIRCH_PROTOCOL_VERSION     1       //!< current ubirch protocol version
+#define UBIRCH_PROTOCOL_VERSION     2       //!< current ubirch protocol version
 #define UBIRCH_PROTOCOL_PLAIN       0x01    //!< plain protocol without signatures (unsafe)
 #define UBIRCH_PROTOCOL_SIGNED      0x02    //!< signed messages (unchained)
 #define UBIRCH_PROTOCOL_CHAINED     0x03    //!< chained signed messages
@@ -280,16 +280,16 @@ inline int ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
     }
 
     // 1 - protocol version
-    msgpack_pack_fix_uint16(pk, proto->version);
+    msgpack_pack_int(pk, proto->version);
 
     // 2 - device ID
-    msgpack_pack_raw(pk, 16);
-    msgpack_pack_raw_body(pk, proto->uuid, sizeof(proto->uuid));
+    msgpack_pack_bin(pk, 16);
+    msgpack_pack_bin_body(pk, proto->uuid, sizeof(proto->uuid));
 
     // 3 the last signature (if chained)
     if (proto->version == proto_chained) {
-        msgpack_pack_raw(pk, sizeof(proto->signature));
-        msgpack_pack_raw_body(pk, proto->signature, sizeof(proto->signature));
+        msgpack_pack_bin(pk, sizeof(proto->signature));
+        msgpack_pack_bin_body(pk, proto->signature, sizeof(proto->signature));
     }
 
     // 4 the payload type
@@ -312,8 +312,8 @@ inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
         }
 
         // 5 add signature hash
-        msgpack_pack_raw(pk, UBIRCH_PROTOCOL_SIGN_SIZE);
-        msgpack_pack_raw_body(pk, proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
+        msgpack_pack_bin(pk, UBIRCH_PROTOCOL_SIGN_SIZE);
+        msgpack_pack_bin_body(pk, proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
     }
 
     proto->status = UBIRCH_PROTOCOL_INITIALIZED;
@@ -322,7 +322,7 @@ inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
 }
 
 inline int ubirch_protocol_verify(msgpack_unpacker *unpacker, ubirch_protocol_check verify) {
-    const size_t msgpack_sig_length = UBIRCH_PROTOCOL_SIGN_SIZE + 3;
+    const size_t msgpack_sig_length = UBIRCH_PROTOCOL_SIGN_SIZE + 2;
     const size_t message_size = msgpack_unpacker_message_size(unpacker);
 
     // make sure we have something to check, if it is just the signature, fail

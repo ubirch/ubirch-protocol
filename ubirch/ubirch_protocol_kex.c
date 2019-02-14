@@ -54,52 +54,52 @@ inline int msgpack_pack_key_register(msgpack_packer *pk, ubirch_key_info *info) 
     msgpack_pack_map(pk, packetSize);
 
     // 1 - pack the algorithm
-    msgpack_pack_raw(pk, strlen(proto_reg_key_algorithm));
-    msgpack_pack_raw_body(pk, proto_reg_key_algorithm, strlen(proto_reg_key_algorithm));
-    msgpack_pack_raw(pk, strlen(info->algorithm));
-    msgpack_pack_raw_body(pk, info->algorithm, strlen(info->algorithm));
+    msgpack_pack_str(pk, strlen(proto_reg_key_algorithm));
+    msgpack_pack_str_body(pk, proto_reg_key_algorithm, strlen(proto_reg_key_algorithm));
+    msgpack_pack_str(pk, strlen(info->algorithm));
+    msgpack_pack_str_body(pk, info->algorithm, strlen(info->algorithm));
 
     // 2 - pack the created date
-    msgpack_pack_raw(pk, strlen(proto_reg_key_created));
-    msgpack_pack_raw_body(pk, proto_reg_key_created, strlen(proto_reg_key_created));
+    msgpack_pack_str(pk, strlen(proto_reg_key_created));
+    msgpack_pack_str_body(pk, proto_reg_key_created, strlen(proto_reg_key_created));
     msgpack_pack_unsigned_int(pk, info->created);
 
     // 3 - pack the device hardware id
-    msgpack_pack_raw(pk, strlen(proto_reg_key_uuid));
-    msgpack_pack_raw_body(pk, proto_reg_key_uuid, strlen(proto_reg_key_uuid));
-    msgpack_pack_raw(pk, sizeof(info->hwDeviceId));
-    msgpack_pack_raw_body(pk, info->hwDeviceId, sizeof(info->hwDeviceId));
+    msgpack_pack_str(pk, strlen(proto_reg_key_uuid));
+    msgpack_pack_str_body(pk, proto_reg_key_uuid, strlen(proto_reg_key_uuid));
+    msgpack_pack_bin(pk, sizeof(info->hwDeviceId));
+    msgpack_pack_bin_body(pk, info->hwDeviceId, sizeof(info->hwDeviceId));
 
     // 4 - pack the previous pub key id
     if(info->previousPubKeyId != NULL) {
-        msgpack_pack_raw(pk, strlen(proto_reg_key_prev_pub_key_id));
-        msgpack_pack_raw_body(pk, proto_reg_key_prev_pub_key_id, strlen(proto_reg_key_prev_pub_key_id));
-        msgpack_pack_raw(pk, strlen(info->previousPubKeyId));
-        msgpack_pack_raw_body(pk, info->previousPubKeyId, strlen(info->previousPubKeyId));
+        msgpack_pack_str(pk, strlen(proto_reg_key_prev_pub_key_id));
+        msgpack_pack_str_body(pk, proto_reg_key_prev_pub_key_id, strlen(proto_reg_key_prev_pub_key_id));
+        msgpack_pack_bin(pk, strlen(info->previousPubKeyId));
+        msgpack_pack_bin_body(pk, info->previousPubKeyId, strlen(info->previousPubKeyId));
     }
 
     // 5 - pack the public key
-    msgpack_pack_raw(pk, strlen(proto_reg_key_pub_key));
-    msgpack_pack_raw_body(pk, proto_reg_key_pub_key, strlen(proto_reg_key_pub_key));
-    msgpack_pack_raw(pk, sizeof(info->pubKey));
-    msgpack_pack_raw_body(pk, info->pubKey, sizeof(info->pubKey));
+    msgpack_pack_str(pk, strlen(proto_reg_key_pub_key));
+    msgpack_pack_str_body(pk, proto_reg_key_pub_key, strlen(proto_reg_key_pub_key));
+    msgpack_pack_bin(pk, sizeof(info->pubKey));
+    msgpack_pack_bin_body(pk, info->pubKey, sizeof(info->pubKey));
 
     // 6 - pack the public key id (if applicable)
     if(info->pubKeyId != NULL) {
-        msgpack_pack_raw(pk, strlen(proto_reg_key_pub_key_id));
-        msgpack_pack_raw_body(pk, proto_reg_key_pub_key_id, strlen(proto_reg_key_pub_key_id));
-        msgpack_pack_raw(pk, strlen(info->pubKeyId));
-        msgpack_pack_raw_body(pk, info->pubKeyId, strlen(info->pubKeyId));
+        msgpack_pack_str(pk, strlen(proto_reg_key_pub_key_id));
+        msgpack_pack_str_body(pk, proto_reg_key_pub_key_id, strlen(proto_reg_key_pub_key_id));
+        msgpack_pack_bin(pk, strlen(info->pubKeyId));
+        msgpack_pack_bin_body(pk, info->pubKeyId, strlen(info->pubKeyId));
     }
 
     // 6 - pack the valid not after date
-    msgpack_pack_raw(pk, strlen(proto_reg_key_valid_not_after));
-    msgpack_pack_raw_body(pk, proto_reg_key_valid_not_after, strlen(proto_reg_key_valid_not_after));
+    msgpack_pack_str(pk, strlen(proto_reg_key_valid_not_after));
+    msgpack_pack_str_body(pk, proto_reg_key_valid_not_after, strlen(proto_reg_key_valid_not_after));
     msgpack_pack_unsigned_int(pk, info->validNotAfter);
 
     // 7 - pack the valid not before date
-    msgpack_pack_raw(pk, strlen(proto_reg_key_valid_not_before));
-    msgpack_pack_raw_body(pk, proto_reg_key_valid_not_before, strlen(proto_reg_key_valid_not_before));
+    msgpack_pack_str(pk, strlen(proto_reg_key_valid_not_before));
+    msgpack_pack_str_body(pk, proto_reg_key_valid_not_before, strlen(proto_reg_key_valid_not_before));
     msgpack_pack_unsigned_int(pk, info->validNotBefore);
 
     return 0;
