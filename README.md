@@ -455,13 +455,14 @@ mbedgt: completed in 177.38 sec
 ### UBRIDGE (NXP K82F)
 
 ```
+mbedgt: test suite report:
 +-----------------+---------------+----------------------+--------+--------------------+-------------+
 | target          | platform_name | test suite           | result | elapsed_time (sec) | copy_method |
 +-----------------+---------------+----------------------+--------+--------------------+-------------+
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | OK     | 64.08              | default     |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-kex     | OK     | 26.56              | default     |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | OK     | 25.63              | default     |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | OK     | 40.85              | default     |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | OK     | 40.04              | default     |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-kex     | OK     | 20.38              | default     |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | OK     | 21.63              | default     |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | OK     | 26.15              | default     |
 +-----------------+---------------+----------------------+--------+--------------------+-------------+
 mbedgt: test suite results: 4 OK
 mbedgt: test case report:
@@ -469,33 +470,33 @@ mbedgt: test case report:
 | target          | platform_name | test suite           | test case                                        | passed | failed | result | elapsed_time (sec) |
 +-----------------+---------------+----------------------+--------------------------------------------------+--------+--------+--------+--------------------+
 | UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] init                   | 1      | 0      | OK     | 0.06               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message chained        | 1      | 0      | OK     | 5.99               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message finish         | 1      | 0      | OK     | 1.71               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message finish (fails) | 1      | 0      | OK     | 0.07               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message simple         | 1      | 0      | OK     | 3.05               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message start          | 1      | 0      | OK     | 0.07               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] new                    | 1      | 0      | OK     | 0.05               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] static message         | 1      | 0      | OK     | 27.07              |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] write                  | 1      | 0      | OK     | 0.05               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-kex     | ubirch protocol [kex] init                       | 1      | 0      | OK     | 0.06               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-kex     | ubirch protocol [kex] register signed            | 1      | 0      | OK     | 1.71               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] init                     | 1      | 0      | OK     | 0.06               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message (unsupported)    | 1      | 0      | OK     | 0.07               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message finish           | 1      | 0      | OK     | 0.07               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message finish (fails)   | 1      | 0      | OK     | 0.08               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message simple           | 1      | 0      | OK     | 1.15               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message chained        | 1      | 0      | OK     | 3.66               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message finish         | 1      | 0      | OK     | 0.55               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message finish (fails) | 1      | 0      | OK     | 0.09               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message simple         | 1      | 0      | OK     | 1.89               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] message start          | 1      | 0      | OK     | 0.08               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] new                    | 1      | 0      | OK     | 0.07               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] static message         | 1      | 0      | OK     | 12.44              |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-chained | ubirch protocol [chained] write                  | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-kex     | ubirch protocol [kex] init                       | 1      | 0      | OK     | 0.07               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-kex     | ubirch protocol [kex] register signed            | 1      | 0      | OK     | 0.53               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] init                     | 1      | 0      | OK     | 0.05               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message (unsupported)    | 1      | 0      | OK     | 0.09               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message finish           | 1      | 0      | OK     | 0.08               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message finish (fails)   | 1      | 0      | OK     | 0.09               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message simple           | 1      | 0      | OK     | 1.16               |
 | UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] message start            | 1      | 0      | OK     | 0.06               |
 | UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] new                      | 1      | 0      | OK     | 0.06               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] write                    | 1      | 0      | OK     | 0.05               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] init                    | 1      | 0      | OK     | 0.07               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message finish          | 1      | 0      | OK     | 4.22               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-plain   | ubirch protocol [plain] write                    | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] init                    | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message finish          | 1      | 0      | OK     | 1.26               |
 | UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message finish (fails)  | 1      | 0      | OK     | 0.08               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message signed          | 1      | 0      | OK     | 5.4                |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message start           | 1      | 0      | OK     | 0.07               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message verify          | 1      | 0      | OK     | 4.16               |
-| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] new                     | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message signed          | 1      | 0      | OK     | 2.49               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message start           | 1      | 0      | OK     | 0.06               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] message verify          | 1      | 0      | OK     | 1.24               |
+| UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] new                     | 1      | 0      | OK     | 0.05               |
 | UBRIDGE-GCC_ARM | UBRIDGE       | tests-ubirch-signed  | ubirch protocol [signed] write                   | 1      | 0      | OK     | 0.06               |
 +-----------------+---------------+----------------------+--------------------------------------------------+--------+--------+--------+--------------------+
 mbedgt: test case results: 27 OK
-mbedgt: completed in 144.24 sec
+mbedgt: completed in 110.15 sec
 ```
