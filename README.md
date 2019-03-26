@@ -61,7 +61,8 @@ array.
     - `0010|0011` - version 1, signed message with chained signatures, `[VE, ID, PS, TY, PL, SI]`
 - **UUID** - [128 bit, 16-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)   
 - **PREV-SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)
-- **TYPE** - [Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family) (1 byte 0x00 if unknown, see [Payload Type](#payload-type))
+- **TYPE** - [Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family), either positive fixnum or uint8
+   (1 byte 0x00 if unknown, see [Payload Type](#payload-type))
 - **PAYLOAD** - ANY msgpack type (incl. raw alternative data)
 - **SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family) 
   ([ED25519](https://ed25519.cr.yp.to) signature, 64 bytes)

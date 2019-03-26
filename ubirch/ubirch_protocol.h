@@ -280,7 +280,7 @@ inline int ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
     }
 
     // 1 - protocol version
-    msgpack_pack_int(pk, proto->version);
+    msgpack_pack_uint8(pk, proto->version);
 
     // 2 - device ID
     msgpack_pack_bin(pk, 16);
@@ -293,7 +293,7 @@ inline int ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
     }
 
     // 4 the payload type
-    msgpack_pack_int(pk, proto->type);
+    msgpack_pack_uint8(pk, proto->type);
 
     proto->status = UBIRCH_PROTOCOL_STARTED;
     return 0;
