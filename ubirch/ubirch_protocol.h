@@ -80,7 +80,7 @@ extern "C" {
 #include "digest/sha512.h"
 #endif
 
-#define UBIRCH_PROTOCOL_VERSION     2       //!< current ubirch protocol version
+#define UBIRCH_PROTOCOL_VERSION     1       //!< current ubirch protocol version
 #define UBIRCH_PROTOCOL_PLAIN       0x01    //!< plain protocol without signatures (unsafe)
 #define UBIRCH_PROTOCOL_SIGNED      0x02    //!< signed messages (unchained)
 #define UBIRCH_PROTOCOL_CHAINED     0x03    //!< chained signed messages
