@@ -108,8 +108,10 @@ typedef enum ubirch_protocol_variant {
  * This function is called from #ubirch_protocol_finish
  *
  * @param buf the data to sign
- * @param size_t len the length of the data buffer
- * @param signature signature output (64 byte)
+ * @param len the length of the data buffer
+ * @param signature the buffer to hold the returned signature (64 byte)
+ * @return 0 on success
+ * @return -1 if the signing failed
  */
 typedef int (*ubirch_protocol_sign)(const unsigned char *buf, size_t len,
                                     unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
@@ -119,8 +121,10 @@ typedef int (*ubirch_protocol_sign)(const unsigned char *buf, size_t len,
  * This function is called from #ubirch_protocol_verify
  *
  * @param buf the data to verify
- * @param size_t the length of the data buffer
- * @param signature the signature to check the dsata with (64 byte)
+ * @param len the length of the data buffer
+ * @param signature the signature to check the data with (64 byte)
+ * @return 0 on success
+ * @return -1 if the verification failed
  */
 typedef int (*ubirch_protocol_check)(const unsigned char *buf, size_t len,
                                      const unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
@@ -214,13 +218,13 @@ static int ubirch_protocol_verify(msgpack_unpacker *unpacker, ubirch_protocol_ch
  * The ubirch protocol msgpack writer. This writer takes care of updating the hash
  * and writing original data to the underlying write callback.
  * @param data the ubirch protocol context
- * @param buf the data to writer and hash
+ * @param buf the data to write and hash
  * @param len the length of the data
  * @return 0 if successful
  */
 static inline int ubirch_protocol_write(void *data, const char *buf, size_t len) {
     ubirch_protocol *proto = (ubirch_protocol *) data;
-    if (proto->version & proto_signed || proto->version == proto_chained) {
+    if (proto->version == proto_signed || proto->version == proto_chained) {
         mbedtls_sha512_update(&proto->hash, (const unsigned char *) buf, len);
     }
     return proto->packer.callback(proto->packer.data, buf, len);
@@ -228,7 +232,8 @@ static inline int ubirch_protocol_write(void *data, const char *buf, size_t len)
 
 inline void ubirch_protocol_init(ubirch_protocol *proto, enum ubirch_protocol_variant variant,
                                  unsigned int data_type, void *data,
-                                 msgpack_packer_write callback, ubirch_protocol_sign sign,
+                                 msgpack_packer_write callback,
+                                 ubirch_protocol_sign sign,      //FIXME make ed25519_sign default sign function
                                  const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE]) {
     proto->packer.data = data;
     proto->packer.callback = callback;
@@ -283,7 +288,7 @@ inline int ubirch_protocol_start(ubirch_protocol *proto, msgpack_packer *pk) {
     msgpack_pack_uint8(pk, proto->version);
 
     // 2 - device ID
-    msgpack_pack_bin(pk, 16);
+    msgpack_pack_bin(pk, sizeof(proto->uuid));
     msgpack_pack_bin_body(pk, proto->uuid, sizeof(proto->uuid));
 
     // 3 the last signature (if chained)
@@ -311,7 +316,7 @@ inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
             return -3;
         }
 
-        // 5 add signature hash
+        // 6 add signature hash
         msgpack_pack_bin(pk, UBIRCH_PROTOCOL_SIGN_SIZE);
         msgpack_pack_bin_body(pk, proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
     }
@@ -321,7 +326,8 @@ inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
     return 0;
 }
 
-inline int ubirch_protocol_verify(msgpack_unpacker *unpacker, ubirch_protocol_check verify) {
+inline int ubirch_protocol_verify(msgpack_unpacker *unpacker,
+                                  ubirch_protocol_check verify) {   //FIXME make ed25519_verify default verify function
     const size_t msgpack_sig_length = UBIRCH_PROTOCOL_SIGN_SIZE + 2;
     const size_t message_size = msgpack_unpacker_message_size(unpacker);
 
