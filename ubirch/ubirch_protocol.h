@@ -103,6 +103,12 @@ typedef enum ubirch_protocol_variant {
     proto_chained = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_CHAINED)
 } ubirch_protocol_variant;
 
+typedef enum ubirch_protocol_payload_type {
+    payload_bin = UBIRCH_PROTOCOL_TYPE_BIN,
+    payload_reg = UBIRCH_PROTOCOL_TYPE_REG,
+    payload_hsk = UBIRCH_PROTOCOL_TYPE_HSK
+} ubirch_protocol_payload_type;
+
 /**
  * The signature function type necessary to sign the message for the ubirch protocol.
  * This function is called from #ubirch_protocol_finish
