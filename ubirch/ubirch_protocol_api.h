@@ -52,7 +52,7 @@ typedef struct ubirch_protocol_buffer {
 static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_variant variant,
                                                            const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
                                                            ubirch_protocol_payload_type type,
-                                                           const char *payload, size_t payload_len) {
+                                                           const unsigned char *payload, size_t payload_len) {
 
     // prepare msgpack packer and UPP header
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
@@ -74,6 +74,10 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
 
     // store generated UPP in struct
     ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) calloc(1, sizeof(ubirch_protocol_buffer));
+    if (!upp) { return NULL; }
+    upp->data = (char *) realloc(upp->data, sbuf->size);
+    if (!upp->data) { return NULL; }
+
     memcpy(upp->data, sbuf->data, sbuf->size);
     upp->size = sbuf->size;
 
@@ -93,7 +97,8 @@ static inline void ubirch_protocol_buffer_free(ubirch_protocol_buffer *buf) {
 
 static inline void printUPP(const char *data, const size_t len) {
     printf("\r\n - - - UPP - - - \r\n");
-    for (int i = 0; i < len; i++) {
+    printf("size: %d Bytes \r\nmsg: ", len);
+    for (unsigned int i = 0; i < len; i++) {
         printf("%02x", data[i]);
     }
     printf("\r\n\r\n");
@@ -104,23 +109,3 @@ static inline void printUPP(const char *data, const size_t len) {
 #endif
 
 #endif //UBIRCH_PROTOCOL_API_H
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
