@@ -37,11 +37,14 @@ typedef struct ubirch_protocol_buffer {
 } ubirch_protocol_buffer;
 
 /**
-* Function to create a UPP (Ubirch Protocol Package)
-* @param upp the buffer for the created UPP
-* @param upp_len the length of the created UPP buffer
-* @return 0 if the UPP was successfully created
-* @return -1 if UPP creation failed
+* Create a UPP (Ubirch Protocol Package)
+ *
+ * @param variant protocol variant
+ * @param uuid the uuid associated with the data
+ * @param type the payload data type indicator (0 -> binary)
+ * @param payload the byte array containing the payload data
+ * @param payload_len the number of bytes in the payload
+* @return struct containing UPP and its size
 */
 static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_variant variant,
                                                            const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
