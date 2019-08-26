@@ -30,6 +30,9 @@ extern "C" {
 #endif
 
 #include "ubirch_protocol.h"
+#include "ubirch_ed25519.h"
+
+#include <stdio.h>  //TODO take this out (only for testing)
 
 typedef struct ubirch_protocol_buffer {
     size_t size;
@@ -44,7 +47,7 @@ typedef struct ubirch_protocol_buffer {
  * @param type the payload data type indicator (0 -> binary)
  * @param payload the byte array containing the payload data
  * @param payload_len the number of bytes in the payload
-* @return struct containing UPP and its size
+ * @return struct containing UPP and its size
 */
 static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_variant variant,
                                                            const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
@@ -53,7 +56,12 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
 
     // prepare msgpack packer and UPP header
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(variant, type, sbuf, msgpack_sbuffer_write, ed25519_sign, uuid);
+
+    ubirch_protocol *proto = (variant == proto_plain) ? ubirch_protocol_new(variant, type, sbuf, msgpack_sbuffer_write,
+                                                                            NULL, uuid)
+                                                      : ubirch_protocol_new(variant, type, sbuf, msgpack_sbuffer_write,
+                                                                            ed25519_sign, uuid);
+
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
     ubirch_protocol_start(proto, pk);
 
@@ -75,6 +83,20 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
     msgpack_sbuffer_free(sbuf);
 
     return upp;
+}
+
+static inline void ubirch_protocol_buffer_free(ubirch_protocol_buffer *buf) {
+    if (buf == NULL) { return; }
+    free(buf->data);
+    free(buf);
+}
+
+static inline void printUPP(const char *data, const size_t len) {
+    printf("\r\n - - - UPP - - - \r\n");
+    for (int i = 0; i < len; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\r\n\r\n");
 }
 
 #ifdef __cplusplus
