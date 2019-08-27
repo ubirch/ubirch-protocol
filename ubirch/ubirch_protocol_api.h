@@ -45,22 +45,24 @@ typedef struct ubirch_protocol_buffer {
  *
  * @param variant protocol variant
  * @param uuid the uuid associated with the data
- * @param type the payload data type indicator (0 -> binary)
+ * @param payload_type the payload data type indicator (0 -> binary)
  * @param payload the byte array containing the payload data
  * @param payload_len the number of bytes in the payload
  * @return struct containing UPP and its size
 */
 static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_variant variant,
                                                            const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
-                                                           ubirch_protocol_payload_type type,
+                                                           uint8_t payload_type,
                                                            const unsigned char *payload, size_t payload_len) {
 
     // prepare msgpack packer and UPP header
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
 
-    ubirch_protocol *proto = (variant == proto_plain) ? ubirch_protocol_new(variant, type, sbuf, msgpack_sbuffer_write,
+    ubirch_protocol *proto = (variant == proto_plain) ? ubirch_protocol_new(variant, payload_type, sbuf,
+                                                                            msgpack_sbuffer_write,
                                                                             NULL, uuid)
-                                                      : ubirch_protocol_new(variant, type, sbuf, msgpack_sbuffer_write,
+                                                      : ubirch_protocol_new(variant, payload_type, sbuf,
+                                                                            msgpack_sbuffer_write,
                                                                             ed25519_sign, uuid);
 
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
@@ -70,8 +72,8 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
 
     ubirch_protocol_start(proto, pk);
 
-    if (type == payload_key_reg) {
-        // create a key registration packet and add it as UPP payload
+    if (payload_type == UBIRCH_PROTOCOL_TYPE_REG) {
+        // create a key registration packet and add it to UPP as payload
         ubirch_key_info *info = (ubirch_key_info *) payload;
         msgpack_pack_key_register(pk, info);
     } else {

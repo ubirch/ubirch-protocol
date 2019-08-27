@@ -152,7 +152,7 @@ void TestSimpleAPISignKeyRegisterMessage() {
     info.validNotAfter = static_cast<long>(timestamp + 60000);
     info.validNotBefore = static_cast<long>(timestamp);
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, payload_key_reg,
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
                                                        reinterpret_cast<const unsigned char *> (&info), sizeof(info));
 
     TEST_ASSERT_NOT_NULL(upp);

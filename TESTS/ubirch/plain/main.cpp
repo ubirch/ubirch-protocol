@@ -164,7 +164,7 @@ void TestSimpleMessage() {
 
 void TestProtocolSimpleAPI() {
     const unsigned char msg[] = {0x24, 0x98};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, payload_bin, msg, sizeof(msg));
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_NOT_NULL(upp);
     TEST_ASSERT_NOT_NULL(upp->data);
@@ -188,7 +188,7 @@ void TestProtocolSimpleAPIVerify() {
     size_t encoded_size;
 
     const unsigned char msg[] = {99};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, payload_bin, msg, sizeof(msg));
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -204,7 +204,7 @@ void TestProtocolSimpleAPIVerify() {
 
 void TestProtocolSimpleAPIFree() {
     const unsigned char msg[] = {0x24, 0x98};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, payload_bin, msg, sizeof(msg));
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_NOT_NULL(upp);
     TEST_ASSERT_NOT_NULL(upp->data);
@@ -212,7 +212,7 @@ void TestProtocolSimpleAPIFree() {
 
     ubirch_protocol_buffer_free(upp);
 
-    TEST_ASSERT_NULL_MESSAGE(upp->size, "upp->size not free");
+    TEST_ASSERT_NULL_MESSAGE(&upp->size, "upp->size not free");
     TEST_ASSERT_NULL_MESSAGE(upp->data, "upp->data not free");
     TEST_ASSERT_NULL_MESSAGE(upp, "upp not free");
 }
