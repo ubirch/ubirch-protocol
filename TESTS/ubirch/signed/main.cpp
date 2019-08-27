@@ -252,9 +252,9 @@ void TestSimpleAPIVerifyMessage() {
     const unsigned char msg[] = {99};
     ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    TEST_ASSERT_NOT_NULL(upp);
-    TEST_ASSERT_NOT_NULL(upp->data);
-    TEST_ASSERT_NOT_EQUAL(0, upp->size);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
 
     // unpack and verify
     msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
@@ -282,9 +282,9 @@ void TestSimpleAPISimpleMessage() {
     const unsigned char msg[] = {0x09, 0xC2};
     ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    TEST_ASSERT_NOT_NULL(upp);
-    TEST_ASSERT_NOT_NULL(upp->data);
-    TEST_ASSERT_NOT_EQUAL(0, upp->size);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -312,9 +312,9 @@ void TestProtocolSimpleAPIMessageFinish() {
     const unsigned char msg[] = {0x09, 0xC2};
     ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    TEST_ASSERT_NOT_NULL(upp);
-    TEST_ASSERT_NOT_NULL(upp->data);
-    TEST_ASSERT_NOT_EQUAL(0, upp->size);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
 
     const unsigned char expected_message[] = {
             0x95, 0x22, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e,
@@ -324,7 +324,6 @@ void TestProtocolSimpleAPIMessageFinish() {
             0x25, 0x2c, 0x6c, 0xb6, 0x2c, 0x64, 0x53, 0xa2, 0xd1, 0x83, 0x54, 0x83, 0x5f, 0x38, 0xef, 0x1d, 0xfb, 0x45,
             0x0e,
     };
-
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
 
