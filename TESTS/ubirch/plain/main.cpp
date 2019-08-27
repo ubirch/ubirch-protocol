@@ -166,9 +166,9 @@ void TestProtocolSimpleAPI() {
     const unsigned char msg[] = {0x24, 0x98};
     ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
-    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+    TEST_ASSERT_NOT_NULL(upp);
+    TEST_ASSERT_NOT_NULL(upp->data);
+    TEST_ASSERT_NOT_EQUAL(0, upp->size);
 
     const unsigned char expected_message[] = {
             0x94, 0x21, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d,
@@ -187,9 +187,9 @@ void TestProtocolSimpleAPIVerify() {
     const unsigned char msg[] = {99};
     ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
-    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+    TEST_ASSERT_NOT_NULL(upp);
+    TEST_ASSERT_NOT_NULL(upp->data);
+    TEST_ASSERT_NOT_EQUAL(0, upp->size);
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -207,9 +207,9 @@ void TestProtocolSimpleAPIFree() {
     const unsigned char msg[] = {0x24, 0x98};
     ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
-    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+    TEST_ASSERT_NOT_NULL(upp);
+    TEST_ASSERT_NOT_NULL(upp->data);
+    TEST_ASSERT_NOT_EQUAL(0, upp->size);
 
     ubirch_protocol_buffer_free(upp);
 
