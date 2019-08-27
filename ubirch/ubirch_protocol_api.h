@@ -104,6 +104,46 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
     return upp;
 }
 
+/**
+* Create a chained UPP with new payload (chained to a previously created UPP)
+ *
+ * @param previous_upp the previous UPP, this buffer will be filled with the new UPP data
+ * @param payload the byte array containing the new payload data
+ * @param payload_len the number of bytes in the new payload
+ * @return 0 if successful
+ * @return -1 if creating chained UPP failed
+*/
+static inline int ubirch_protocol_chain_message(ubirch_protocol_buffer *previous_upp, const unsigned char *payload,
+                                                size_t payload_len) {
+
+    // get a pointer to start of signature of previous UPP
+    unsigned char *previous_upp_signature = previous_upp->data + (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE);
+    // get a pointer to start of UPP field for previous signature
+    unsigned char *previous_signature_field =
+            previous_upp->data + 22;  // FIXME magic number (version + UUID + 5 msgpack-bytes)
+    // write signature of previous UPP in previous-signature-field of new UPP
+    memcpy(previous_signature_field, previous_upp_signature, UBIRCH_PROTOCOL_SIGN_SIZE);
+
+    // get a pointer to start of UPP payload field
+    unsigned char *payload_field = previous_upp->data + 89;  // FIXME magic number (HEADER_SIZE)
+
+    // make sure, there is enough space for new payload
+    if (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE < 89 + payload_len) {
+        void *tmp = realloc(upp->data, 89 + payload_len + UBIRCH_PROTOCOL_SIGN_SIZE);
+        if (!tmp) { return -1; }
+        previous_upp->data = (char *) tmp;
+    }
+    // update size for new UPP
+    previous_upp->size = 89 + payload_len + UBIRCH_PROTOCOL_SIGN_SIZE
+
+    // write payload to payload field
+    memcpy(payload_field, payload, payload_len);
+
+    // TODO append signature
+
+    return 0;
+}
+
 static inline void ubirch_protocol_buffer_free(ubirch_protocol_buffer *buf) {
     if (buf == NULL) { return; }
     free(buf->data);

@@ -337,6 +337,187 @@ void TestVerifyMessage() {
     msgpack_sbuffer_free(sbuf);
 }
 
+/**********************************************************************************************************************/
+
+void TestProtocolSimpleAPIMessageFinish() {
+    const unsigned char msg[] = {0x09, 0xC2};
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+
+    const unsigned char expected_message[] = {
+            0x96, 0x23, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e,
+            0x6f, 0x70, 0xc4, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xcd, 0x09, 0xc2,
+            0xc4, 0x40, 0x3f, 0xe0, 0xd2, 0x7b, 0x1f, 0xb0, 0x5d, 0xa6, 0x3b, 0x4b, 0x25, 0x5e, 0xf9, 0x2e, 0x82, 0xe9,
+            0x99, 0x6a, 0xd0, 0x25, 0x52, 0x5d, 0x7d, 0x79, 0x79, 0x55, 0x56, 0xce, 0xed, 0x2d, 0x18, 0x78, 0x42, 0x30,
+            0xe2, 0x8d, 0xc6, 0xd5, 0x5b, 0x85, 0xb0, 0xe4, 0x57, 0xf7, 0x5e, 0x58, 0x19, 0x5f, 0xff, 0x84, 0x9b, 0xbd,
+            0x66, 0xf6, 0xe6, 0xf2, 0xd4, 0xf2, 0x36, 0x10, 0x81, 0x0b, 0x83, 0x0c,
+    };
+    TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
+
+    ubirch_protocol_buffer_free(upp);
+}
+
+void TestSimpleAPISimpleMessage() {
+    char _key[20], _value[300];
+    size_t encoded_size;
+
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          ed25519_public_key, crypto_sign_PUBLICKEYBYTES);
+    greentea_send_kv("publicKey", _value);
+
+    const unsigned char msg[] = {0x09, 0xC2};
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+
+    printUPP(upp->data, upp->size);
+
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          (unsigned char *) upp->data, upp->size);
+    greentea_send_kv("checkMessage", _value, encoded_size);
+
+    ubirch_protocol_buffer_free(upp);
+
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
+}
+
+void TestSimpleAPIChainedMessage() {
+    char _key[20], _value[300];
+    size_t encoded_size;
+
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          ed25519_public_key, crypto_sign_PUBLICKEYBYTES);
+    greentea_send_kv("publicKey", _value);
+
+    const char *message1 = "message 1";
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          (unsigned char *) upp->data, upp->size);
+    greentea_send_kv("checkMessage", _value, encoded_size);
+
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "chained protocol variant failed");
+
+    // clear buffer for next message
+    msgpack_sbuffer_clear(sbuf);
+
+    const char *message2 = "message 2";
+    ubirch_protocol_start(proto, pk);
+    msgpack_pack_str(pk, strlen(message2));
+    msgpack_pack_str_body(pk, message2, strlen(message2));
+    ubirch_protocol_finish(proto, pk);
+
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          (unsigned char *) sbuf->data, sbuf->size);
+    greentea_send_kv("checkMessage", _value, encoded_size);
+
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "chained signature verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "chained protocol variant failed");
+
+    ubirch_protocol_buffer_free(upp);
+}
+
+void TestSimpleAPIChainedStaticMessage() {
+    char _key[20], _value[300];
+    size_t encoded_size;
+
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          ed25519_public_key, crypto_sign_PUBLICKEYBYTES);
+    greentea_send_kv("publicKey", _value);
+
+    msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
+    ubirch_protocol *proto = ubirch_protocol_new(proto_chained, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+
+    for (int i = 0; i < 5; i++) {
+        const char *staticValue = "STATIC";
+        ubirch_protocol_start(proto, pk);
+        msgpack_pack_str(pk, strlen(staticValue));
+        msgpack_pack_str_body(pk, staticValue, strlen(staticValue));
+        ubirch_protocol_finish(proto, pk);
+
+        // unpack and verify
+        msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
+        if (msgpack_unpacker_buffer_capacity(unpacker) < sbuf->size) {
+            msgpack_unpacker_reserve_buffer(unpacker, sbuf->size);
+        }
+        memcpy(msgpack_unpacker_buffer(unpacker), sbuf->data, sbuf->size);
+        msgpack_unpacker_buffer_consumed(unpacker, sbuf->size);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify),
+                                      "message verification failed");
+        msgpack_unpacker_free(unpacker);
+
+        memset(_value, 0, sizeof(_value));
+        mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                              (unsigned char *) sbuf->data, sbuf->size);
+        greentea_send_kv("checkMessage", _value, encoded_size);
+
+        greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+        TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "chained signature verification failed");
+        TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "chained protocol variant failed");
+
+        // clear buffer for next message
+        msgpack_sbuffer_clear(sbuf);
+    }
+
+    msgpack_packer_free(pk);
+    ubirch_protocol_free(proto);
+    msgpack_sbuffer_free(sbuf);
+}
+
+void TestSimpleAPIVerifyMessage() {
+    // create a new message a sign it
+    msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
+    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
+    msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+
+    ubirch_protocol_start(proto, pk);
+    msgpack_pack_int(pk, 99);
+    ubirch_protocol_finish(proto, pk);
+
+    msgpack_packer_free(pk);
+    ubirch_protocol_free(proto);
+
+    // unpack and verify
+    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
+    if (msgpack_unpacker_buffer_capacity(unpacker) < sbuf->size) {
+        msgpack_unpacker_reserve_buffer(unpacker, sbuf->size);
+    }
+    memcpy(msgpack_unpacker_buffer(unpacker), sbuf->data, sbuf->size);
+    msgpack_unpacker_buffer_consumed(unpacker, sbuf->size);
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
+
+    msgpack_unpacker_free(unpacker);
+    msgpack_sbuffer_free(sbuf);
+    msgpack_sbuffer_free(sbuf);
+}
+
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
     GREENTEA_SETUP(600, "ProtocolTests");
@@ -364,6 +545,17 @@ int main() {
                  TestProtocolMessageFinish, greentea_case_failure_abort_handler),
             Case("ubirch protocol [chained] static message",
                  TestChainedStaticMessage, greentea_case_failure_abort_handler),
+
+            Case("ubirch protocol simple API [chained] message simple",
+                 TestSimpleAPISimpleMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol simple API [chained] message chained",
+                 TestSimpleAPIChainedMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol simple API [chained] message chained static",
+                 TestSimpleAPIChainedStaticMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol simple API [chained] message verify",
+                 TestSimpleAPIVerifyMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol simple API [chained] message finish",
+                 TestProtocolSimpleAPIMessageFinish, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
