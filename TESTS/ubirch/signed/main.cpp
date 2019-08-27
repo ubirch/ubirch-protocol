@@ -1,5 +1,6 @@
 #include <unity/unity.h>
 #include <ubirch/ubirch_protocol.h>
+#include "ubirch_protocol_api.h"
 #include <ubirch/ubirch_ed25519.h>
 #include <mbedtls/base64.h>
 
@@ -213,8 +214,8 @@ void TestSimpleMessage() {
     memcpy(msgpack_unpacker_buffer(unpacker), sbuf->data, sbuf->size);
     msgpack_unpacker_buffer_consumed(unpacker, sbuf->size);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
-    msgpack_unpacker_free(unpacker);
 
+    msgpack_unpacker_free(unpacker);
     msgpack_sbuffer_free(sbuf);
 }
 
@@ -246,6 +247,100 @@ void TestVerifyMessage() {
     msgpack_sbuffer_free(sbuf);
 }
 
+void TestSimpleAPIVerifyMessage() {
+    // create a new message a sign it
+    const unsigned char msg[] = {99};
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+
+    TEST_ASSERT_NOT_NULL(upp);
+    TEST_ASSERT_NOT_NULL(upp->data);
+    TEST_ASSERT_NOT_EQUAL(0, upp->size);
+
+    // unpack and verify
+    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
+    if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
+        msgpack_unpacker_reserve_buffer(unpacker, upp->size);
+    }
+    memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
+    msgpack_unpacker_buffer_consumed(unpacker, upp->size);
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
+
+    msgpack_unpacker_free(unpacker);
+    ubirch_protocol_buffer_free(upp);
+}
+
+void TestSimpleAPISimpleMessage() {
+    char _key[20], _value[300];
+    size_t encoded_size;
+
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size, ed25519_public_key,
+                          crypto_sign_PUBLICKEYBYTES);
+    greentea_send_kv("publicKey", _value);
+
+    const unsigned char msg[] = {0x09, 0xC2};
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+
+    TEST_ASSERT_NOT_NULL(upp);
+    TEST_ASSERT_NOT_NULL(upp->data);
+    TEST_ASSERT_NOT_EQUAL(0, upp->size);
+
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          (unsigned char *) upp->data, upp->size);
+    greentea_send_kv("checkMessage", _value, encoded_size);
+
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("2", _value, "signed protocol variant failed");
+
+    // unpack and verify
+    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
+    if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
+        msgpack_unpacker_reserve_buffer(unpacker, upp->size);
+    }
+    memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
+    msgpack_unpacker_buffer_consumed(unpacker, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
+
+    msgpack_unpacker_free(unpacker);
+    ubirch_protocol_buffer_free(upp);
+}
+
+void TestProtocolSimpleAPIMessageFinish() {
+    const unsigned char msg[] = {0x09, 0xC2};
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+
+    TEST_ASSERT_NOT_NULL(upp);
+    TEST_ASSERT_NOT_NULL(upp->data);
+    TEST_ASSERT_NOT_EQUAL(0, upp->size);
+
+    const unsigned char expected_message[] = {
+            0x95, 0x22, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e,
+            0x6f, 0x70, 0x00, 0xc4, 0x02, 0x09, 0xc2, 0xc4, 0x40, 0x1f, 0x89, 0xd7, 0x0c, 0x9f, 0xa1, 0xc5, 0x7c, 0x80,
+            0x22, 0x7b, 0x85, 0x18, 0xde, 0x06, 0x37, 0x03, 0x9b, 0xe4, 0xa5, 0x38, 0xb7, 0x47, 0xbf, 0xb8, 0xec, 0x96,
+            0xd8, 0xc5, 0x45, 0xad, 0x2c, 0xae, 0x07, 0xc1, 0xfb, 0x88, 0xc6, 0x92, 0x97, 0x49, 0x0c, 0x72, 0xf9, 0x0a,
+            0x25, 0x2c, 0x6c, 0xb6, 0x2c, 0x64, 0x53, 0xa2, 0xd1, 0x83, 0x54, 0x83, 0x5f, 0x38, 0xef, 0x1d, 0xfb, 0x45,
+            0x0e,
+    };
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
+
+    // unpack and verify
+    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
+    if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
+        msgpack_unpacker_reserve_buffer(unpacker, upp->size);
+    }
+    memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
+    msgpack_unpacker_buffer_consumed(unpacker, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
+
+    msgpack_unpacker_free(unpacker);
+    ubirch_protocol_buffer_free(upp);
+}
+
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
     GREENTEA_SETUP(600, "ProtocolTests");
     return greentea_test_setup_handler(number_of_cases);
@@ -254,25 +349,30 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
 
 int main() {
     Case cases[] = {
-            Case("ubirch protocol [signed] init",
-                 TestProtocolInit, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] new",
-                 TestProtocolNew, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] write",
-                 TestProtocolWrite, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] message signed",
-                 TestSimpleMessage, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] message start",
-                 TestProtocolMessageStart, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] message finish (fails)",
-                 TestProtocolMessageFinishWithoutStart, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] message finish",
-                 TestProtocolMessageFinish, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] message verify",
-                 TestVerifyMessage, greentea_case_failure_abort_handler),
-
+//            Case("ubirch protocol [signed] init",
+//                 TestProtocolInit, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [signed] new",
+//                 TestProtocolNew, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [signed] write",
+//                 TestProtocolWrite, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [signed] message signed",
+//                 TestSimpleMessage, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [signed] message start",
+//                 TestProtocolMessageStart, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [signed] message finish (fails)",
+//                 TestProtocolMessageFinishWithoutStart, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [signed] message finish",
+//                 TestProtocolMessageFinish, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [signed] message verify",
+//                 TestVerifyMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol simple API [signed] message verify",
+                 TestSimpleAPIVerifyMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol simple API [signed] message signed",
+                 TestSimpleAPISimpleMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol simple API [signed] message finish",
+                 TestProtocolSimpleAPIMessageFinish, greentea_case_failure_abort_handler),
     };
 
-//    Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
-//    Harness::run(specification);
+    Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
+    Harness::run(specification);
 }

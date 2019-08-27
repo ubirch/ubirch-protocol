@@ -174,11 +174,10 @@ void TestSimpleAPISignKeyRegisterMessage() {
             0x6f, 0x1f, 0x88, 0xb2, 0x6a, 0x68, 0x49, 0x95, 0x60, 0x2b, 0x78, 0x58, 0x8e, 0x35, 0x8f, 0x80, 0x4e, 0x6d,
             0xdb, 0x9f, 0x32, 0xf9, 0x2c, 0x92, 0x37, 0x95, 0xa8, 0xcc, 0x3b, 0xd1, 0xee, 0x52, 0x80, 0x07,
     };
-    TEST_ASSERT_EQUAL_HEX8_ARRAY(expectedMessage, upp->data, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
 
     ubirch_protocol_buffer_free(upp);
-
-    TEST_ASSERT_TRUE(true);
 }
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
@@ -189,10 +188,10 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
 
 int main() {
     Case cases[] = {
-            Case("ubirch protocol [kex] init",
-                 TestProtocolInit, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [kex] register signed",
-                 TestSignKeyRegisterMessage, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [kex] init",
+//                 TestProtocolInit, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [kex] register signed",
+//                 TestSignKeyRegisterMessage, greentea_case_failure_abort_handler),
             Case("ubirch protocol simple API [kex] register signed",
                  TestSimpleAPISignKeyRegisterMessage, greentea_case_failure_abort_handler),
     };

@@ -55,23 +55,25 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
                                                            uint8_t payload_type,
                                                            const unsigned char *payload, size_t payload_len) {
 
-    // prepare msgpack packer and UPP header
+    // prepare msgpack buffer and packer
     msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
 
     ubirch_protocol *proto = (variant == proto_plain) ? ubirch_protocol_new(variant, payload_type, sbuf,
-                                                                            msgpack_sbuffer_write,
-                                                                            NULL, uuid)
+                                                                            msgpack_sbuffer_write, NULL, uuid)
                                                       : ubirch_protocol_new(variant, payload_type, sbuf,
-                                                                            msgpack_sbuffer_write,
-                                                                            ed25519_sign, uuid);
+                                                                            msgpack_sbuffer_write, ed25519_sign, uuid);
+    if (!proto) { return NULL; }
 
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+    if (!pk) { return NULL; }
 
 //    TODO load PREVIOUS_SIGNATURE for chained msgs before ubirch_protocol_start
 //    memcpy(proto->signature,PREVIOUS_SIGNATURE, UBIRCH_PROTOCOL_SIGN_SIZE);
 
+    // pack UPP header
     ubirch_protocol_start(proto, pk);
 
+    // add payload
     if (payload_type == UBIRCH_PROTOCOL_TYPE_REG) {
         // create a key registration packet and add it to UPP as payload
         ubirch_key_info *info = (ubirch_key_info *) payload;
@@ -85,7 +87,7 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
     // sign the package
     ubirch_protocol_finish(proto, pk);
 
-    // store generated UPP in struct
+    // allocate memory and store generated UPP in struct
     ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) calloc(1, sizeof(ubirch_protocol_buffer));
     if (!upp) { return NULL; }
     upp->data = (char *) realloc(upp->data, sbuf->size);
@@ -94,7 +96,7 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
     memcpy(upp->data, sbuf->data, sbuf->size);
     upp->size = sbuf->size;
 
-    // free allocated heap
+    // free allocated memory
     msgpack_packer_free(pk);
     ubirch_protocol_free(proto);
     msgpack_sbuffer_free(sbuf);
@@ -112,7 +114,7 @@ static inline void printUPP(const char *data, const size_t len) {
     printf("\r\n - - - UPP - - - \r\n");
     printf("size: %d Bytes \r\nmsg: ", len);
     for (unsigned int i = 0; i < len; i++) {
-        printf("%02x", data[i]);
+        printf("0x%02x, ", data[i]);
     }
     printf("\r\n\r\n");
 }
