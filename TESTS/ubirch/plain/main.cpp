@@ -242,11 +242,11 @@ int main() {
 //                 TestProtocolMessageFinishWithoutStart, greentea_case_failure_abort_handler),
 //            Case("ubirch protocol [plain] message finish",
 //                 TestProtocolMessageFinish, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [plain] simple API - simple message",
+            Case("ubirch protocol simple API [plain] simple message",
                  TestProtocolSimpleAPI, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [plain] simple API - verify",
+            Case("ubirch protocol simple API [plain] verify",
                  TestProtocolSimpleAPIVerify, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [plain] simple API - free dynamically allocated memory",
+            Case("ubirch protocol simple API [plain] free dynamically allocated memory",
                  TestProtocolSimpleAPIFree, greentea_case_failure_abort_handler),
     };
 

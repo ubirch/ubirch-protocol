@@ -30,6 +30,7 @@ extern "C" {
 #endif
 
 #include "ubirch_protocol.h"
+#include "ubirch_protocol_kex.h"
 #include "ubirch_ed25519.h"
 
 #include <stdio.h>  //TODO take this out (only for testing)
@@ -72,7 +73,7 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
     if (type == payload_key_reg) {
         // create a key registration packet and add it as UPP payload
         ubirch_key_info *info = (ubirch_key_info *) payload;
-        msgpack_pack_key_register(pk, &info);
+        msgpack_pack_key_register(pk, info);
     } else {
         // add payload as byte array to UPP
         msgpack_pack_bin(pk, payload_len);
