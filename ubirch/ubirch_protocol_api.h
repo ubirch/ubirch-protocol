@@ -63,11 +63,27 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
                                                                             ed25519_sign, uuid);
 
     msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+
+//    TODO PREVIOUS_SIGNATURE for chained msgs
+//    memcpy(proto->signature,PREVIOUS_SIGNATURE, UBIRCH_PROTOCOL_SIGN_SIZE);
+
     ubirch_protocol_start(proto, pk);
 
     // add payload as byte array to package
     msgpack_pack_bin(pk, payload_len);
     msgpack_pack_bin_body(pk, payload, payload_len);
+
+// TODO create key registration info
+
+//    ubirch_key_info info = {};
+//    info.algorithm = (char *)(UBIRCH_KEX_ALG_ECC_ED25519);
+//    info.created = timestamp;
+//    memcpy(info.hwDeviceId, UUID, sizeof(UUID));
+//    memcpy(info.pubKey, public_key, sizeof(public_key));
+//    info.validNotAfter = NOTAFTERTIMESTAMP;
+//    info.validNotBefore = NOTBEFORTIMESTAMP;
+//    msgpack_pack_key_register(pk, &info);
+
 
     // sign the package
     ubirch_protocol_finish(proto, pk);

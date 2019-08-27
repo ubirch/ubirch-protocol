@@ -273,6 +273,6 @@ int main() {
 
     };
 
-    Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
-    Harness::run(specification);
+//    Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
+//    Harness::run(specification);
 }

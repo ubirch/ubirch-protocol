@@ -249,13 +249,13 @@ Message 2:
 
 ### Message Responses
 
-Message responses will have the same structure as normal message, but use the signature of the original message
+Message responses will have the same structure as normal messages, but use the signature of the original message
 in place of the previous signature (for the chained message protocol). This ties the request and response together.
  
 ### Key Registration
 
 Devices must register at the key service to make their existence known.
-The key registration message is the first step and simply published a key
+The key registration message is the first step and simply publishes a key
 with some meta-data to the key service. It will later be used for looking
 up keys for a certain device, i.e. when doing an initial trust hand shake.
 

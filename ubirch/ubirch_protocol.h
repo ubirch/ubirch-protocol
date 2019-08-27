@@ -239,7 +239,7 @@ static inline int ubirch_protocol_write(void *data, const char *buf, size_t len)
 inline void ubirch_protocol_init(ubirch_protocol *proto, enum ubirch_protocol_variant variant,
                                  unsigned int data_type, void *data,
                                  msgpack_packer_write callback,
-                                 ubirch_protocol_sign sign,      //FIXME make ed25519_sign default sign function
+                                 ubirch_protocol_sign sign,
                                  const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE]) {
     proto->packer.data = data;
     proto->packer.callback = callback;
@@ -333,7 +333,7 @@ inline int ubirch_protocol_finish(ubirch_protocol *proto, msgpack_packer *pk) {
 }
 
 inline int ubirch_protocol_verify(msgpack_unpacker *unpacker,
-                                  ubirch_protocol_check verify) {   //FIXME make ed25519_verify default verify function
+                                  ubirch_protocol_check verify) {
     const size_t msgpack_sig_length = UBIRCH_PROTOCOL_SIGN_SIZE + 2;
     const size_t message_size = msgpack_unpacker_message_size(unpacker);
 
