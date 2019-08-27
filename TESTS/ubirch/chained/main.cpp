@@ -1,5 +1,6 @@
 #include <unity/unity.h>
 #include <ubirch/ubirch_protocol.h>
+#include "ubirch_protocol_api.h"
 #include <armnacl.h>
 #include <mbedtls/base64.h>
 #include <ubirch_ed25519.h>
@@ -365,6 +366,6 @@ int main() {
                  TestChainedStaticMessage, greentea_case_failure_abort_handler),
     };
 
-//    Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
-//    Harness::run(specification);
+    Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
+    Harness::run(specification);
 }

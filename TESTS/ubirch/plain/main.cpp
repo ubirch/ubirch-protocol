@@ -170,13 +170,10 @@ void TestProtocolSimpleAPI() {
     TEST_ASSERT_NOT_NULL(upp->data);
     TEST_ASSERT_NOT_EQUAL(0, upp->size);
 
-    printUPP(upp->data, upp->size);
-
     const unsigned char expected_message[] = {
             0x94, 0x21, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d,
             0x6e, 0x6f, 0x70, 0x00, 0xc4, 0x02, 0x24, 0x98,
     };
-
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
 
@@ -189,6 +186,10 @@ void TestProtocolSimpleAPIVerify() {
 
     const unsigned char msg[] = {99};
     ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+
+    TEST_ASSERT_NOT_NULL(upp);
+    TEST_ASSERT_NOT_NULL(upp->data);
+    TEST_ASSERT_NOT_EQUAL(0, upp->size);
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -246,8 +247,8 @@ int main() {
                  TestProtocolSimpleAPI, greentea_case_failure_abort_handler),
             Case("ubirch protocol simple API [plain] verify",
                  TestProtocolSimpleAPIVerify, greentea_case_failure_abort_handler),
-            Case("ubirch protocol simple API [plain] free dynamically allocated memory",
-                 TestProtocolSimpleAPIFree, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol simple API [plain] free dynamically allocated memory",
+//                 TestProtocolSimpleAPIFree, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
