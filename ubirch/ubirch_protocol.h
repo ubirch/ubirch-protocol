@@ -105,7 +105,7 @@ typedef enum ubirch_protocol_variant {
 
 typedef enum ubirch_protocol_payload_type {
     payload_bin = UBIRCH_PROTOCOL_TYPE_BIN,
-    payload_reg = UBIRCH_PROTOCOL_TYPE_REG,
+    payload_key_reg = UBIRCH_PROTOCOL_TYPE_REG,
     payload_hsk = UBIRCH_PROTOCOL_TYPE_HSK
 } ubirch_protocol_payload_type;
 
