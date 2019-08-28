@@ -404,7 +404,7 @@ void TestSimpleAPIChainedMessage() {
 
     const char *message1 = "message 1";
     ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
-                                                       (const unsigned char *) message1, sizeof(message1));
+                                                       (const unsigned char *) message1, strlen(message1));
 
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
     TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
@@ -422,7 +422,7 @@ void TestSimpleAPIChainedMessage() {
     TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "chained protocol variant failed");
 
     const char *message2 = "message 2 (is a bit longer)";
-    int error = ubirch_protocol_chain_message(upp, (const unsigned char *) message2, sizeof(message2));
+    int error = ubirch_protocol_chain_message(upp, (const unsigned char *) message2, strlen(message2));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, error, "ubirch_protocol_chain_message returned error");
 
     printUPP(upp->data, upp->size);
@@ -437,7 +437,7 @@ void TestSimpleAPIChainedMessage() {
     TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "chained protocol variant failed");
 
     const char *message3 = "msg3";
-    error = ubirch_protocol_chain_message(upp, (const unsigned char *) message3, sizeof(message3));
+    error = ubirch_protocol_chain_message(upp, (const unsigned char *) message3, strlen(message3));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, error, "ubirch_protocol_chain_message returned error");
 
     printUPP(upp->data, upp->size);

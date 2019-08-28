@@ -119,10 +119,18 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
  * @param payload the byte array containing the new payload data
  * @param payload_len the number of bytes in the new payload
  * @return 0 if successful
- * @return -1 if creating chained UPP failed
+ * @return -1 if previous UPP either empty or does not have a signature
+ * @return -2 if allocating memory for new message failed
+ * @return -3 if the signing failed
 */
 static inline int ubirch_protocol_chain_message(ubirch_protocol_buffer *previous_upp, const unsigned char *payload,
                                                 size_t payload_len) {
+    if (!previous_upp || !previous_upp->data || !previous_upp->size) { return -1; }
+    // make sure previous UPP has a signature
+    uint8_t version = previous_upp->data[1];
+    if (version != proto_signed && version != proto_chained) { return -1; }
+
+    // TODO change version of new upp to chained if previous was only signed
 
     // get a pointer to start of signature of previous UPP
     char *upp_signature = previous_upp->data + (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE);
@@ -135,7 +143,7 @@ static inline int ubirch_protocol_chain_message(ubirch_protocol_buffer *previous
     size_t unsigned_upp_size = 89 + payload_len;
     if (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE < unsigned_upp_size) {
         void *tmp = realloc(previous_upp->data, unsigned_upp_size + 2 + UBIRCH_PROTOCOL_SIGN_SIZE);
-        if (!tmp) { return -1; }
+        if (!tmp) { return -2; }
         previous_upp->data = (char *) tmp;
     }
     // update size for new UPP
@@ -143,6 +151,8 @@ static inline int ubirch_protocol_chain_message(ubirch_protocol_buffer *previous
 
     // get a pointer to start of UPP payload field
     char *payload_field = previous_upp->data + 89;  // FIXME magic number (HEADER_SIZE)
+    // update msgpack bytes to new size of payload field    // FIXME this only works for payloads <= 0xFF (255 byte)
+    previous_upp->data[88] = (const unsigned char) payload_len;
     // write payload to payload field
     memcpy(payload_field, payload, payload_len);
 
@@ -164,7 +174,7 @@ static inline int ubirch_protocol_chain_message(ubirch_protocol_buffer *previous
     // get a pointer to start of signature field for new upp
     char *new_upp_signature = previous_upp->data + (unsigned_upp_size);
     // add msgpack bytes
-    unsigned char msgpack_bytes[2] = {0xC4, 0x40};
+    unsigned char msgpack_bytes[2] = {0xc4, UBIRCH_PROTOCOL_SIGN_SIZE};
     memcpy(new_upp_signature, msgpack_bytes, 2);
     // append signature hash to UPP
     memcpy(new_upp_signature + 2, signature, UBIRCH_PROTOCOL_SIGN_SIZE);
