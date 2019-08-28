@@ -207,8 +207,6 @@ void TestSimpleAPISimpleKeyVerify() {
     TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
     TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
 
-    printUPP(upp->data, upp->size);
-
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
                           (unsigned char *) upp->data, upp->size);

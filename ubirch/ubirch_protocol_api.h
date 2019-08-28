@@ -119,18 +119,15 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
  * @param payload the byte array containing the new payload data
  * @param payload_len the number of bytes in the new payload
  * @return 0 if successful
- * @return -1 if previous UPP either empty or does not have a signature
+ * @return -1 if previous UPP either empty or was not chained
  * @return -2 if allocating memory for new message failed
  * @return -3 if the signing failed
 */
 static inline int ubirch_protocol_chain_message(ubirch_protocol_buffer *previous_upp, const unsigned char *payload,
                                                 size_t payload_len) {
     if (!previous_upp || !previous_upp->data || !previous_upp->size) { return -1; }
-    // make sure previous UPP has a signature
-    uint8_t version = previous_upp->data[1];
-    if (version != proto_signed && version != proto_chained) { return -1; }
-
-    // TODO change version of new upp to chained if previous was only signed
+    // make sure previous UPP was chained
+    if (previous_upp->data[1] != proto_chained) { return -1; }
 
     // get a pointer to start of signature of previous UPP
     char *upp_signature = previous_upp->data + (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE);

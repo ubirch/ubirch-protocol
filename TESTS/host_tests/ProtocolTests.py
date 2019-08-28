@@ -1,11 +1,10 @@
 import base64
+import ed25519
 import hashlib
+import msgpack
+from mbed_host_tests import BaseHostTest, event_callback
 from time import sleep
 
-import msgpack
-
-from mbed_host_tests import BaseHostTest, event_callback
-import ed25519
 
 class CryptoProtocolTests(BaseHostTest):
 
@@ -34,5 +33,22 @@ class CryptoProtocolTests(BaseHostTest):
             # not ready to accept the response then :(
             sleep(1)
             self.send_kv("verify", protocolVariant)
+        except Exception as e:
+            self.send_kv("error", e.message)
+
+    @event_callback("checkPayload")
+    def __verifyPayload(self, key, value, timestamp):
+        message = base64.b64decode(value.split(";", 1)[0])
+        try:
+            payload = b''
+            unpacked = msgpack.unpackb(message)
+            protocolVariant = unpacked[0] & 0x000F
+            if protocolVariant == 3:
+                payload = unpacked[4]
+            else:
+                payload = unpacked[3]
+
+            sleep(1)
+            self.send_kv("verify", payload)
         except Exception as e:
             self.send_kv("error", e.message)
