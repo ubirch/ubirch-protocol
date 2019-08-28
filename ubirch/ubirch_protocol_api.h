@@ -33,11 +33,20 @@ extern "C" {
 #include "ubirch_protocol_kex.h"
 #include "ubirch_ed25519.h"
 
+#if defined(MBEDTLS_CONFIG_FILE)
+#include <mbedtls/sha512.h>
+#else
+
+#include "digest/sha512.h"
+
+#endif
+
 #include <stdio.h>  //TODO take this out (only for testing)
 
 typedef struct ubirch_protocol_buffer {
     size_t size;
     char *data;
+//    mbedtls_sha512_context hash;
 } ubirch_protocol_buffer;
 
 /**
@@ -68,7 +77,6 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
     if (!pk) { return NULL; }
 
 //    TODO load PREVIOUS_SIGNATURE for chained msgs before ubirch_protocol_start
-//    memcpy(proto->signature,PREVIOUS_SIGNATURE, UBIRCH_PROTOCOL_SIGN_SIZE);
 
     // pack UPP header
     ubirch_protocol_start(proto, pk);
@@ -117,29 +125,49 @@ static inline int ubirch_protocol_chain_message(ubirch_protocol_buffer *previous
                                                 size_t payload_len) {
 
     // get a pointer to start of signature of previous UPP
-    unsigned char *previous_upp_signature = previous_upp->data + (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE);
+    char *upp_signature = previous_upp->data + (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE);
     // get a pointer to start of UPP field for previous signature
-    unsigned char *previous_signature_field =
-            previous_upp->data + 22;  // FIXME magic number (version + UUID + 5 msgpack-bytes)
+    char *previous_signature_field = previous_upp->data + 22;  // FIXME magic number (version + UUID + 5 msgpack-bytes)
     // write signature of previous UPP in previous-signature-field of new UPP
-    memcpy(previous_signature_field, previous_upp_signature, UBIRCH_PROTOCOL_SIGN_SIZE);
-
-    // get a pointer to start of UPP payload field
-    unsigned char *payload_field = previous_upp->data + 89;  // FIXME magic number (HEADER_SIZE)
+    memcpy(previous_signature_field, upp_signature, UBIRCH_PROTOCOL_SIGN_SIZE);
 
     // make sure, there is enough space for new payload
-    if (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE < 89 + payload_len) {
-        void *tmp = realloc(upp->data, 89 + payload_len + UBIRCH_PROTOCOL_SIGN_SIZE);
+    size_t unsigned_upp_size = 89 + payload_len;
+    if (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE < unsigned_upp_size) {
+        void *tmp = realloc(previous_upp->data, unsigned_upp_size + 2 + UBIRCH_PROTOCOL_SIGN_SIZE);
         if (!tmp) { return -1; }
         previous_upp->data = (char *) tmp;
     }
     // update size for new UPP
-    previous_upp->size = 89 + payload_len + UBIRCH_PROTOCOL_SIGN_SIZE
+    previous_upp->size = unsigned_upp_size + 2 + UBIRCH_PROTOCOL_SIGN_SIZE;
 
+    // get a pointer to start of UPP payload field
+    char *payload_field = previous_upp->data + 89;  // FIXME magic number (HEADER_SIZE)
     // write payload to payload field
     memcpy(payload_field, payload, payload_len);
 
-    // TODO append signature
+    // add signature
+    mbedtls_sha512_context hash;
+    hash.is384 = -1;
+    mbedtls_sha512_init(&hash);
+    mbedtls_sha512_starts(&hash, 0);
+    mbedtls_sha512_update(&hash, (const unsigned char *) previous_upp->data, unsigned_upp_size);
+
+    unsigned char sha512sum[UBIRCH_PROTOCOL_SIGN_SIZE];
+    unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE];
+    mbedtls_sha512_finish(&hash, sha512sum);
+
+    if (ed25519_sign(sha512sum, sizeof(sha512sum), signature)) {
+        return -3;
+    }
+
+    // get a pointer to start of signature field for new upp
+    char *new_upp_signature = previous_upp->data + (unsigned_upp_size);
+    // add msgpack bytes
+    unsigned char msgpack_bytes[2] = {0xC4, 0x40};
+    memcpy(new_upp_signature, msgpack_bytes, 2);
+    // append signature hash to UPP
+    memcpy(new_upp_signature + 2, signature, UBIRCH_PROTOCOL_SIGN_SIZE);
 
     return 0;
 }
@@ -154,7 +182,8 @@ static inline void printUPP(const char *data, const size_t len) {
     printf("\r\n - - - UPP - - - \r\n");
     printf("size: %d Bytes \r\nmsg: ", len);
     for (unsigned int i = 0; i < len; i++) {
-        printf("0x%02x, ", data[i]);
+//        printf("0x%02x, ", data[i]);
+        printf("%02x", data[i]);
     }
     printf("\r\n\r\n");
 }

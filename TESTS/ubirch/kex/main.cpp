@@ -2,6 +2,7 @@
 #include <ubirch/ubirch_protocol.h>
 #include "ubirch_protocol_api.h"
 #include <ubirch/ubirch_ed25519.h>
+#include <mbedtls/base64.h>
 #include <ubirch_protocol_kex.h>
 
 #include "utest/utest.h"
@@ -174,9 +175,59 @@ void TestSimpleAPISignKeyRegisterMessage() {
             0x6f, 0x1f, 0x88, 0xb2, 0x6a, 0x68, 0x49, 0x95, 0x60, 0x2b, 0x78, 0x58, 0x8e, 0x35, 0x8f, 0x80, 0x4e, 0x6d,
             0xdb, 0x9f, 0x32, 0xf9, 0x2c, 0x92, 0x37, 0x95, 0xa8, 0xcc, 0x3b, 0xd1, 0xee, 0x52, 0x80, 0x07,
     };
-    TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
-    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expectedMessage), upp->size, "message length wrong");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expectedMessage, upp->data, upp->size, "message serialization failed");
 
+    ubirch_protocol_buffer_free(upp);
+}
+
+void TestSimpleAPISimpleKeyVerify() {
+    ubirch_key_info info = {};
+    info.algorithm = const_cast<char *>(UBIRCH_KEX_ALG_ECC_ED25519);
+    info.created = static_cast<long>(timestamp);
+    memcpy(info.hwDeviceId, UUID, sizeof(UUID));
+    memcpy(info.pubKey, ed25519_public_key, sizeof(ed25519_public_key));
+    info.validNotAfter = static_cast<long>(timestamp + 60000);
+    info.validNotBefore = static_cast<long>(timestamp);
+
+    char _key[20], _value[500];
+    size_t encoded_size;
+
+    memset(_value, 0, sizeof(_value));
+    int encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size, info.pubKey,
+                                             crypto_sign_PUBLICKEYBYTES);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, encode_error, "mbedtls_base64_encode returned error");
+
+    greentea_send_kv("publicKey", _value);
+
+    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
+                                                       reinterpret_cast<const unsigned char *> (&info), sizeof(info));
+
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+
+    printUPP(upp->data, upp->size);
+
+    memset(_value, 0, sizeof(_value));
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                          (unsigned char *) upp->data, upp->size);
+    greentea_send_kv("checkMessage", _value, encoded_size);
+
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("2", _value, "signed protocol variant failed");
+
+    // unpack and verify
+    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
+    if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
+        msgpack_unpacker_reserve_buffer(unpacker, upp->size);
+    }
+    memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
+    msgpack_unpacker_buffer_consumed(unpacker, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
+
+    msgpack_unpacker_free(unpacker);
     ubirch_protocol_buffer_free(upp);
 }
 
@@ -194,6 +245,8 @@ int main() {
 //                 TestSignKeyRegisterMessage, greentea_case_failure_abort_handler),
             Case("ubirch protocol simple API [kex] register signed",
                  TestSimpleAPISignKeyRegisterMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol simple API [kex] register signed verify",
+                 TestSimpleAPISimpleKeyVerify, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);

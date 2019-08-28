@@ -87,7 +87,7 @@ extern "C" {
 
 #define UBIRCH_PROTOCOL_PUBKEY_SIZE 32      //!< public key size
 #define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes
-#define UBIRCH_PROTOCOL_HASH_SIZE   64      //!< size of the hash
+#define UBIRCH_PROTOCOL_HASH_SIZE   64      //!< size of the hash   // FIXME always same as UBIRCH_PROTOCOL_SIGN_SIZE
 #define UBIRCH_PROTOCOL_UUID_SIZE   16      //!< the size of a UUID
 
 #define UBIRCH_PROTOCOL_INITIALIZED 1       //!< protocol is initialized
@@ -136,12 +136,12 @@ typedef int (*ubirch_protocol_check)(const unsigned char *buf, size_t len,
 typedef struct ubirch_protocol {
     msgpack_packer packer;                              //!< the underlying target packer
     ubirch_protocol_sign sign;                          //!< the message signing function
-    uint16_t version;                                   //!< the specific used protocol version
+    uint16_t version;                                   //!< the specific used protocol version     //FIXME not needed in current implementation
     unsigned int type;                                  //!< the payload type (0 - unspecified, app specific)
     unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE];      //!< the uuid of the sender (used to retrieve the keys)
-    unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]; //!< the current or previous signature of a message
+    unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]; //!< the current or previous signature of a message //FIXME not needed in current implementation
     mbedtls_sha512_context hash;                        //!< the streaming hash of the data to sign
-    unsigned int status;                                //!< amount of bytes packed
+    unsigned int status;                                //!< amount of bytes packed     //FIXME not needed in current implementation
 } ubirch_protocol;
 
 /**
