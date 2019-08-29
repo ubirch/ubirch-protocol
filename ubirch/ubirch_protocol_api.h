@@ -43,14 +43,74 @@ extern "C" {
 
 #include <stdio.h>  //TODO take this out (only for testing)
 
+#define UPP_BUFFER_INIT_SIZE 217    //!< initial allocated size for UPP data buffer
+
 typedef struct ubirch_protocol_buffer {
     size_t size;
     char *data;
-//    mbedtls_sha512_context hash;
+    size_t alloc;
+    msgpack_packer *packer;                             //!< the underlying target packer
+    ubirch_protocol_sign sign;                          //!< the message signing function
+    uint8_t version;                                    //!< the specific used protocol version
+    uint8_t type;                                       //!< the payload type (0 - unspecified, app specific)
+    unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE];      //!< the uuid of the sender (used to retrieve the keys)
+    unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]; //!< the current or previous signature of a message
+    mbedtls_sha512_context hash;                        //!< the streaming hash of the data to sign
+    uint8_t status;                                     //!< the status of the protocol package
 } ubirch_protocol_buffer;
 
+
+static inline int ubirch_protocol_buffer_write(void *data, const char *buf, size_t len) {
+    ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) data;
+
+    if (upp->version == proto_signed || upp->version == proto_chained) {
+        mbedtls_sha512_update(&upp->hash, (const unsigned char *) buf, len);
+    }
+
+    if (upp->alloc - upp->size < len) {
+        void *tmp = realloc(upp->data, upp->size + len);
+        if (!tmp) { return -1; }
+        upp->data = (char *) tmp;
+    }
+
+    memcpy(upp->data + upp->size, buf, len);
+    upp->size += len;
+    return 0;
+}
+
+static inline ubirch_protocol_buffer *ubirch_protocol_new(ubirch_protocol_variant variant,
+                                                          const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
+                                                          uint8_t payload_type) {
+
+    *upp = (ubirch_protocol_buffer *) calloc(1, sizeof(ubirch_protocol_buffer));
+    if (!upp) { return NULL; }
+
+    upp->data = (char *) realloc(upp->data, UPP_BUFFER_INIT_SIZE);
+    if (!upp->data) { return NULL; }
+
+    upp->alloc = UPP_BUFFER_INIT_SIZE;
+
+    upp->packer = msgpack_packer_new(upp, ubirch_protocol_buffer_write);
+    if (upp->packer) { return NULL; }
+
+    if (variant == proto_plain) {
+        upp->ubirch_protocol_sign = NULL
+    } else {
+        upp->ubirch_protocol_sign = ed25519_sign;
+    }
+
+    upp->version = variant;
+    upp->type = payload_type;
+    memcpy(upp->uuid, uuid, UBIRCH_PROTOCOL_UUID_SIZE);
+    upp->hash.is384 = -1;
+
+    upp->status = UBIRCH_PROTOCOL_INITIALIZED;
+
+    return upp;
+}
+
 /**
-* Create a UPP (Ubirch Protocol Package)
+ * Create a UPP (Ubirch Protocol Package)
  *
  * @param variant protocol variant
  * @param uuid the uuid associated with the data
@@ -64,19 +124,8 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
                                                            uint8_t payload_type,
                                                            const unsigned char *payload, size_t payload_len) {
 
-    // prepare msgpack buffer and packer
-    msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-
-    ubirch_protocol *proto = (variant == proto_plain) ? ubirch_protocol_new(variant, payload_type, sbuf,
-                                                                            msgpack_sbuffer_write, NULL, uuid)
-                                                      : ubirch_protocol_new(variant, payload_type, sbuf,
-                                                                            msgpack_sbuffer_write, ed25519_sign, uuid);
-    if (!proto) { return NULL; }
-
-    msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
-    if (!pk) { return NULL; }
-
-//    TODO load PREVIOUS_SIGNATURE for chained msgs before ubirch_protocol_start
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new();
+    if (!upp) { return NULL; }
 
     // pack UPP header
     ubirch_protocol_start(proto, pk);
@@ -96,8 +145,6 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
     ubirch_protocol_finish(proto, pk);
 
     // allocate memory and store generated UPP in struct
-    ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) calloc(1, sizeof(ubirch_protocol_buffer));
-    if (!upp) { return NULL; }
     upp->data = (char *) realloc(upp->data, sbuf->size);
     if (!upp->data) { return NULL; }
 
@@ -113,7 +160,7 @@ static inline ubirch_protocol_buffer *ubirch_protocol_pack(ubirch_protocol_varia
 }
 
 /**
-* Create a chained UPP with new payload (chained to a previously created UPP)
+ * Create a chained UPP with new payload (chained to a previously created UPP)
  *
  * @param previous_upp the previous UPP, this buffer will be filled with the new UPP data
  * @param payload the byte array containing the new payload data

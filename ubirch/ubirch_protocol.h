@@ -92,6 +92,8 @@ extern "C" {
 
 #define UBIRCH_PROTOCOL_INITIALIZED 1       //!< protocol is initialized
 #define UBIRCH_PROTOCOL_STARTED     2       //!< protocol has started
+#define UBIRCH_PROTOCOL_FINISHED    3       //!< payload has been written to protocol
+#define UBIRCH_PROTOCOL_SIGNED      4       //!< protocol has been signed
 
 #define UBIRCH_PROTOCOL_TYPE_BIN 0x00       //!< payload is undefined and binary
 #define UBIRCH_PROTOCOL_TYPE_REG 0x01       //!< payload is defined as key register message
