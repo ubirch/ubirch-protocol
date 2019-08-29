@@ -46,9 +46,9 @@ extern "C" {
 #define UPP_BUFFER_INIT_SIZE 217    //!< initial allocated size for UPP data buffer
 
 typedef struct ubirch_protocol_buffer {
-    size_t size;
-    char data[UPP_BUFFER_INIT_SIZE];
-    size_t alloc;
+    size_t size;                                        //!< the number of bytes written to data buffer
+    char *data;                                         //!< the data buffer to write UPP to
+    size_t alloc;                                       //!< the number of bytes allocated for data buffer
     msgpack_packer *packer;                             //!< the underlying target packer serializing data
     ubirch_protocol_sign sign;                          //!< the message signing function
     uint8_t version;                                    //!< the specific used protocol version
@@ -60,32 +60,41 @@ typedef struct ubirch_protocol_buffer {
 } ubirch_protocol_buffer;
 
 
-static inline uint8_t ubirch_protocol_buffer_write(void *data, const char *buf, size_t len) {
+static inline int ubirch_protocol_buffer_write(void *data, const char *buf, size_t len) {
     ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) data;
 
-    if (upp->version == proto_signed || upp->version == proto_chained) {
-        mbedtls_sha512_update(&upp->hash, (const unsigned char *) buf, len);
-    }
-
+    // make sure there is enough space in data buffer
     if (upp->alloc - upp->size < len) {
         void *tmp = realloc(upp->data, upp->size + len);
         if (!tmp) { return -1; }
         upp->data = (char *) tmp;
     }
 
+    // update the data hash
+    if (upp->version == proto_signed || upp->version == proto_chained) {
+        mbedtls_sha512_update(&upp->hash, (const unsigned char *) buf, len);
+    }
+
+    // append new data to buffer
     memcpy(upp->data + upp->size, buf, len);
     upp->size += len;
+
     return 0;
 }
 
-static inline void ubirch_protocol_buffer_init(ubirch_protocol_buffer *upp,
-                                               ubirch_protocol_variant variant,
-                                               const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
-                                               uint8_t payload_type) {
+static inline int8_t ubirch_protocol_buffer_init(ubirch_protocol_buffer *upp,
+                                                 ubirch_protocol_variant variant,
+                                                 const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
+                                                 uint8_t payload_type) {
     memset(upp, 0, sizeof(upp));
+
+    upp->data = (char *) realloc(upp->data, UPP_BUFFER_INIT_SIZE);
+    if (!upp->data) { return -1; }
     upp->alloc = UPP_BUFFER_INIT_SIZE;
+
     msgpack_packer_init(upp->packer, upp, ubirch_protocol_buffer_write);
-    upp->ubirch_protocol_sign = ed25519_sign;
+
+    upp->sign = ed25519_sign;
     upp->version = variant;
     upp->type = payload_type;
     memcpy(upp->uuid, uuid, UBIRCH_PROTOCOL_UUID_SIZE);
@@ -100,7 +109,7 @@ static inline void ubirch_protocol_buffer_init(ubirch_protocol_buffer *upp,
  * @return -2 if the protocol was not initialized
  * @return -3 if the protocol version is not supported
  */
-static inline uint8_t ubirch_protocol_buffer_start(ubirch_protocol_buffer *upp) {
+static inline int8_t ubirch_protocol_buffer_start(ubirch_protocol_buffer *upp) {
     if (!upp) { return -1; }
     if (upp->status != UBIRCH_PROTOCOL_INITIALIZED) { return -2; }
 
@@ -152,13 +161,13 @@ static inline uint8_t ubirch_protocol_buffer_start(ubirch_protocol_buffer *upp) 
  * @return -2 if used before ubirch_protocol_start or does not have any payload
  * @return -3 if the signing failed
  */
-static inline uint8_t ubirch_protocol_add_payload(ubirch_protocol_buffer *upp,
-                                                  const unsigned char *payload, size_t payload_len) {
+static inline int8_t ubirch_protocol_add_payload(ubirch_protocol_buffer *upp,
+                                                 const unsigned char *payload, size_t payload_len) {
     if (!upp) { return -1; }
     if (upp->status != UBIRCH_PROTOCOL_STARTED) { return -2; }
 
     // 5 add the payload
-    if (payload_type == UBIRCH_PROTOCOL_TYPE_REG) {
+    if (upp->type == UBIRCH_PROTOCOL_TYPE_REG) {
         // create a key registration packet and add it to UPP
         ubirch_key_info *info = (ubirch_key_info *) payload;
         msgpack_pack_key_register(upp->packer, info);
@@ -181,7 +190,7 @@ static inline uint8_t ubirch_protocol_add_payload(ubirch_protocol_buffer *upp,
  * @return -2 if used before ubirch_protocol_start or ubirch_protocol_add_payload
  * @return -3 if the signing failed
  */
-static inline uint8_t ubirch_protocol_buffer_finish(ubirch_protocol_buffer *upp) {
+static inline int8_t ubirch_protocol_buffer_finish(ubirch_protocol_buffer *upp) {
     if (!upp) { return -1; }
     if (upp->status != UBIRCH_PROTOCOL_HAS_PAYLOAD) { return -2; }
 
@@ -194,8 +203,8 @@ static inline uint8_t ubirch_protocol_buffer_finish(ubirch_protocol_buffer *upp)
         }
 
         // 6 add signature hash
-        msgpack_pack_bin(pk, UBIRCH_PROTOCOL_SIGN_SIZE);
-        msgpack_pack_bin_body(pk, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
+        msgpack_pack_bin(upp->packer, UBIRCH_PROTOCOL_SIGN_SIZE);
+        msgpack_pack_bin_body(upp->packer, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
     }
 
     upp->status = UBIRCH_PROTOCOL_INITIALIZED;
@@ -214,97 +223,44 @@ static inline uint8_t ubirch_protocol_buffer_finish(ubirch_protocol_buffer *upp)
  * @param payload_len the number of bytes in the payload
  * @return 0 if successful
  * @return -1 if upp is NULL
- * @return -2 protocol version not supported
- * @return -3 if the signing failed
+ * @return -2 if allocating memory failed
+ * @return -3 protocol version not supported
+ * @return -4 if the signing failed
 */
-static inline uint8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
+static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
                                            ubirch_protocol_variant variant,
                                            const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
                                            uint8_t payload_type,
                                            const unsigned char *payload, size_t payload_len) {
     uint8_t error = 0;
     if (!upp) { return -1; }
-    // initialize UPP context
-    ubirch_protocol_buffer_init(upp, variant, uuid, payload_type);
+
+    // initialize UPP context if not initialized yet
+    if (upp->status != UBIRCH_PROTOCOL_INITIALIZED) {       //FIXME this will not work on uninitialized struct
+        error = ubirch_protocol_buffer_init(upp, variant, uuid, payload_type);
+        if (error) { return -2; }
+    } else {
+        // clear buffer
+        upp->size = 0;
+    }
 
     // pack UPP header
     error = ubirch_protocol_buffer_start(upp);
-    if (error) { return -2 }
+    if (error) { return -3; }
 
     // add payload
     ubirch_protocol_add_payload(upp, payload, payload_len);
 
     // sign the package
     error = ubirch_protocol_buffer_finish(upp);
-    if (error) { return -3 }
+    if (error) { return -4; }
 
     return 0;
 }
 
-/**
- * Create a chained UPP with new payload (chained to a previously created UPP)
- *
- * @param previous_upp the previous UPP, this buffer will be filled with the new UPP data
- * @param payload the byte array containing the new payload data
- * @param payload_len the number of bytes in the new payload
- * @return 0 if successful
- * @return -1 if previous UPP either empty or was not chained
- * @return -2 if allocating memory for new message failed
- * @return -3 if the signing failed
-*/
-static inline int ubirch_protocol_chain_message(ubirch_protocol_buffer *previous_upp, const unsigned char *payload,
-                                                size_t payload_len) {
-    if (!previous_upp || !previous_upp->data || !previous_upp->size) { return -1; }
-    // make sure previous UPP was chained
-    if (previous_upp->data[1] != proto_chained) { return -1; }
-
-    // get a pointer to start of signature of previous UPP
-    char *upp_signature = previous_upp->data + (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE);
-    // get a pointer to start of UPP field for previous signature
-    char *previous_signature_field = previous_upp->data + 22;  // FIXME magic number (version + UUID + 5 msgpack-bytes)
-    // write signature of previous UPP in previous-signature-field of new UPP
-    memcpy(previous_signature_field, upp_signature, UBIRCH_PROTOCOL_SIGN_SIZE);
-
-    // make sure, there is enough space for new payload
-    size_t unsigned_upp_size = 89 + payload_len;
-    if (previous_upp->size - UBIRCH_PROTOCOL_SIGN_SIZE < unsigned_upp_size) {
-        void *tmp = realloc(previous_upp->data, unsigned_upp_size + 2 + UBIRCH_PROTOCOL_SIGN_SIZE);
-        if (!tmp) { return -2; }
-        previous_upp->data = (char *) tmp;
-    }
-    // update size for new UPP
-    previous_upp->size = unsigned_upp_size + 2 + UBIRCH_PROTOCOL_SIGN_SIZE;
-
-    // get a pointer to start of UPP payload field
-    char *payload_field = previous_upp->data + 89;  // FIXME magic number (HEADER_SIZE)
-    // update msgpack bytes to new size of payload field    // FIXME this only works for payloads <= 0xFF (255 byte)
-    previous_upp->data[88] = (const unsigned char) payload_len;
-    // write payload to payload field
-    memcpy(payload_field, payload, payload_len);
-
-    // add signature
-    mbedtls_sha512_context hash;
-    hash.is384 = -1;
-    mbedtls_sha512_init(&hash);
-    mbedtls_sha512_starts(&hash, 0);
-    mbedtls_sha512_update(&hash, (const unsigned char *) previous_upp->data, unsigned_upp_size);
-
-    unsigned char sha512sum[UBIRCH_PROTOCOL_SIGN_SIZE];
-    unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE];
-    mbedtls_sha512_finish(&hash, sha512sum);
-
-    if (ed25519_sign(sha512sum, sizeof(sha512sum), signature)) {
-        return -3;
-    }
-
-    // get a pointer to start of signature field for new upp
-    char *new_upp_signature = previous_upp->data + (unsigned_upp_size);
-    // add msgpack bytes
-    unsigned char msgpack_bytes[2] = {0xc4, UBIRCH_PROTOCOL_SIGN_SIZE};
-    memcpy(new_upp_signature, msgpack_bytes, 2);
-    // append signature hash to UPP
-    memcpy(new_upp_signature + 2, signature, UBIRCH_PROTOCOL_SIGN_SIZE);
-
+static inline int8_t ubirch_protocol_set_sign(ubirch_protocol_buffer *upp, ubirch_protocol_sign sign) {
+    if (upp->status != UBIRCH_PROTOCOL_INITIALIZED) { return -1; }
+    upp->sign = sign;
     return 0;
 }
 
