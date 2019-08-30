@@ -86,18 +86,16 @@ static inline int8_t ubirch_protocol_buffer_init(ubirch_protocol_buffer *upp,
                                                  ubirch_protocol_variant variant,
                                                  const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
                                                  uint8_t payload_type) {
-    memset(upp, 0, sizeof(upp));
-
+    upp->size = 0;
     upp->data = (char *) realloc(upp->data, UPP_BUFFER_INIT_SIZE);
     if (!upp->data) { return -1; }
     upp->alloc = UPP_BUFFER_INIT_SIZE;
-
     msgpack_packer_init(upp->packer, upp, ubirch_protocol_buffer_write);
-
-    upp->sign = ed25519_sign;
+    upp->sign = ed25519_sign;   //FIXME initialize to NULL and let user set?
     upp->version = variant;
     upp->type = payload_type;
     memcpy(upp->uuid, uuid, UBIRCH_PROTOCOL_UUID_SIZE);
+    memset(upp->uuid, 0, sizeof(upp->uuid));
     upp->hash.is384 = -1;
     upp->status = UBIRCH_PROTOCOL_INITIALIZED;
 }
@@ -236,7 +234,8 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
     if (!upp) { return -1; }
 
     // initialize UPP context if not initialized yet
-    if (upp->status != UBIRCH_PROTOCOL_INITIALIZED) {       //FIXME this will not work on uninitialized struct
+//    if (upp->status != UBIRCH_PROTOCOL_INITIALIZED) {       //FIXME this will not work on uninitialized struct
+    if (&upp->data[1] == NULL) {
         error = ubirch_protocol_buffer_init(upp, variant, uuid, payload_type);
         if (error) { return -2; }
     } else {
