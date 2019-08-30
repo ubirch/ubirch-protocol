@@ -164,20 +164,22 @@ void TestSimpleMessage() {
 
 void TestProtocolSimpleAPI() {
     const unsigned char msg[] = {0x24, 0x98};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    ubirch_protocol_buffer upp;
 
-    TEST_ASSERT_NOT_NULL(upp);
-    TEST_ASSERT_NOT_NULL(upp->data);
-    TEST_ASSERT_NOT_EQUAL(0, upp->size);
+    int8_t ret = ubirch_protocol_pack(&upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "failed to pack UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp.data, "no data in generated UPP");
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp.size, "UPP size should not be 0");
 
     const unsigned char expected_message[] = {
             0x94, 0x21, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d,
             0x6e, 0x6f, 0x70, 0x00, 0xc4, 0x02, 0x24, 0x98,
     };
-    TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
-    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp.size, "message length wrong");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp.data, upp.size, "message serialization failed");
 
-    ubirch_protocol_buffer_free(upp);
+    ubirch_protocol_buffer_free(&upp);
 }
 
 void TestProtocolSimpleAPIVerify() {
@@ -185,18 +187,20 @@ void TestProtocolSimpleAPIVerify() {
     size_t encoded_size;
 
     const unsigned char msg[] = {99};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    ubirch_protocol_buffer upp;
 
-    TEST_ASSERT_NOT_NULL(upp);
-    TEST_ASSERT_NOT_NULL(upp->data);
-    TEST_ASSERT_NOT_EQUAL(0, upp->size);
+    int8_t ret = ubirch_protocol_pack(&upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "failed to pack UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp.data, "no data in generated UPP");
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp.size, "UPP size should not be 0");
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
-                          (unsigned char *) upp->data, upp->size);
+                          (unsigned char *) upp.data, upp.size);
     greentea_send_kv("checkMessage", _value, encoded_size);
 
-    ubirch_protocol_buffer_free(upp);
+    ubirch_protocol_buffer_free(&upp);
 
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
     TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "message verification failed");
@@ -205,17 +209,18 @@ void TestProtocolSimpleAPIVerify() {
 
 void TestProtocolSimpleAPIFree() {
     const unsigned char msg[] = {0x24, 0x98};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    ubirch_protocol_buffer upp;
 
-    TEST_ASSERT_NOT_NULL(upp);
-    TEST_ASSERT_NOT_NULL(upp->data);
-    TEST_ASSERT_NOT_EQUAL(0, upp->size);
+    int8_t ret = ubirch_protocol_pack(&upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    ubirch_protocol_buffer_free(upp);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "failed to pack UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp.data, "no data in generated UPP");
+    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp.size, "UPP size should not be 0");
 
-    TEST_ASSERT_NULL_MESSAGE(&upp->size, "upp->size not free");
-    TEST_ASSERT_NULL_MESSAGE(upp->data, "upp->data not free");
-    TEST_ASSERT_NULL_MESSAGE(upp, "upp not free");
+    ubirch_protocol_buffer_free(&upp);
+
+    TEST_ASSERT_NULL_MESSAGE(&upp.size, "upp->size not free");
+    TEST_ASSERT_NULL_MESSAGE(&upp.data, "upp->data not free");
 }
 
 
