@@ -169,8 +169,10 @@ void TestProtocolSimpleAPI() {
     int8_t ret = ubirch_protocol_pack(&upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "failed to pack UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp.data, "no data in generated UPP");
+    TEST_ASSERT_NOT_NULL_MESSAGE(&upp.data, "no data in generated UPP");
     TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp.size, "UPP size should not be 0");
+
+    printUPP(upp.data, upp.size);
 
     const unsigned char expected_message[] = {
             0x94, 0x21, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d,
@@ -219,7 +221,6 @@ void TestProtocolSimpleAPIFree() {
 
     ubirch_protocol_buffer_free(&upp);
 
-    TEST_ASSERT_NULL_MESSAGE(&upp.size, "upp->size not free");
     TEST_ASSERT_NULL_MESSAGE(&upp.data, "upp->data not free");
 }
 
@@ -252,8 +253,8 @@ int main() {
                  TestProtocolSimpleAPI, greentea_case_failure_abort_handler),
             Case("ubirch protocol simple API [plain] verify",
                  TestProtocolSimpleAPIVerify, greentea_case_failure_abort_handler),
-//            Case("ubirch protocol simple API [plain] free dynamically allocated memory",
-//                 TestProtocolSimpleAPIFree, greentea_case_failure_abort_handler),
+            Case("ubirch protocol simple API [plain] free dynamically allocated memory",
+                 TestProtocolSimpleAPIFree, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);

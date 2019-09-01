@@ -61,7 +61,7 @@ typedef struct ubirch_protocol_buffer {
 
 
 static inline int ubirch_protocol_buffer_write(void *data, const char *buf, size_t len) {
-    fprintf(stderr, "\r\nubirch_protocol_buffer_write\r\n\r\n");
+    fprintf(stderr, "\r\nubirch_protocol_buffer_write\r\n");
     ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) data;
 
     // make sure there is enough space in data buffer
@@ -104,7 +104,7 @@ static inline int8_t ubirch_protocol_buffer_init(ubirch_protocol_buffer *upp,
     upp->version = variant;
     upp->type = payload_type;
     memcpy(upp->uuid, uuid, UBIRCH_PROTOCOL_UUID_SIZE);
-    memset(upp->signature, 0, sizeof(upp->signature));
+    memset(upp->signature, 0, UBIRCH_PROTOCOL_SIGN_SIZE);
     upp->hash.is384 = -1;
     upp->status = UBIRCH_PROTOCOL_INITIALIZED;
 
@@ -234,12 +234,12 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
                                            const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
                                            uint8_t payload_type,
                                            const unsigned char *payload, size_t payload_len) {
-    uint8_t error = 0;
+    int8_t error = 0;
     if (!upp) { return -1; }
 
     // initialize UPP context if not initialized yet
     if (upp->status != UBIRCH_PROTOCOL_INITIALIZED) {       //FIXME is this safe on uninitialized struct?
-        fprintf(stderr, "\r\ninitializing buffer\r\n\r\n");
+        fprintf(stderr, "\r\ninitializing buffer\r\n");
         error = ubirch_protocol_buffer_init(upp, variant, uuid, payload_type);
         if (error) {
             fprintf(stderr, "\r\nINITIALIZATION FAILED! ERROR: %d\r\n\r\n", error);
@@ -247,11 +247,11 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
         }
     } else {
         // clear buffer
-        fprintf(stderr, "\r\nclearing buffer\r\n\r\n");
+        fprintf(stderr, "\r\nclearing buffer\r\n");
         upp->size = 0;
     }
 
-    fprintf(stderr, "\r\nstart upp\r\n\r\n");
+    fprintf(stderr, "\r\nstart upp\r\n");
     // pack UPP header
     error = ubirch_protocol_buffer_start(upp);
     if (error) {
@@ -260,9 +260,11 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
     }
 
     // add payload
+    fprintf(stderr, "\r\nadd payload\r\n");
     ubirch_protocol_add_payload(upp, payload, payload_len);
 
     // sign the package
+    fprintf(stderr, "\r\nsign\r\n");
     error = ubirch_protocol_buffer_finish(upp);
     if (error) { return -4; }
 
@@ -276,10 +278,11 @@ static inline int8_t ubirch_protocol_set_sign(ubirch_protocol_buffer *upp, ubirc
 }
 
 static inline void ubirch_protocol_buffer_free(ubirch_protocol_buffer *buf) {
+    fprintf(stderr, "\r\nfreeing\r\n");
     if (buf == NULL) { return; }
-    free(buf->data);
-    msgpack_packer_free(&buf->packer);
-//    free(buf);
+    // FIXME next line crashes
+//    if (&buf->packer != NULL){ msgpack_packer_free(&buf->packer); }  //free packer before data (packer points to data)
+    if (&buf->data != NULL) { free(buf->data); }
 }
 
 static inline void printUPP(const char *data, const size_t len) {
