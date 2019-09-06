@@ -278,6 +278,10 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
     // clear buffer
     upp->size = upp->header_size;
 
+    // remember hash of header
+    mbedtls_sha512_context tmp_hash;
+    memcpy(&tmp_hash, &upp->hash, sizeof(tmp_hash));
+
     // add payload
     ubirch_protocol_add_payload(upp, payload, payload_len);
 
@@ -287,6 +291,9 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
         fprintf(stderr, "\r\nUPP SIGN FAILED! ERROR: %d\r\n\r\n", error);
         return -2;
     }
+
+    // reset hash
+    memcpy(&upp->hash, &tmp_hash, sizeof(tmp_hash));
 
     return 0;
 }
@@ -303,7 +310,7 @@ static inline void ubirch_protocol_buffer_free(ubirch_protocol_buffer *buf) {
         if (buf->data != NULL) {
             free(buf->data);
         }
-
+        mbedtls_sha512_free(&buf->hash);
         free(buf);
     }
 }
