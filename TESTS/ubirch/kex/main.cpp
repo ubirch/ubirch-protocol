@@ -153,11 +153,11 @@ void TestSimpleAPISignKeyRegisterMessage() {
     info.validNotAfter = static_cast<long>(timestamp + 60000);
     info.validNotBefore = static_cast<long>(timestamp);
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
-                                                             ed25519_sign);
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, reinterpret_cast<const unsigned char *> (&info), sizeof(info));
+    int8_t ret = ubirch_protocol_pack(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
+                                      reinterpret_cast<const unsigned char *> (&info), sizeof(info));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     const unsigned char expectedMessage[] = {
@@ -200,11 +200,11 @@ void TestSimpleAPISimpleKeyVerify() {
 
     greentea_send_kv("publicKey", _value);
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
-                                                             ed25519_sign);
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, reinterpret_cast<const unsigned char *> (&info), sizeof(info));
+    int8_t ret = ubirch_protocol_pack(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
+                                      reinterpret_cast<const unsigned char *> (&info), sizeof(info));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));

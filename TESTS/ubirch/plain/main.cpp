@@ -165,11 +165,11 @@ void TestSimpleMessage() {
 void TestProtocolSimpleAPI() {
     const unsigned char msg[] = {0x24, 0x98};
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, NULL);
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(NULL);
 
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_pack(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
@@ -188,11 +188,11 @@ void TestProtocolSimpleAPIVerify() {
     size_t encoded_size;
     const unsigned char msg[] = {99};
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, NULL);
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(NULL);
 
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_pack(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
@@ -210,11 +210,11 @@ void TestProtocolSimpleAPIVerify() {
 
 void TestProtocolSimpleAPIFree() {      //FIXME not passing
     const unsigned char msg[] = {0x24, 0x98};
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, NULL);
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(NULL);
 
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_pack(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
