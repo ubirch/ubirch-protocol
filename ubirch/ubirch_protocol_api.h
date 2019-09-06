@@ -55,7 +55,6 @@ typedef struct ubirch_protocol_buffer {
     uint8_t type;                                       //!< the payload type (0 - unspecified, app specific)
     unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE];      //!< the uuid of the sender (used to retrieve the keys)
     unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]; //!< the current or previous signature of a message
-    mbedtls_sha512_context hash;                        //!< the streaming hash of the data to sign
     uint8_t status;                                     //!< the status of the protocol package
     size_t header_size;
 } ubirch_protocol_buffer;
@@ -69,11 +68,6 @@ static inline int ubirch_protocol_buffer_write(void *data, const char *buf, size
         void *tmp = realloc(upp->data, upp->size + len);
         if (!tmp) { return -1; }
         upp->data = (char *) tmp;
-    }
-
-    // update the data hash
-    if (upp->version == proto_signed || upp->version == proto_chained) {
-        mbedtls_sha512_update(&upp->hash, (const unsigned char *) buf, len);
     }
 
     // append new data to buffer
@@ -114,7 +108,6 @@ static inline int8_t ubirch_protocol_buffer_init(ubirch_protocol_buffer *upp,
     upp->type = payload_type;
     memcpy(upp->uuid, uuid, UBIRCH_PROTOCOL_UUID_SIZE);
     memset(upp->signature, 0, UBIRCH_PROTOCOL_SIGN_SIZE);
-    upp->hash.is384 = -1;
     upp->status = UBIRCH_PROTOCOL_INITIALIZED;
 
     return 0;
@@ -131,11 +124,6 @@ static inline int8_t ubirch_protocol_buffer_start(ubirch_protocol_buffer *upp) {
     if (!upp) { return -1; }
     if (upp->status !=
         UBIRCH_PROTOCOL_INITIALIZED) { return -2; }  //FIXME this check is not safe on uninitialized struct
-
-    if (upp->version == proto_signed || upp->version == proto_chained) {
-        mbedtls_sha512_init(&upp->hash);
-        mbedtls_sha512_starts(&upp->hash, 0);
-    }
 
     // the message consists of 3 header elements, the payload and (not included) the signature
     switch (upp->version) {
@@ -245,7 +233,7 @@ static inline int8_t ubirch_protocol_buffer_finish(ubirch_protocol_buffer *upp) 
     // only add signature if we have a chained or signed message
     if (upp->version == proto_signed || upp->version == proto_chained) {
         unsigned char sha512sum[UBIRCH_PROTOCOL_HASH_SIZE];
-        mbedtls_sha512_finish(&upp->hash, sha512sum);
+        mbedtls_sha512((const unsigned char *) upp->data, upp->size, sha512sum, 0);
         if (upp->sign(sha512sum, sizeof(sha512sum), upp->signature)) {
             return -3;
         }
@@ -278,10 +266,6 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
     // clear buffer
     upp->size = upp->header_size;
 
-    // remember hash of header
-    mbedtls_sha512_context tmp_hash;
-    memcpy(&tmp_hash, &upp->hash, sizeof(tmp_hash));
-
     // add payload
     ubirch_protocol_add_payload(upp, payload, payload_len);
 
@@ -291,9 +275,6 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
         fprintf(stderr, "\r\nUPP SIGN FAILED! ERROR: %d\r\n\r\n", error);
         return -2;
     }
-
-    // reset hash
-    memcpy(&upp->hash, &tmp_hash, sizeof(tmp_hash));
 
     return 0;
 }
@@ -310,7 +291,6 @@ static inline void ubirch_protocol_buffer_free(ubirch_protocol_buffer *buf) {
         if (buf->data != NULL) {
             free(buf->data);
         }
-        mbedtls_sha512_free(&buf->hash);
         free(buf);
     }
 }
