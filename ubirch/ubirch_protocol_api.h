@@ -29,32 +29,97 @@
 extern "C" {
 #endif
 
-#include "ubirch_protocol.h"
-#include "ubirch_protocol_kex.h"
-#include "ubirch_ed25519.h"
+#ifndef MSGPACK_ZONE_CHUNK_SIZE
+#define MSGPACK_ZONE_CHUNK_SIZE 128
+#endif
+
+// we use an mbed port of msgpack which tries to include arpa/inet.h if __MBED__ is not defined
+// so we fake it here, if we compile for another system. It does not have any other impact.
+#ifndef __MBED__
+#define __MBED__
+#include <msgpack.h>
+#undef __MBED__
+#else
+#include <msgpack.h>
+#endif
 
 #if defined(MBEDTLS_CONFIG_FILE)
 #include <mbedtls/sha512.h>
 #else
-
 #include "digest/sha512.h"
-
 #endif
 
-#include <stdio.h>  //TODO take this out (only for testing)
+#include "ubirch_protocol_kex.h"
 
-#define UPP_BUFFER_INIT_SIZE 217    //!< initial allocated size for UPP data buffer
+#define UPP_BUFFER_INIT_SIZE 217    //!< initial allocation size for UPP data buffer, enough space for chained message with 64 byte payload
 
+#define UBIRCH_PROTOCOL_VERSION     2       //!< current ubirch protocol version
+#define UBIRCH_PROTOCOL_PLAIN       0x01    //!< plain protocol without signatures (unsafe)
+#define UBIRCH_PROTOCOL_SIGNED      0x02    //!< signed messages (unchained)
+#define UBIRCH_PROTOCOL_CHAINED     0x03    //!< chained signed messages
+
+#define UBIRCH_PROTOCOL_PUBKEY_SIZE 32      //!< public key size
+#define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes (same as size of hash)
+#define UBIRCH_PROTOCOL_UUID_SIZE   16      //!< the size of a UUID
+
+#define UBIRCH_PROTOCOL_TYPE_BIN 0x00       //!< payload is undefined and binary
+#define UBIRCH_PROTOCOL_TYPE_REG 0x01       //!< payload is defined as key register message
+#define UBIRCH_PROTOCOL_TYPE_HSK 0x02       //!< payload is a key handshake message
+
+typedef enum ubirch_protocol_variant {
+    proto_plain = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_PLAIN),
+    proto_signed = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_SIGNED),
+    proto_chained = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_CHAINED)
+} ubirch_protocol_variant;
+
+/**
+ * The signature function type necessary to sign the message for the ubirch protocol.
+ * This function is called from #ubirch_protocol_finish
+ *
+ * @param buf the data to sign
+ * @param len the length of the data buffer
+ * @param signature the buffer to hold the returned signature (64 byte)
+ * @return 0 on success
+ * @return -1 if the signing failed
+ */
+typedef int (*ubirch_protocol_sign)(const unsigned char *buf, size_t len,
+                                    unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
+
+/**
+ * The verification function to check the validity of the message.
+ * This function is called from #ubirch_protocol_verify
+ *
+ * @param buf the data to verify
+ * @param len the length of the data buffer
+ * @param signature the signature to check the data with (64 byte)
+ * @return 0 on success
+ * @return -1 if the verification failed
+ */
+typedef int (*ubirch_protocol_check)(const unsigned char *buf, size_t len,
+                                     const unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
+
+/**
+ * ubirch protocol context, which holds a data buffer for the ubirch protocol package,
+ * the underlying packer, the message signing function as well as the signature of last package.
+ */
 typedef struct ubirch_protocol_buffer {
-    size_t size;                                        //!< the number of bytes written to data buffer
+    size_t size;                                        //!< the current number of bytes written to data buffer
     char *data;                                         //!< the data buffer to write UPP to
-    size_t alloc;                                       //!< the number of bytes allocated for data buffer
+    size_t alloc;                                       //!< the current number of bytes allocated for data buffer
     msgpack_packer packer;                              //!< the underlying target packer for serializing data
     ubirch_protocol_sign sign;                          //!< the message signing function
-    unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]; //!< the current or previous signature of a message
+    unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]; //!< the signature of the previous message, will be 0 on init
 } ubirch_protocol_buffer;
 
-
+/**
+ * Callback for msgpack_packer to write data to UPP data buffer.
+ *
+ * @param data the ubirch protocol context
+ * @param buf the data to write
+ * @param len the length of the data
+ * @return 0 if successful
+ * @return -1 if fail to reallocate memory for data buffer
+ */
 static inline int ubirch_protocol_buffer_write(void *data, const char *buf, size_t len) {
     ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) data;
 
@@ -73,12 +138,12 @@ static inline int ubirch_protocol_buffer_write(void *data, const char *buf, size
 }
 
 /**
- * Create new Ubirch protocol context
+ * Create new ubirch protocol context
+ *
  * @param sign a callback used for signing a message
- * @return the Ubirch protocol context
+ * @return a new initialized ubirch protocol context
  */
 static inline ubirch_protocol_buffer *ubirch_protocol_buffer_new(ubirch_protocol_sign sign) {
-    //TODO register key pair here?
 
     //allocate memory for UPP struct
     ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) malloc(sizeof(ubirch_protocol_buffer));
@@ -103,6 +168,7 @@ static inline ubirch_protocol_buffer *ubirch_protocol_buffer_new(ubirch_protocol
 
 /**
  * Start a new message. Writes the header data.
+ *
  * @param upp the Ubirch protocol context
  * @return -1 if upp is NULL
  * @return -2 if the protocol version is not supported
@@ -174,7 +240,7 @@ static inline int8_t ubirch_protocol_buffer_finish(ubirch_protocol_buffer *upp, 
 
     // only add signature if we have a chained or signed message
     if (variant == proto_signed || variant == proto_chained) {
-        unsigned char sha512sum[UBIRCH_PROTOCOL_HASH_SIZE];
+        unsigned char sha512sum[UBIRCH_PROTOCOL_SIGN_SIZE];
         mbedtls_sha512((const unsigned char *) upp->data, upp->size, sha512sum, 0);
         if (upp->sign(sha512sum, sizeof(sha512sum), upp->signature)) {
             return -2;
@@ -233,6 +299,10 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
     return 0;
 }
 
+/**
+ * Free memory for a ubirch protocol context.
+ * @param proto the protocol context
+ */
 static inline void ubirch_protocol_buffer_free(ubirch_protocol_buffer *buf) {
     if (buf != NULL) {
         if (buf->data != NULL) {
