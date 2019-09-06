@@ -250,11 +250,13 @@ void TestVerifyMessage() {
 void TestSimpleAPIVerifyMessage() {
     // create a new message a sign it
     const unsigned char msg[] = {99};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
-    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                             ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
+
+    int8_t ret = ubirch_protocol_pack(upp, msg, sizeof(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     // unpack and verify
     msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
@@ -280,11 +282,13 @@ void TestSimpleAPISimpleMessage() {
     greentea_send_kv("publicKey", _value);
 
     const unsigned char msg[] = {0x09, 0xC2};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
-    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                             ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
+
+    int8_t ret = ubirch_protocol_pack(upp, msg, sizeof(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -310,11 +314,13 @@ void TestSimpleAPISimpleMessage() {
 
 void TestProtocolSimpleAPIMessageFinish() {
     const unsigned char msg[] = {0x09, 0xC2};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
-    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                             ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
+
+    int8_t ret = ubirch_protocol_pack(upp, msg, sizeof(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     const unsigned char expected_message[] = {
             0x95, 0x22, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e,

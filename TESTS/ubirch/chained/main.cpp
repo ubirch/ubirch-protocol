@@ -340,12 +340,14 @@ void TestVerifyMessage() {
 /**********************************************************************************************************************/
 
 void TestProtocolSimpleAPIMessageFinish() {
-    const unsigned char msg[] = {0x09, 0xC2};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
-    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                             ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
+
+    const unsigned char msg[] = {0x09, 0xC2};
+    int8_t ret = ubirch_protocol_pack(upp, msg, sizeof(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     const unsigned char expected_message[] = {
             0x96, 0x23, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e,
@@ -374,12 +376,13 @@ void TestSimpleAPISimpleMessage() {
                           ed25519_public_key, crypto_sign_PUBLICKEYBYTES);
     greentea_send_kv("publicKey", _value);
 
-    const unsigned char msg[] = {0x09, 0xC2};
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                             ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
-    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+    const unsigned char msg[] = {0x09, 0xC2};
+    int8_t ret = ubirch_protocol_pack(upp, msg, sizeof(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -396,19 +399,20 @@ void TestSimpleAPISimpleMessage() {
 void TestSimpleAPIChainedMessage() {
     char _key[20], _value[300], _value_in[300];
     size_t encoded_size;
+    int8_t ret = 0;
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
                           ed25519_public_key, crypto_sign_PUBLICKEYBYTES);
     greentea_send_kv("publicKey", _value);
 
-    const char *message1 = "message 1";
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
-                                                       (const unsigned char *) message1, strlen(message1));
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                             ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
-    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+    const char *message1 = "message 1";
+    ret = ubirch_protocol_pack(upp, (const unsigned char *) message1, strlen(message1));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -426,8 +430,8 @@ void TestSimpleAPIChainedMessage() {
 
 
     const char *message2 = "message 2 (is a bit longer)";
-    int error = ubirch_protocol_chain_message(upp, (const unsigned char *) message2, strlen(message2));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, error, "ubirch_protocol_chain_message returned error");
+    ret = ubirch_protocol_pack(upp, (const unsigned char *) message2, strlen(message2));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -445,8 +449,8 @@ void TestSimpleAPIChainedMessage() {
 
 
     const char *message3 = "msg3";
-    error = ubirch_protocol_chain_message(upp, (const unsigned char *) message3, strlen(message3));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, error, "ubirch_protocol_chain_message returned error");
+    ret = ubirch_protocol_pack(upp, (const unsigned char *) message3, strlen(message3));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -468,22 +472,22 @@ void TestSimpleAPIChainedMessage() {
 void TestSimpleAPIChainedStaticMessage() {
     char _key[20], _value[300], _value_in[300];
     size_t encoded_size;
-    int error;
+    int8_t ret = 0;
+    const char *staticValue = "STATIC";
 
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
                           ed25519_public_key, crypto_sign_PUBLICKEYBYTES);
     greentea_send_kv("publicKey", _value);
 
-    const char *staticValue = "STATIC";
-    ubirch_protocol_buffer *upp = ubirch_protocol_pack(proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
-                                                       (const unsigned char *) staticValue, strlen(staticValue));
-
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "failed to create UPP");
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "no data in generated UPP");
-    TEST_ASSERT_NOT_EQUAL_MESSAGE(0, upp->size, "UPP size shouldn't be 0");
+    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
+                                                             ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
     for (int i = 0; i < 5; i++) {
+        ret = ubirch_protocol_pack(upp, (const unsigned char *) staticValue, strlen(staticValue));
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
+
         // unpack and verify
         msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
         if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
@@ -508,9 +512,6 @@ void TestSimpleAPIChainedStaticMessage() {
 
         greentea_parse_kv(_key, _value_in, sizeof(_key), sizeof(_value_in));
         TEST_ASSERT_EQUAL_STRING_MESSAGE(staticValue, _value_in, "payload comparison failed");
-
-        error = ubirch_protocol_chain_message(upp, (const unsigned char *) staticValue, strlen(staticValue));
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, error, "ubirch_protocol_chain_message returned error");
     }
 
     ubirch_protocol_buffer_free(upp);

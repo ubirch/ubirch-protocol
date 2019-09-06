@@ -62,7 +62,6 @@ typedef struct ubirch_protocol_buffer {
 
 
 static inline int ubirch_protocol_buffer_write(void *data, const char *buf, size_t len) {
-    fprintf(stderr, "\r\nubirch_protocol_buffer_write\r\n");
     ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) data;
 
     // make sure there is enough space in data buffer
@@ -95,7 +94,7 @@ static inline int ubirch_protocol_buffer_write(void *data, const char *buf, size
 static inline int8_t ubirch_protocol_buffer_init(ubirch_protocol_buffer *upp,
                                                  ubirch_protocol_variant variant,
                                                  const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
-                                                 uint8_t payload_type) {
+                                                 uint8_t payload_type, ubirch_protocol_sign sign) {
     if (!upp) { return -1; }
 
     upp->size = 0;
@@ -108,13 +107,10 @@ static inline int8_t ubirch_protocol_buffer_init(ubirch_protocol_buffer *upp,
     msgpack_packer_init(&upp->packer, upp, ubirch_protocol_buffer_write);
 
     // set user sign function
-    if (variant == proto_signed || variant == proto_chained) {
-        upp->sign = ed25519_sign;   //TODO always initialize to NULL and let user set?
-    } else {
-        upp->sign = NULL;
-    }
+    upp->sign = sign;
 
-    upp->version = variant; // FIXME optimize
+    // FIXME optimize
+    upp->version = variant;
     upp->type = payload_type;
     memcpy(upp->uuid, uuid, UBIRCH_PROTOCOL_UUID_SIZE);
     memset(upp->signature, 0, UBIRCH_PROTOCOL_SIGN_SIZE);
@@ -186,7 +182,7 @@ static inline int8_t ubirch_protocol_buffer_start(ubirch_protocol_buffer *upp) {
  */
 static inline ubirch_protocol_buffer *ubirch_protocol_buffer_new(ubirch_protocol_variant variant,
                                                                  const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
-                                                                 uint8_t payload_type) {
+                                                                 uint8_t payload_type, ubirch_protocol_sign sign) {
 
     int8_t error = 0;
     //TODO register key pair here?
@@ -196,7 +192,7 @@ static inline ubirch_protocol_buffer *ubirch_protocol_buffer_new(ubirch_protocol
     if (upp == NULL) { return NULL; }
 
     // initialize UPP struct
-    error = ubirch_protocol_buffer_init(upp, variant, uuid, payload_type);
+    error = ubirch_protocol_buffer_init(upp, variant, uuid, payload_type, sign);
     if (error) {
         fprintf(stderr, "\r\nUPP INIT FAILED! ERROR: %d\r\n\r\n", error);
         return NULL;
@@ -259,7 +255,7 @@ static inline int8_t ubirch_protocol_buffer_finish(ubirch_protocol_buffer *upp) 
         msgpack_pack_bin_body(&upp->packer, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
     }
 
-    upp->status = UBIRCH_PROTOCOL_INITIALIZED;
+    upp->status = UBIRCH_PROTOCOL_STARTED;
 
     return 0;
 }
@@ -283,13 +279,14 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
     upp->size = upp->header_size;
 
     // add payload
-    fprintf(stderr, "\r\nadd payload\r\n");
     ubirch_protocol_add_payload(upp, payload, payload_len);
 
     // sign the package
-    fprintf(stderr, "\r\nsign\r\n");
     error = ubirch_protocol_buffer_finish(upp);
-    if (error) { return -2; }
+    if (error) {
+        fprintf(stderr, "\r\nUPP SIGN FAILED! ERROR: %d\r\n\r\n", error);
+        return -2;
+    }
 
     return 0;
 }
