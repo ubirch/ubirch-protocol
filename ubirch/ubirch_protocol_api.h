@@ -328,36 +328,20 @@ static inline void ubirch_protocol_free(ubirch_protocol *upp) {
 static inline int ubirch_protocol_verify(ubirch_protocol *upp, ubirch_protocol_check verify) {
     if (upp == NULL || upp->data == NULL) { return -2; }
 
-    // unpack
-    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
-    if (!unpacker) { return -3; }
-
-    if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
-        if (!msgpack_unpacker_reserve_buffer(unpacker, upp->size)) {
-            /* Memory allocation error. */
-            return -3;
-        }
-    }
-    memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
-    msgpack_unpacker_buffer_consumed(unpacker, upp->size);
-
-    const size_t msgpack_sig_length = UBIRCH_PROTOCOL_SIGN_SIZE + 2;
-    const size_t message_size = msgpack_unpacker_message_size(unpacker);
+    // separate message and signature
+    const size_t unsigned_message_len = upp->size - (UBIRCH_PROTOCOL_SIGN_SIZE + 2);
 
     // make sure we have something to check, if it is just the signature, fail
-    if (message_size <= msgpack_sig_length) return -2;
+    if (unsigned_message_len <= 0) { return -2; }
 
     // hash the message data
-    unsigned char *data = (unsigned char *) (unpacker->buffer + unpacker->off);
-
     unsigned char sha512sum[UBIRCH_PROTOCOL_SIGN_SIZE];
-    mbedtls_sha512(data, message_size - msgpack_sig_length, sha512sum, 0);
+    mbedtls_sha512((const unsigned char *) upp->data, unsigned_message_len, sha512sum, 0);
 
     // get a pointer to the signature
-    unsigned char *signature = data + (message_size - UBIRCH_PROTOCOL_SIGN_SIZE);
+    const unsigned char *signature = (const unsigned char *) upp->data + (upp->size - UBIRCH_PROTOCOL_SIGN_SIZE);
 
-    msgpack_unpacker_free(unpacker);
-
+    // verify signature with user verify function
     return verify(sha512sum, UBIRCH_PROTOCOL_SIGN_SIZE, signature);
 }
 
