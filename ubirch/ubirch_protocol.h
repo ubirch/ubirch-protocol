@@ -60,7 +60,24 @@
 extern "C" {
 #endif
 
-#include "ubirch_protocol_api.h"
+#ifndef MSGPACK_ZONE_CHUNK_SIZE
+#define MSGPACK_ZONE_CHUNK_SIZE 128
+#endif
+
+#define UBIRCH_PROTOCOL_VERSION     2       //!< current ubirch protocol version
+#define UBIRCH_PROTOCOL_PLAIN       0x01    //!< plain protocol without signatures (unsafe)
+#define UBIRCH_PROTOCOL_SIGNED      0x02    //!< signed messages (unchained)
+#define UBIRCH_PROTOCOL_CHAINED     0x03    //!< chained signed messages
+
+#define UBIRCH_PROTOCOL_PUBKEY_SIZE 32      //!< public key size
+#define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes (same as size of hash)
+#define UBIRCH_PROTOCOL_UUID_SIZE   16      //!< the size of a UUID
+
+#define UBIRCH_PROTOCOL_TYPE_BIN 0x00       //!< payload is undefined and binary
+#define UBIRCH_PROTOCOL_TYPE_REG 0x01       //!< payload is defined as key register message
+#define UBIRCH_PROTOCOL_TYPE_HSK 0x02       //!< payload is a key handshake message
+
+#define UPP_BUFFER_INIT_SIZE 219            //!< initial allocation size for UPP data buffer, enough space for chained message with 64 byte payload
 
 #ifdef __cplusplus
 }

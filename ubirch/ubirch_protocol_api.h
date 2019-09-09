@@ -25,12 +25,11 @@
 #ifndef UBIRCH_PROTOCOL_API_H
 #define UBIRCH_PROTOCOL_API_H
 
+#include "ubirch_protocol.h"
+#include "ubirch_protocol_kex.h"
+
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef MSGPACK_ZONE_CHUNK_SIZE
-#define MSGPACK_ZONE_CHUNK_SIZE 128
 #endif
 
 // we use an mbed port of msgpack which tries to include arpa/inet.h if __MBED__ is not defined
@@ -48,23 +47,6 @@ extern "C" {
 #else
 #include "digest/sha512.h"
 #endif
-
-#include "ubirch_protocol_kex.h"
-
-#define UPP_BUFFER_INIT_SIZE 219    //!< initial allocation size for UPP data buffer, enough space for chained message with 64 byte payload
-
-#define UBIRCH_PROTOCOL_VERSION     2       //!< current ubirch protocol version
-#define UBIRCH_PROTOCOL_PLAIN       0x01    //!< plain protocol without signatures (unsafe)
-#define UBIRCH_PROTOCOL_SIGNED      0x02    //!< signed messages (unchained)
-#define UBIRCH_PROTOCOL_CHAINED     0x03    //!< chained signed messages
-
-#define UBIRCH_PROTOCOL_PUBKEY_SIZE 32      //!< public key size
-#define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes (same as size of hash)
-#define UBIRCH_PROTOCOL_UUID_SIZE   16      //!< the size of a UUID
-
-#define UBIRCH_PROTOCOL_TYPE_BIN 0x00       //!< payload is undefined and binary
-#define UBIRCH_PROTOCOL_TYPE_REG 0x01       //!< payload is defined as key register message
-#define UBIRCH_PROTOCOL_TYPE_HSK 0x02       //!< payload is a key handshake message
 
 typedef enum ubirch_protocol_variant {
     proto_plain = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_PLAIN),
@@ -367,6 +349,7 @@ static inline void printUPP(const char *data, const size_t len) {
     }
     printf("\r\n\r\n");
 }
+
 
 #ifdef __cplusplus
 }
