@@ -108,16 +108,9 @@ void TestSimpleAPISimpleKeyVerify() {
     TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
     TEST_ASSERT_EQUAL_STRING_MESSAGE("2", _value, "signed protocol variant failed");
 
-    // unpack and verify
-    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
-    if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
-        msgpack_unpacker_reserve_buffer(unpacker, upp->size);
-    }
-    memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
-    msgpack_unpacker_buffer_consumed(unpacker, upp->size);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
+    // verify message
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp, ed25519_verify), "message verification failed");
 
-    msgpack_unpacker_free(unpacker);
     ubirch_protocol_free(upp);
 }
 

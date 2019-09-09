@@ -34,17 +34,9 @@ void TestSimpleAPIVerifyMessage() {
     int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
-    // unpack and verify
-    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
-    if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
-        msgpack_unpacker_reserve_buffer(unpacker, upp->size);
-    }
-    memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
-    msgpack_unpacker_buffer_consumed(unpacker, upp->size);
+    // verify message
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp, ed25519_verify), "message verification failed");
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
-
-    msgpack_unpacker_free(unpacker);
     ubirch_protocol_free(upp);
 }
 
@@ -74,16 +66,9 @@ void TestSimpleAPISimpleMessage() {
     TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
     TEST_ASSERT_EQUAL_STRING_MESSAGE("2", _value, "signed protocol variant failed");
 
-    // unpack and verify
-    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
-    if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
-        msgpack_unpacker_reserve_buffer(unpacker, upp->size);
-    }
-    memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
-    msgpack_unpacker_buffer_consumed(unpacker, upp->size);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
+    // verify message
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp, ed25519_verify), "message verification failed");
 
-    msgpack_unpacker_free(unpacker);
     ubirch_protocol_free(upp);
 }
 
@@ -108,16 +93,9 @@ void TestProtocolSimpleAPIMessageFinish() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
 
-    // unpack and verify
-    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
-    if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
-        msgpack_unpacker_reserve_buffer(unpacker, upp->size);
-    }
-    memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
-    msgpack_unpacker_buffer_consumed(unpacker, upp->size);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
+    // verify message
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp, ed25519_verify), "message verification failed");
 
-    msgpack_unpacker_free(unpacker);
     ubirch_protocol_free(upp);
 }
 

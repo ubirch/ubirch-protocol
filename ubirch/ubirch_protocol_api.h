@@ -322,24 +322,24 @@ static inline void ubirch_protocol_free(ubirch_protocol *upp) {
  * @param verify the private key to use for verification
  * @return 0 if the verification is successful
  * @return -1 if the signature verification has failed
- * @return -2 if the message length is wrong (too short to actually do a check)
+ * @return -2 if upp is NULL or the message length is wrong (too short to actually do a check)
  */
 //TODO refactor
-static inline int ubirch_protocol_verify(msgpack_unpacker *unpacker, ubirch_protocol_check verify) {
-    /* unpacker on the stack */
-    msgpack_unpacker unp;
+static inline int ubirch_protocol_verify(ubirch_protocol *upp, ubirch_protocol_check verify) {
+    if (upp == NULL || upp->data == NULL) { return -2; }
 
-/* Initialize the unpacker. 100 means initial buffer size. */
-/* It can expand later. */
-    bool result = msgpack_unpacker_init(&unp, 16);
-/* If memory allocation is failed, result is false, else result is true. */
-    if (result) {
-        /* Do unpacking */
+    // unpack
+    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
+    if (!unpacker) { return -3; }
+
+    if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
+        if (!msgpack_unpacker_reserve_buffer(unpacker, upp->size)) {
+            /* Memory allocation error. */
+            return -3;
+        }
     }
-    msgpack_unpacker_destroy(&unp);
-
-
-
+    memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
+    msgpack_unpacker_buffer_consumed(unpacker, upp->size);
 
     const size_t msgpack_sig_length = UBIRCH_PROTOCOL_SIGN_SIZE + 2;
     const size_t message_size = msgpack_unpacker_message_size(unpacker);
@@ -349,11 +349,14 @@ static inline int ubirch_protocol_verify(msgpack_unpacker *unpacker, ubirch_prot
 
     // hash the message data
     unsigned char *data = (unsigned char *) (unpacker->buffer + unpacker->off);
+
     unsigned char sha512sum[UBIRCH_PROTOCOL_SIGN_SIZE];
     mbedtls_sha512(data, message_size - msgpack_sig_length, sha512sum, 0);
 
     // get a pointer to the signature
     unsigned char *signature = data + (message_size - UBIRCH_PROTOCOL_SIGN_SIZE);
+
+    msgpack_unpacker_free(unpacker);
 
     return verify(sha512sum, UBIRCH_PROTOCOL_SIGN_SIZE, signature);
 }

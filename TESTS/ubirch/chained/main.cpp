@@ -174,16 +174,9 @@ void TestSimpleAPIChainedStaticMessage() {
                                       reinterpret_cast<const unsigned char *> (staticValue), strlen(staticValue));
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
-        // unpack and verify
-        msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
-        if (msgpack_unpacker_buffer_capacity(unpacker) < upp->size) {
-            msgpack_unpacker_reserve_buffer(unpacker, upp->size);
-        }
-        memcpy(msgpack_unpacker_buffer(unpacker), upp->data, upp->size);
-        msgpack_unpacker_buffer_consumed(unpacker, upp->size);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify),
+        // verify message
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp, ed25519_verify),
                                       "message verification failed");
-        msgpack_unpacker_free(unpacker);
 
         memset(_value, 0, sizeof(_value));
         mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
