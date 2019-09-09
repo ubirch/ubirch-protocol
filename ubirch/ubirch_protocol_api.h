@@ -133,7 +133,10 @@ static inline ubirch_protocol *ubirch_protocol_new(ubirch_protocol_sign sign) {
 
     // initialize struct, allocate memory for data buffer
     upp->data = (char *) malloc(UPP_BUFFER_INIT_SIZE);
-    if (upp->data == NULL) { return NULL; }
+    if (upp->data == NULL) {
+        free(upp);
+        return NULL;
+    }
     upp->alloc = UPP_BUFFER_INIT_SIZE;
 
     // initialize packer to write data to UPP data buffer
@@ -323,6 +326,21 @@ static inline void ubirch_protocol_free(ubirch_protocol *upp) {
  */
 //TODO refactor
 static inline int ubirch_protocol_verify(msgpack_unpacker *unpacker, ubirch_protocol_check verify) {
+    /* unpacker on the stack */
+    msgpack_unpacker unp;
+
+/* Initialize the unpacker. 100 means initial buffer size. */
+/* It can expand later. */
+    bool result = msgpack_unpacker_init(&unp, 16);
+/* If memory allocation is failed, result is false, else result is true. */
+    if (result) {
+        /* Do unpacking */
+    }
+    msgpack_unpacker_destroy(&unp);
+
+
+
+
     const size_t msgpack_sig_length = UBIRCH_PROTOCOL_SIGN_SIZE + 2;
     const size_t message_size = msgpack_unpacker_message_size(unpacker);
 
