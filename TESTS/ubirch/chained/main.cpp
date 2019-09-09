@@ -95,7 +95,7 @@ void TestSimpleAPIChainedMessage() {
 
     const char *message1 = "message 1";
     ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
-                                  (const unsigned char *) message1, strlen(message1));
+                                  reinterpret_cast<const unsigned char *> (message1), strlen(message1));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));
@@ -115,7 +115,7 @@ void TestSimpleAPIChainedMessage() {
 
     const char *message2 = "message 2 (is a bit longer)";
     ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
-                                  (const unsigned char *) message2, strlen(message2));
+                                  reinterpret_cast<const unsigned char *> (message2), strlen(message2));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));
@@ -135,7 +135,7 @@ void TestSimpleAPIChainedMessage() {
 
     const char *message3 = "msg3";
     ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
-                                  (const unsigned char *) message3, strlen(message3));
+                                  reinterpret_cast<const unsigned char *> (message3), strlen(message3));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));
@@ -171,7 +171,7 @@ void TestSimpleAPIChainedStaticMessage() {
 
     for (int i = 0; i < 5; i++) {
         ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
-                                      (const unsigned char *) staticValue, strlen(staticValue));
+                                      reinterpret_cast<const unsigned char *> (staticValue), strlen(staticValue));
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
         // unpack and verify
