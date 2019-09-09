@@ -251,10 +251,10 @@ void TestSimpleAPIVerifyMessage() {
     // create a new message a sign it
     const unsigned char msg[] = {99};
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     // unpack and verify
@@ -268,7 +268,7 @@ void TestSimpleAPIVerifyMessage() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
 
     msgpack_unpacker_free(unpacker);
-    ubirch_protocol_buffer_free(upp);
+    ubirch_protocol_free(upp);
 }
 
 void TestSimpleAPISimpleMessage() {
@@ -282,10 +282,10 @@ void TestSimpleAPISimpleMessage() {
 
     const unsigned char msg[] = {0x09, 0xC2};
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));
@@ -307,16 +307,16 @@ void TestSimpleAPISimpleMessage() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
 
     msgpack_unpacker_free(unpacker);
-    ubirch_protocol_buffer_free(upp);
+    ubirch_protocol_free(upp);
 }
 
 void TestProtocolSimpleAPIMessageFinish() {
     const unsigned char msg[] = {0x09, 0xC2};
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     const unsigned char expected_message[] = {
@@ -341,7 +341,7 @@ void TestProtocolSimpleAPIMessageFinish() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
 
     msgpack_unpacker_free(unpacker);
-    ubirch_protocol_buffer_free(upp);
+    ubirch_protocol_free(upp);
 }
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {

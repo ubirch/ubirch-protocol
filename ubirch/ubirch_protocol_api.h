@@ -51,7 +51,7 @@ extern "C" {
 
 #include "ubirch_protocol_kex.h"
 
-#define UPP_BUFFER_INIT_SIZE 217    //!< initial allocation size for UPP data buffer, enough space for chained message with 64 byte payload
+#define UPP_BUFFER_INIT_SIZE 219    //!< initial allocation size for UPP data buffer, enough space for chained message with 64 byte payload
 
 #define UBIRCH_PROTOCOL_VERSION     2       //!< current ubirch protocol version
 #define UBIRCH_PROTOCOL_PLAIN       0x01    //!< plain protocol without signatures (unsafe)
@@ -99,17 +99,17 @@ typedef int (*ubirch_protocol_check)(const unsigned char *buf, size_t len,
                                      const unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]);
 
 /**
- * ubirch protocol context, which holds a data buffer for the ubirch protocol package,
+ * Ubirch protocol context, which holds a data buffer for the ubirch protocol package,
  * the underlying packer, the message signing function as well as the signature of last package.
  */
-typedef struct ubirch_protocol_buffer {
+typedef struct ubirch_protocol {
     size_t size;                                        //!< the current number of bytes written to data buffer
     char *data;                                         //!< the data buffer to write UPP to
     size_t alloc;                                       //!< the current number of bytes allocated for data buffer
     msgpack_packer packer;                              //!< the underlying target packer for serializing data
     ubirch_protocol_sign sign;                          //!< the message signing function
     unsigned char signature[UBIRCH_PROTOCOL_SIGN_SIZE]; //!< the signature of the previous message, will be 0 on init
-} ubirch_protocol_buffer;
+} ubirch_protocol;
 
 /**
  * Callback for msgpack_packer to write data to UPP data buffer.
@@ -120,8 +120,8 @@ typedef struct ubirch_protocol_buffer {
  * @return 0 if successful
  * @return -1 if fail to reallocate memory for data buffer
  */
-static inline int ubirch_protocol_buffer_write(void *data, const char *buf, size_t len) {
-    ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) data;
+static inline int ubirch_protocol_write(void *data, const char *buf, size_t len) {
+    ubirch_protocol *upp = (ubirch_protocol *) data;
 
     // make sure there is enough space in data buffer
     if (upp->alloc - upp->size < len) {
@@ -143,10 +143,10 @@ static inline int ubirch_protocol_buffer_write(void *data, const char *buf, size
  * @param sign a callback used for signing a message
  * @return a new initialized ubirch protocol context
  */
-static inline ubirch_protocol_buffer *ubirch_protocol_buffer_new(ubirch_protocol_sign sign) {
+static inline ubirch_protocol *ubirch_protocol_new(ubirch_protocol_sign sign) {
 
     //allocate memory for UPP struct
-    ubirch_protocol_buffer *upp = (ubirch_protocol_buffer *) malloc(sizeof(ubirch_protocol_buffer));
+    ubirch_protocol *upp = (ubirch_protocol *) malloc(sizeof(ubirch_protocol));
     if (upp == NULL) { return NULL; }
 
     // initialize struct, allocate memory for data buffer
@@ -155,7 +155,7 @@ static inline ubirch_protocol_buffer *ubirch_protocol_buffer_new(ubirch_protocol
     upp->alloc = UPP_BUFFER_INIT_SIZE;
 
     // initialize packer to write data to UPP data buffer
-    msgpack_packer_init(&upp->packer, upp, ubirch_protocol_buffer_write);
+    msgpack_packer_init(&upp->packer, upp, ubirch_protocol_write);
 
     // set user sign function
     upp->sign = sign;
@@ -165,18 +165,21 @@ static inline ubirch_protocol_buffer *ubirch_protocol_buffer_new(ubirch_protocol
     return upp;
 }
 
-
 /**
- * Start a new message. Writes the header data.
+ * Start a new message. Writes the header data to ubirch protocol package.
  *
- * @param upp the Ubirch protocol context
+ * @param upp the ubirch protocol context
+ * @param variant protocol variant
+ * @param uuid the uuid associated with the data
+ * @param payload_type the payload data type indicator (0 - binary)
  * @return -1 if upp is NULL
  * @return -2 if the protocol version is not supported
  */
-static inline int8_t ubirch_protocol_buffer_start(ubirch_protocol_buffer *upp,
-                                                  ubirch_protocol_variant variant,
-                                                  const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
-                                                  uint8_t payload_type) {
+static inline int8_t ubirch_protocol_start(ubirch_protocol *upp,
+                                           ubirch_protocol_variant variant,
+                                           const unsigned char *uuid,
+                                           uint8_t payload_type) {
+    if (upp == NULL) return -1;
 
     // the message consists of 3 header elements, the payload and (not included) the signature
     switch (variant) {
@@ -212,9 +215,21 @@ static inline int8_t ubirch_protocol_buffer_start(ubirch_protocol_buffer *upp,
     return 0;
 }
 
-static inline int8_t ubirch_protocol_add_payload(ubirch_protocol_buffer *upp,
+/**
+ * Add payload to ubirch protocol package.
+ *
+ * @param upp the ubirch protocol context
+ * @param payload_type the payload data type indicator (0 - binary)
+ * @param payload the payload for the UPP, can be key registration info or byte array.
+ * @param payload_len the size of the payload in bytes
+ * @return -1 if upp is NULL
+ * @return -2 if the protocol version is not supported
+ */
+static inline int8_t ubirch_protocol_add_payload(ubirch_protocol *upp,
                                                  uint8_t payload_type,
                                                  const unsigned char *payload, size_t payload_len) {
+    if (upp == NULL) return -1;
+
     // 5 add the payload
     if (payload_type == UBIRCH_PROTOCOL_TYPE_REG) {
         // create a key registration packet and add it to UPP
@@ -231,12 +246,14 @@ static inline int8_t ubirch_protocol_add_payload(ubirch_protocol_buffer *upp,
 
 /**
  * Finish a message. Calculates the signature and attaches it to the message.
+ *
  * @param upp the ubirch protocol context
+ * @param variant protocol variant
  * @return 0 if successful
  * @return -1 if upp is NULL
  * @return -2 if the signing failed
  */
-static inline int8_t ubirch_protocol_buffer_finish(ubirch_protocol_buffer *upp, ubirch_protocol_variant variant) {
+static inline int8_t ubirch_protocol_finish(ubirch_protocol *upp, ubirch_protocol_variant variant) {
 
     // only add signature if we have a chained or signed message
     if (variant == proto_signed || variant == proto_chained) {
@@ -255,24 +272,25 @@ static inline int8_t ubirch_protocol_buffer_finish(ubirch_protocol_buffer *upp, 
 }
 
 /**
- * Pack payload to UPP and sign, if singed or chained type
- * @param upp the Ubirch protocol context
+ * Generate a ubirch protocol message
+ *
+ * @param upp the ubirch protocol context
  * @param variant protocol variant
  * @param uuid the uuid associated with the data
  * @param payload_type the payload data type indicator (0 -> binary)
- * @param payload the byte array containing the payload data
- * @param payload_len the number of bytes in the payload
+ * @param payload the byte array containing the payload data or key registration info
+ * @param payload_len the size of the payload in bytes
  * @return 0 if successful
  * @return -1 if upp is not initialized
  * @return -2 if no sign callback was provided
  * @return -3 if the protocol version is not supported
  * @return -4 if the signing failed
 */
-static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
-                                          ubirch_protocol_variant variant,
-                                          const unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE],
-                                          uint8_t payload_type,
-                                          const unsigned char *payload, size_t payload_len) {
+static inline int8_t ubirch_protocol_message(ubirch_protocol *upp,
+                                             ubirch_protocol_variant variant,
+                                             const unsigned char *uuid,
+                                             uint8_t payload_type,
+                                             const unsigned char *payload, size_t payload_len) {
     int8_t error = 0;
     // check if UPP struct has been initialized
     if (upp == NULL || upp->data == NULL) { return -1; }
@@ -286,14 +304,14 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
     upp->size = 0;
 
     // pack UPP header
-    error = ubirch_protocol_buffer_start(upp, variant, uuid, payload_type);
+    error = ubirch_protocol_start(upp, variant, uuid, payload_type);
     if (error) { return -3; }
 
     // add payload
     ubirch_protocol_add_payload(upp, payload_type, payload, payload_len);
 
     // sign the package
-    error = ubirch_protocol_buffer_finish(upp, variant);
+    error = ubirch_protocol_finish(upp, variant);
     if (error) { return -4; }
 
     return 0;
@@ -301,15 +319,43 @@ static inline int8_t ubirch_protocol_pack(ubirch_protocol_buffer *upp,
 
 /**
  * Free memory for a ubirch protocol context.
- * @param proto the protocol context
+ * @param upp the protocol context
  */
-static inline void ubirch_protocol_buffer_free(ubirch_protocol_buffer *buf) {
-    if (buf != NULL) {
-        if (buf->data != NULL) {
-            free(buf->data);
+static inline void ubirch_protocol_free(ubirch_protocol *upp) {
+    if (upp != NULL) {
+        if (upp->data != NULL) {
+            free(upp->data);
         }
-        free(buf);
+        free(upp);
     }
+}
+
+/**
+ * Verify a messages signature.
+ * This function requires 256 bytes of heap memory to verify
+ * @param unpacker the unpacker containing the data
+ * @param verify the private key to use for verification
+ * @return 0 if the verification is successful
+ * @return -1 if the signature verification has failed
+ * @return -2 if the message length is wrong (too short to actually do a check)
+ */
+//TODO refactor
+static inline int ubirch_protocol_verify(msgpack_unpacker *unpacker, ubirch_protocol_check verify) {
+    const size_t msgpack_sig_length = UBIRCH_PROTOCOL_SIGN_SIZE + 2;
+    const size_t message_size = msgpack_unpacker_message_size(unpacker);
+
+    // make sure we have something to check, if it is just the signature, fail
+    if (message_size <= msgpack_sig_length) return -2;
+
+    // hash the message data
+    unsigned char *data = (unsigned char *) (unpacker->buffer + unpacker->off);
+    unsigned char sha512sum[UBIRCH_PROTOCOL_SIGN_SIZE];
+    mbedtls_sha512(data, message_size - msgpack_sig_length, sha512sum, 0);
+
+    // get a pointer to the signature
+    unsigned char *signature = data + (message_size - UBIRCH_PROTOCOL_SIGN_SIZE);
+
+    return verify(sha512sum, UBIRCH_PROTOCOL_SIGN_SIZE, signature);
 }
 
 static inline void printUPP(const char *data, const size_t len) {

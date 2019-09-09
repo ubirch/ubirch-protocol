@@ -165,11 +165,11 @@ void TestSimpleMessage() {
 void TestProtocolSimpleAPI() {
     const unsigned char msg[] = {0x24, 0x98};
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(NULL);
+    ubirch_protocol *upp = ubirch_protocol_new(NULL);
 
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
@@ -180,7 +180,7 @@ void TestProtocolSimpleAPI() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
 
-    ubirch_protocol_buffer_free(upp);
+    ubirch_protocol_free(upp);
 }
 
 void TestProtocolSimpleAPIVerify() {
@@ -188,11 +188,11 @@ void TestProtocolSimpleAPIVerify() {
     size_t encoded_size;
     const unsigned char msg[] = {99};
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(NULL);
+    ubirch_protocol *upp = ubirch_protocol_new(NULL);
 
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
@@ -201,7 +201,7 @@ void TestProtocolSimpleAPIVerify() {
                           (unsigned char *) upp->data, upp->size);
     greentea_send_kv("checkMessage", _value, encoded_size);
 
-    ubirch_protocol_buffer_free(upp);
+    ubirch_protocol_free(upp);
 
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
     TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "message verification failed");
@@ -210,15 +210,15 @@ void TestProtocolSimpleAPIVerify() {
 
 void TestProtocolSimpleAPIFree() {      //FIXME not passing
     const unsigned char msg[] = {0x24, 0x98};
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(NULL);
+    ubirch_protocol *upp = ubirch_protocol_new(NULL);
 
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
-    ubirch_protocol_buffer_free(upp);
+    ubirch_protocol_free(upp);
 
     TEST_ASSERT_NULL_MESSAGE(upp, "upp not free");
 }

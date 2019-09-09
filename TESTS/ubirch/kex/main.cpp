@@ -153,11 +153,11 @@ void TestSimpleAPISignKeyRegisterMessage() {
     info.validNotAfter = static_cast<long>(timestamp + 60000);
     info.validNotBefore = static_cast<long>(timestamp);
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
-                                      reinterpret_cast<const unsigned char *> (&info), sizeof(info));
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
+                                         reinterpret_cast<const unsigned char *> (&info), sizeof(info));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     const unsigned char expectedMessage[] = {
@@ -178,7 +178,7 @@ void TestSimpleAPISignKeyRegisterMessage() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expectedMessage), upp->size, "message length wrong");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expectedMessage, upp->data, upp->size, "message serialization failed");
 
-    ubirch_protocol_buffer_free(upp);
+    ubirch_protocol_free(upp);
 }
 
 void TestSimpleAPISimpleKeyVerify() {
@@ -200,11 +200,11 @@ void TestSimpleAPISimpleKeyVerify() {
 
     greentea_send_kv("publicKey", _value);
 
-    ubirch_protocol_buffer *upp = ubirch_protocol_buffer_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
 
-    int8_t ret = ubirch_protocol_pack(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
-                                      reinterpret_cast<const unsigned char *> (&info), sizeof(info));
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
+                                         reinterpret_cast<const unsigned char *> (&info), sizeof(info));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     memset(_value, 0, sizeof(_value));
@@ -226,7 +226,7 @@ void TestSimpleAPISimpleKeyVerify() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
 
     msgpack_unpacker_free(unpacker);
-    ubirch_protocol_buffer_free(upp);
+    ubirch_protocol_free(upp);
 }
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
