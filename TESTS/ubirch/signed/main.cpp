@@ -35,7 +35,8 @@ void TestSimpleAPIVerifyMessage() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     // verify message
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp, ed25519_verify), "message verification failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp->data, upp->size, ed25519_verify),
+                                  "message verification failed");
 
     ubirch_protocol_free(upp);
 }
@@ -67,7 +68,8 @@ void TestSimpleAPISimpleMessage() {
     TEST_ASSERT_EQUAL_STRING_MESSAGE("2", _value, "signed protocol variant failed");
 
     // verify message
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp, ed25519_verify), "message verification failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp->data, upp->size, ed25519_verify),
+                                  "message verification failed");
 
     ubirch_protocol_free(upp);
 }
@@ -94,7 +96,8 @@ void TestProtocolSimpleAPIMessageFinish() {
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
 
     // verify message
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp, ed25519_verify), "message verification failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp->data, upp->size, ed25519_verify),
+                                  "message verification failed");
 
     ubirch_protocol_free(upp);
 }

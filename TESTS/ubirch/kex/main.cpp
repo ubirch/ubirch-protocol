@@ -109,7 +109,8 @@ void TestSimpleAPISimpleKeyVerify() {
     TEST_ASSERT_EQUAL_STRING_MESSAGE("2", _value, "signed protocol variant failed");
 
     // verify message
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp, ed25519_verify), "message verification failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp->data, upp->size, ed25519_verify),
+                                  "message verification failed");
 
     ubirch_protocol_free(upp);
 }

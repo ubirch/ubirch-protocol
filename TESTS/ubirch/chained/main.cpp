@@ -175,7 +175,7 @@ void TestSimpleAPIChainedStaticMessage() {
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
         // verify message
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp, ed25519_verify),
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp->data, upp->size, ed25519_verify),
                                       "message verification failed");
 
         memset(_value, 0, sizeof(_value));
