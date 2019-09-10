@@ -94,7 +94,8 @@ typedef struct ubirch_protocol {
 } ubirch_protocol;
 
 /**
- * Create new ubirch protocol context
+ * Create new ubirch protocol context. Allocates memory for context and data buffer on heap,
+ * initializes msgpack_packer, sets user sign callback and initializes signature of previous message to 0.
  *
  * @param sign a callback used for signing a message, can be NULL if no signing required (i.e. plain protocol variant)
  * @return a new initialized ubirch protocol context

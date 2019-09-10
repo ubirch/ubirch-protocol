@@ -8,6 +8,24 @@ from time import sleep
 
 class CryptoProtocolTests(BaseHostTest):
 
+    def unpackMessage(self, message):
+        payload = b''
+        signature = b''
+        last_signature = b''
+        unpacked = msgpack.unpackb(message)
+        variant = unpacked[0] & 0x000F
+        uuid = unpacked[1]
+        if variant == 1:
+            payload = unpacked[3]
+        if variant == 2:
+            payload = unpacked[3]
+            signature = unpacked[4]
+        if variant == 3:
+            last_signature = unpacked[2]
+            payload = unpacked[4]
+            signature = unpacked[5]
+        return variant, uuid, last_signature, payload, signature
+
     @event_callback("publicKey")
     def __importKey(self, key, value, timestamp):
         self.vk = ed25519.VerifyingKey(value, encoding="base64")
@@ -17,12 +35,8 @@ class CryptoProtocolTests(BaseHostTest):
         message = base64.b64decode(value.split(";", 1)[0])
         self.log("msg: "+ message.encode('hex'))
         try:
-            signature = b''
-            unpacked = msgpack.unpackb(message)
-            protocolVariant = unpacked[0] & 0x000F
-            if protocolVariant == 2 or protocolVariant == 3:
-                if protocolVariant == 2: signature = unpacked[4]
-                if protocolVariant == 3: signature = unpacked[5]
+            variant, uuid, last_signature, payload, signature = self.unpackMessage(message)
+            if variant == 2 or variant == 3:
                 tohash = message[0:-66]
                 hash = hashlib.sha512(tohash).digest()
                 self.log("hash      : " + hash.encode('hex'))
@@ -32,23 +46,12 @@ class CryptoProtocolTests(BaseHostTest):
             # sometimes the python script is too fast, looks like the DUT is
             # not ready to accept the response then :(
             sleep(1)
-            self.send_kv("verify", protocolVariant)
-        except Exception as e:
-            self.send_kv("error", e.message)
+            self.send_kv("variant", variant)
+            self.send_kv("uuid", uuid)
+            self.send_kv("payload", payload)
+            if variant == 2 or variant == 3:
+                self.send_kv("signature", signature)
+                if variant == 3: self.send_kv("last signature", last_signature)
 
-    @event_callback("checkPayload")
-    def __verifyPayload(self, key, value, timestamp):
-        message = base64.b64decode(value.split(";", 1)[0])
-        try:
-            payload = b''
-            unpacked = msgpack.unpackb(message)
-            protocolVariant = unpacked[0] & 0x000F
-            if protocolVariant == 3:
-                payload = unpacked[4]
-            else:
-                payload = unpacked[3]
-
-            sleep(1)
-            self.send_kv("verify", payload)
         except Exception as e:
             self.send_kv("error", e.message)
