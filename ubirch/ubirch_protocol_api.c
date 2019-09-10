@@ -132,7 +132,7 @@ int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant var
                                const unsigned char *payload, size_t payload_len) {
     int8_t error = 0;
     // check if UPP struct has been initialized
-    if (upp == NULL || upp->data == NULL) { return -1; }
+    if (upp == NULL || upp->data == NULL || upp->packer.data != upp) { return -1; }
 
     // for protocol variants with signature, check if context has a sign callback
     if (variant == proto_signed || variant == proto_chained) {

@@ -28,10 +28,10 @@ void TestProtocolNew() {
 }
 
 void TestProtocolMessage() {
-    const unsigned char msg[] = {0x24, 0x98};
+    const unsigned char msg[] = {0x24, 0x98, 0x42, 0x21, 0x42, 0x98, 0x24};
     const unsigned char expected_message[] = {
             0x94, 0x21, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d,
-            0x6e, 0x6f, 0x70, 0x00, 0xc4, 0x02, 0x24, 0x98,
+            0x6e, 0x6f, 0x70, 0x00, 0xc4, 0x07, 0x24, 0x98, 0x42, 0x21, 0x42, 0x98, 0x24
     };
 
     ubirch_protocol *upp = ubirch_protocol_new(NULL);
@@ -78,7 +78,29 @@ void TestProtocolSimpleMessage() {
     TEST_ASSERT_EQUAL_STRING_MESSAGE(msg, _value, "payload check failed");
 }
 
-void TestProtocolSimpleAPIFree() {      //FIXME not passing
+void TestProtocolUninitialized() {
+    const unsigned char msg[] = {0x24, 0x98};
+    ubirch_protocol upp;
+
+    int8_t ret = ubirch_protocol_message(&upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, ret, "expected to fail");
+}
+
+void TestProtocolUnsupported() {
+    const unsigned char msg[] = {0x24, 0x98};
+    ubirch_protocol *upp = ubirch_protocol_new(NULL);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    int8_t ret = ubirch_protocol_message(upp, (ubirch_protocol_variant) 0, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg,
+                                         sizeof(msg));
+
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-3, ret, "expected to fail");
+
+    ubirch_protocol_free(upp);
+}
+
+void TestProtocolFree() {      //FIXME not passing
     const unsigned char msg[] = {0x24, 0x98};
     ubirch_protocol *upp = ubirch_protocol_new(NULL);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
@@ -106,7 +128,11 @@ int main() {
                  TestProtocolMessage, greentea_case_failure_abort_handler),
             Case("ubirch protocol [plain] simple message",
                  TestProtocolSimpleMessage, greentea_case_failure_abort_handler),
-//            Case("ubirch protocol [plain] free heap",
+            Case("ubirch protocol [plain] pack uninitialized UPP context",
+                 TestProtocolUninitialized, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [plain] pack unsupported protocol variant",
+                 TestProtocolUnsupported, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [plain] free allocated heap",
 //                 TestProtocolSimpleAPIFree, greentea_case_failure_abort_handler),
     };
 
