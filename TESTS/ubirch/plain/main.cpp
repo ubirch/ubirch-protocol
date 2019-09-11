@@ -59,8 +59,9 @@ void TestProtocolSimpleMessage() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     memset(_value, 0, sizeof(_value));
-    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
-                          (unsigned char *) upp->data, upp->size);
+    int encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                                             (unsigned char *) upp->data, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, encode_error, "mbedtls_base64_encode returned error");;
     greentea_send_kv("checkMessage", _value, encoded_size);
 
     ubirch_protocol_free(upp);
