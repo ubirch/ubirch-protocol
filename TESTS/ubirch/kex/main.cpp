@@ -109,11 +109,11 @@ void TestSignKeyRegisterMessage() {
     info.validNotBefore = static_cast<long>(timestamp);
 
     ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
     int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
                                          reinterpret_cast<const unsigned char *> (&info), sizeof(info));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     const unsigned char expectedMessage[] = {
             0x95, 0x22, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e,
@@ -147,11 +147,11 @@ void TestKeyVerify() {
 
     // create ubirch key registration message
     ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
     int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
                                          reinterpret_cast<const unsigned char *> (&info), sizeof(info));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // verify message
     ret = ubirch_protocol_verify(upp->data, upp->size, ed25519_verify);
@@ -174,11 +174,11 @@ void TestHostKeyRegMessage() {
 
     // create ubirch key registration message
     ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
     int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
                                          reinterpret_cast<const unsigned char *> (&info), sizeof(info));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // encode and send message to host
     memset(_value, 0, sizeof(_value));

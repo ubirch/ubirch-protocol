@@ -156,6 +156,7 @@ static inline int ubirch_protocol_write(void *data, const char *buf, size_t len)
         void *tmp = realloc(upp->data, upp->size + len);
         if (!tmp) { return -1; }
         upp->data = (char *) tmp;
+        upp->alloc = upp->size + len;
     }
 
     // append new data to buffer
@@ -203,10 +204,14 @@ static inline void printUPP(const char *data, const size_t len) {
     printf("\r\n - - - UPP - - - \r\n");
     printf("size: %d Bytes \r\nmsg: ", len);
     for (unsigned int i = 0; i < len; i++) {
-//        printf("0x%02x, ", data[i]);
+        printf("0x%02x, ", data[i]);
+    }
+    printf("\r\n\r\n");
+    for (unsigned int i = 0; i < len; i++) {
         printf("%02x", data[i]);
     }
     printf("\r\n\r\n");
+    fflush(stdout);
 }
 
 #ifdef __cplusplus
