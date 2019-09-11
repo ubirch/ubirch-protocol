@@ -25,137 +25,213 @@ unsigned char ed25519_public_key[crypto_sign_PUBLICKEYBYTES] = {
         0x8f, 0xfd, 0xaa, 0x55, 0x93, 0xe6, 0x3e, 0x6a
 };
 
-void TestProtocolSimpleAPIMessageFinish() {
-
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
-
-    const unsigned char msg[] = {0x09, 0xC2};
-    int8_t ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
-
+void TestProtocolMessageChained() {
+    const unsigned char msg[] = {0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42};
     const unsigned char expected_message[] = {
             0x96, 0x23, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e,
             0x6f, 0x70, 0xc4, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc4, 0x02, 0x09,
-            0xc2, 0xc4, 0x40, 0x0b, 0xac, 0x97, 0xb9, 0x00, 0xe8, 0x97, 0x2a, 0xc3, 0x5b, 0x4d, 0xde, 0x59, 0x5b, 0xd3,
-            0x6d, 0x37, 0x32, 0x23, 0x1e, 0xbe, 0x79, 0x5d, 0x8a, 0x94, 0x34, 0xc5, 0xba, 0xe7, 0x5d, 0x19, 0xea, 0x86,
-            0xba, 0xed, 0x3f, 0x33, 0x8a, 0xe1, 0x6e, 0x6c, 0x6c, 0xd9, 0xb9, 0x70, 0x44, 0xae, 0x81, 0x33, 0x25, 0x25,
-            0xc6, 0x9c, 0xde, 0x96, 0x48, 0x2c, 0xa9, 0x75, 0x9a, 0x31, 0x31, 0x93, 0x02,
-
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc4, 0x07, 0x24,
+            0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42, 0xc4, 0x40, 0xde, 0x3f, 0x28, 0x00, 0x7a, 0xbb, 0xc9, 0x0a, 0x53, 0xbf,
+            0xb3, 0x29, 0x9c, 0x6e, 0x81, 0xa6, 0xd0, 0x6a, 0xe2, 0x99, 0x63, 0x8f, 0x0c, 0xe1, 0xe7, 0x8b, 0x9e, 0x7f,
+            0x62, 0xce, 0x07, 0x6d, 0xdc, 0xaf, 0x3b, 0xd4, 0xd2, 0x32, 0xc7, 0x49, 0x63, 0xdf, 0xe2, 0x15, 0xd5, 0x0f,
+            0x2a, 0xe0, 0x6f, 0x11, 0x54, 0x70, 0x9c, 0xd5, 0x44, 0x1b, 0xf2, 0x3b, 0x63, 0x42, 0x7e, 0x2b, 0x52, 0x0b,
     };
+
+    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    int8_t ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
 
     ubirch_protocol_free(upp);
 }
 
-void TestSimpleAPISimpleMessage() {
-    char _key[20], _value[300];
-    size_t encoded_size;
-
-    memset(_value, 0, sizeof(_value));
-    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
-                          ed25519_public_key, crypto_sign_PUBLICKEYBYTES);
-    greentea_send_kv("publicKey", _value);
+void TestProtocolVerifyChained() {
+    const unsigned char msg[] = {0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42};
 
     ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    const unsigned char msg[] = {0x09, 0xC2};
     int8_t ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
+    // verify message
+    ret = ubirch_protocol_verify(upp->data, upp->size, ed25519_verify);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "message verification failed");
+
+    ubirch_protocol_free(upp);
+}
+
+void TestSimpleMessageChained() {
+    char _key[20], _value[300];
+    size_t encoded_size;
+    const char *msg = "simple message";
+
+    // create UPP
+    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    int8_t ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
+                                         reinterpret_cast<const unsigned char *> (msg), strlen(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+
+    // register public key with host
     memset(_value, 0, sizeof(_value));
-    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
-                          (unsigned char *) upp->data, upp->size);
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size, ed25519_public_key,
+                          crypto_sign_PUBLICKEYBYTES);
+    greentea_send_kv("publicKey", _value);
+
+    // send message to host
+    memset(_value, 0, sizeof(_value));
+    int encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                                             (unsigned char *) upp->data, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, encode_error, "mbedtls_base64_encode returned error");;
     greentea_send_kv("checkMessage", _value, encoded_size);
 
     ubirch_protocol_free(upp);
 
+    // check if host could verify signature and was able to unpack UPP correctly
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
-    TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
-    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "chained protocol variant failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("variant", _key, "message verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "protocol variant check failed");
+
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("uuid", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, _value, UBIRCH_PROTOCOL_UUID_SIZE, "UUID check failed");
+
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("payload", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(msg, _value, "payload check failed");
+
+    unsigned char allZeros[UBIRCH_PROTOCOL_SIGN_SIZE] = {0};
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("last signature", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(allZeros, _value, UBIRCH_PROTOCOL_SIGN_SIZE, "last signature check failed");
 }
 
-void TestSimpleAPIChainedMessage() {
-    char _key[20], _value[300], _value_in[300];
+void TestChainedMessages() {
+    char _key[20], _value[300];
     size_t encoded_size;
     int8_t ret = 0;
+    int encode_error = 0;
 
+    // register public key with host
     memset(_value, 0, sizeof(_value));
-    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
-                          ed25519_public_key, crypto_sign_PUBLICKEYBYTES);
+    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size, ed25519_public_key,
+                          crypto_sign_PUBLICKEYBYTES);
     greentea_send_kv("publicKey", _value);
 
+    // create UPP
     ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP failed");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
+    unsigned char last_signature[UBIRCH_PROTOCOL_SIGN_SIZE] = {0};
     const char *message1 = "message 1";
     ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
                                   reinterpret_cast<const unsigned char *> (message1), strlen(message1));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
+    // send message to host
     memset(_value, 0, sizeof(_value));
-    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
-                          (unsigned char *) upp->data, upp->size);
+    encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                                         (unsigned char *) upp->data, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, encode_error, "mbedtls_base64_encode returned error");;
     greentea_send_kv("checkMessage", _value, encoded_size);
 
-    greentea_parse_kv(_key, _value_in, sizeof(_key), sizeof(_value_in));
-    TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
-    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value_in, "chained protocol variant failed");
+    // check if host could verify signature and was able to unpack UPP correctly
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("variant", _key, "message verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "protocol variant check failed");
 
-    greentea_send_kv("checkPayload", _value, encoded_size);
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("uuid", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, _value, UBIRCH_PROTOCOL_UUID_SIZE, "UUID check failed");
 
-    greentea_parse_kv(_key, _value_in, sizeof(_key), sizeof(_value_in));
-    TEST_ASSERT_EQUAL_STRING_MESSAGE(message1, _value_in, "payload comparison failed");
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("payload", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(message1, _value, "payload check failed");
 
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("last signature", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, _value, UBIRCH_PROTOCOL_SIGN_SIZE,
+                                         "last signature check failed");
 
-    const char *message2 = "message 2 (is a bit longer)";
+    // store signature of last UPP
+    memcpy(last_signature, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
+
+    // pack new UPP
+    const char *message2 = "message 2 (is a little bit longer)";
     ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
                                   reinterpret_cast<const unsigned char *> (message2), strlen(message2));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
+    // send message to host
     memset(_value, 0, sizeof(_value));
-    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
-                          (unsigned char *) upp->data, upp->size);
+    encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                                         (unsigned char *) upp->data, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, encode_error, "mbedtls_base64_encode returned error");;
     greentea_send_kv("checkMessage", _value, encoded_size);
 
-    greentea_parse_kv(_key, _value_in, sizeof(_key), sizeof(_value_in));
-    TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
-    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value_in, "chained protocol variant failed");
+    // check if host could verify signature and was able to unpack UPP correctly
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("variant", _key, "message verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "protocol variant check failed");
 
-    greentea_send_kv("checkPayload", _value, encoded_size);
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("uuid", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, _value, UBIRCH_PROTOCOL_UUID_SIZE, "UUID check failed");
 
-    greentea_parse_kv(_key, _value_in, sizeof(_key), sizeof(_value_in));
-    TEST_ASSERT_EQUAL_STRING_MESSAGE(message2, _value_in, "payload comparison failed");
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("payload", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(message2, _value, "payload check failed");
 
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("last signature", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, _value, UBIRCH_PROTOCOL_SIGN_SIZE,
+                                         "last signature check failed");
 
+    // store signature of last UPP
+    memcpy(last_signature, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
+
+    // pack new UPP
     const char *message3 = "msg3";
     ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
                                   reinterpret_cast<const unsigned char *> (message3), strlen(message3));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
+    // send message to host
     memset(_value, 0, sizeof(_value));
-    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
-                          (unsigned char *) upp->data, upp->size);
+    encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                                         (unsigned char *) upp->data, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, encode_error, "mbedtls_base64_encode returned error");;
     greentea_send_kv("checkMessage", _value, encoded_size);
 
-    greentea_parse_kv(_key, _value_in, sizeof(_key), sizeof(_value_in));
-    TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
-    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value_in, "chained protocol variant failed");
+    // check if host could verify signature and was able to unpack UPP correctly
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("variant", _key, "message verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("3", _value, "protocol variant check failed");
 
-    greentea_send_kv("checkPayload", _value, encoded_size);
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("uuid", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, _value, UBIRCH_PROTOCOL_UUID_SIZE, "UUID check failed");
 
-    greentea_parse_kv(_key, _value_in, sizeof(_key), sizeof(_value_in));
-    TEST_ASSERT_EQUAL_STRING_MESSAGE(message3, _value_in, "payload comparison failed");
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("payload", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(message3, _value, "payload check failed");
+
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("last signature", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, _value, UBIRCH_PROTOCOL_SIGN_SIZE,
+                                         "last signature check failed");
 
     ubirch_protocol_free(upp);
 }
 
-void TestSimpleAPIChainedStaticMessage() {
+void TestChainedMessagesStatic() {
     char _key[20], _value[300], _value_in[300];
     size_t encoded_size;
     int8_t ret = 0;
@@ -205,14 +281,16 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
 
 int main() {
     Case cases[] = {
-            Case("ubirch protocol simple API [chained] message finish",
-                 TestProtocolSimpleAPIMessageFinish, greentea_case_failure_abort_handler),
-            Case("ubirch protocol simple API [chained] message simple",
-                 TestSimpleAPISimpleMessage, greentea_case_failure_abort_handler),
-            Case("ubirch protocol simple API [chained] message chained",
-                 TestSimpleAPIChainedMessage, greentea_case_failure_abort_handler),
-            Case("ubirch protocol simple API [chained] message chained static",
-                 TestSimpleAPIChainedStaticMessage, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] pack message",
+                 TestProtocolMessageChained, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] verify",
+                 TestProtocolVerifyChained, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] simple message",
+                 TestSimpleMessageChained, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] chained messages",
+                 TestChainedMessages, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [chained] chained static messages",
+                 TestChainedMessagesStatic, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
