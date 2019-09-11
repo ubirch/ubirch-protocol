@@ -100,6 +100,25 @@ void TestProtocolUnsupported() {
     ubirch_protocol_free(upp);
 }
 
+void TestProtocolLongMessage() {
+    /* this message is 550 Bytes long */
+    const char *msg = "Lectus urna duis convallis convallis tellus id interdum velit laoreet. Tellus rutrum tellus "
+                      "pellentesque eu tincidunt. Ullamcorper eget nulla facilisi etiam dignissim. Amet consectetur "
+                      "adipiscing elit ut aliquam purus sit. Libero nunc consequat interdum varius sit amet. Enim "
+                      "tortor at auctor urna nunc id cursus metus aliquam. Imperdiet massa tincidunt nunc pulvinar "
+                      "sapien. Non diam phasellus vestibulum lorem sed risus. Nunc non blandit massa enim nec. Leo a "
+                      "diam sollicitudin tempor id eu nisl nunc. Non enim praesent elementum facilisis leo vel.";
+
+    ubirch_protocol *upp = ubirch_protocol_new(NULL);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    int8_t ret = ubirch_protocol_message(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
+                                         reinterpret_cast<const unsigned char *> (msg), strlen(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+
+    ubirch_protocol_free(upp);
+}
+
 void TestProtocolFree() {      //FIXME not passing
     const unsigned char msg[] = {0x24, 0x98};
     ubirch_protocol *upp = ubirch_protocol_new(NULL);
@@ -132,6 +151,8 @@ int main() {
                  TestProtocolUninitialized, greentea_case_failure_abort_handler),
             Case("ubirch protocol [plain] pack unsupported protocol variant",
                  TestProtocolUnsupported, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [plain] long message",
+                 TestProtocolLongMessage, greentea_case_failure_abort_handler),
 //            Case("ubirch protocol [plain] free allocated heap",
 //                 TestProtocolSimpleAPIFree, greentea_case_failure_abort_handler),
     };
