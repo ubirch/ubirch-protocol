@@ -106,11 +106,6 @@ void TestSimpleMessageChained() {
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
     TEST_ASSERT_EQUAL_STRING_MESSAGE("payload", _key, "unexpected key");
     TEST_ASSERT_EQUAL_STRING_MESSAGE(msg, _value, "payload check failed");
-
-//    unsigned char allZeros[UBIRCH_PROTOCOL_SIGN_SIZE] = {0};
-//    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
-//    TEST_ASSERT_EQUAL_STRING_MESSAGE("last signature", _key, "unexpected key");
-//    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(allZeros, _value, UBIRCH_PROTOCOL_SIGN_SIZE, "last signature check failed");
 }
 
 void TestChainedMessages() {
@@ -135,6 +130,10 @@ void TestChainedMessages() {
                                   reinterpret_cast<const unsigned char *> (message1), strlen(message1));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
+    // check last signature
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, upp->data + 22, UBIRCH_PROTOCOL_SIGN_SIZE,
+                                         "last signature check failed");
+
     // send message to host
     memset(_value, 0, sizeof(_value));
     encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -155,11 +154,6 @@ void TestChainedMessages() {
     TEST_ASSERT_EQUAL_STRING_MESSAGE("payload", _key, "unexpected key");
     TEST_ASSERT_EQUAL_STRING_MESSAGE(message1, _value, "payload check failed");
 
-//    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
-//    TEST_ASSERT_EQUAL_STRING_MESSAGE("last signature", _key, "unexpected key");
-//    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, _value, UBIRCH_PROTOCOL_SIGN_SIZE,
-//                                         "last signature check failed");
-
     // store signature of last UPP
     memcpy(last_signature, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
 
@@ -168,6 +162,10 @@ void TestChainedMessages() {
     ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
                                   reinterpret_cast<const unsigned char *> (message2), strlen(message2));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+
+    // check last signature
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, upp->data + 22, UBIRCH_PROTOCOL_SIGN_SIZE,
+                                         "last signature check failed");
 
     // send message to host
     memset(_value, 0, sizeof(_value));
@@ -189,11 +187,6 @@ void TestChainedMessages() {
     TEST_ASSERT_EQUAL_STRING_MESSAGE("payload", _key, "unexpected key");
     TEST_ASSERT_EQUAL_STRING_MESSAGE(message2, _value, "payload check failed");
 
-//    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
-//    TEST_ASSERT_EQUAL_STRING_MESSAGE("last signature", _key, "unexpected key");
-//    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, _value, UBIRCH_PROTOCOL_SIGN_SIZE,
-//                                         "last signature check failed");
-
     // store signature of last UPP
     memcpy(last_signature, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
 
@@ -202,6 +195,10 @@ void TestChainedMessages() {
     ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
                                   reinterpret_cast<const unsigned char *> (message3), strlen(message3));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+
+    // check last signature
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, upp->data + 22, UBIRCH_PROTOCOL_SIGN_SIZE,
+                                         "last signature check failed");
 
     // send message to host
     memset(_value, 0, sizeof(_value));
@@ -222,11 +219,6 @@ void TestChainedMessages() {
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
     TEST_ASSERT_EQUAL_STRING_MESSAGE("payload", _key, "unexpected key");
     TEST_ASSERT_EQUAL_STRING_MESSAGE(message3, _value, "payload check failed");
-
-//    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
-//    TEST_ASSERT_EQUAL_STRING_MESSAGE("last signature", _key, "unexpected key");
-//    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, _value, UBIRCH_PROTOCOL_SIGN_SIZE,
-//                                         "last signature check failed");
 
     ubirch_protocol_free(upp);
 }
@@ -258,6 +250,10 @@ void TestChainedMessagesStatic() {
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(upp->data, upp->size, ed25519_verify),
                                       "message verification failed");
 
+        // check last signature
+        TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, upp->data + 22, UBIRCH_PROTOCOL_SIGN_SIZE,
+                                             "last signature check failed");
+
         // send message to host
         memset(_value, 0, sizeof(_value));
         encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
@@ -277,11 +273,6 @@ void TestChainedMessagesStatic() {
         greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
         TEST_ASSERT_EQUAL_STRING_MESSAGE("payload", _key, "unexpected key");
         TEST_ASSERT_EQUAL_STRING_MESSAGE(staticValue, _value, "payload check failed");
-
-//    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
-//    TEST_ASSERT_EQUAL_STRING_MESSAGE("last signature", _key, "unexpected key");
-//    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(last_signature, _value, UBIRCH_PROTOCOL_SIGN_SIZE,
-//                                         "last signature check failed");
 
         // store signature of last UPP
         memcpy(last_signature, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
