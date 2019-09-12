@@ -8,7 +8,7 @@ from time import sleep
 
 class CryptoProtocolTests(BaseHostTest):
 
-    def unpackMessage(self, message):
+    def __unpackMessage(self, message):
         _payload = b''
         _signature = b''
         _last_signature = b''
@@ -27,7 +27,7 @@ class CryptoProtocolTests(BaseHostTest):
             _signature = unpacked[5]
         return _variant, _uuid, _last_signature, _type, _payload, _signature
 
-    def verifySignature(self, message, signature):
+    def __verifySignature(self, message, signature):
         tohash = message[0:-66]
         hash = hashlib.sha512(tohash).digest()
         self.log("hash      : " + hash.encode('hex'))
@@ -44,18 +44,18 @@ class CryptoProtocolTests(BaseHostTest):
         message = base64.b64decode(value.split(";", 1)[0])
         self.log("msg: "+ message.encode('hex'))
         try:
-            variant, uuid, last_signature, type, payload, signature = self.unpackMessage(message)
+            variant, uuid, last_signature, type, payload, signature = self.__unpackMessage(message)
             if type == 1:
                 self.vk = ed25519.VerifyingKey(payload['pubKey'])
             if variant == 2 or variant == 3:
-                self.verifySignature(message, signature)
+                self.__verifySignature(message, signature)
             # sometimes the python script is too fast, looks like the DUT is
             # not ready to accept the response then :(
             sleep(1)
             self.send_kv("variant", variant)
             self.send_kv("uuid", uuid)
             if type == 0: self.send_kv("payload", payload)
-            if variant == 3: self.send_kv("last signature", last_signature.encode('hex'))
+            # if variant == 3: self.send_kv("last signature", last_signature.encode('hex'))
 
         except Exception as e:
             self.send_kv("error", e.message)
