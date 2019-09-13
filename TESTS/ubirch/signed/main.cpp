@@ -2,6 +2,7 @@
 #include "ubirch/ubirch_protocol.h"
 #include <ubirch/ubirch_ed25519.h>
 #include <mbedtls/base64.h>
+#include <msgpack.h>
 
 #include "utest/utest.h"
 #include "greentea-client/test_env.h"
@@ -166,6 +167,74 @@ void TestProtocolLongMessageSigned() {
     ubirch_protocol_free(upp);
 }
 
+void TestMsgpackMessageSigned() {
+    char _key[20], _value[300];
+    size_t encoded_size;
+    static const time_t timestamp = 1568392345;
+
+    //create a msgpack object
+    msgpack_sbuffer sbuf; /* buffer */
+    msgpack_packer pk;    /* packer */
+
+    msgpack_sbuffer_init(&sbuf); /* initialize buffer */
+    msgpack_packer_init(&pk, &sbuf, msgpack_sbuffer_write); /* initialize packer */
+
+    //dummy map with 3 key-value-pairs
+    msgpack_pack_map(&pk, 3);
+
+    // 1 - UUID
+    msgpack_pack_str(&pk, strlen("uuid"));
+    msgpack_pack_str_body(&pk, "uuid", strlen("uuid"));
+    msgpack_pack_bin(&pk, UBIRCH_PROTOCOL_UUID_SIZE);
+    msgpack_pack_bin_body(&pk, UUID, UBIRCH_PROTOCOL_UUID_SIZE);
+
+    // 2 - timestamp
+    msgpack_pack_str(&pk, strlen("time"));
+    msgpack_pack_str_body(&pk, "time", strlen("time"));
+    msgpack_pack_uint32(&pk, timestamp);
+
+    // 2 - dummy data array
+    msgpack_pack_str(&pk, strlen("data"));
+    msgpack_pack_str_body(&pk, "data", strlen("data"));
+    msgpack_pack_array(&pk, 3);
+    msgpack_pack_int16(&pk, 42);
+    msgpack_pack_int16(&pk, 21);
+    msgpack_pack_int16(&pk, 84);
+
+    // create a ubirch protocol context
+    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    // pack message
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_MSGPACK,
+                                         reinterpret_cast<const unsigned char *> (sbuf.data), sbuf.size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+
+    printUPP(upp->data, upp->size);
+
+    // verify message
+    ret = ubirch_protocol_verify(upp->data, upp->size, ed25519_verify);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "message verification failed");
+
+    // send message to host
+    memset(_value, 0, sizeof(_value));
+    int encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                                             (unsigned char *) upp->data, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, encode_error, "mbedtls_base64_encode returned error");;
+    greentea_send_kv("checkMessage", _value, encoded_size);
+
+    ubirch_protocol_free(upp);
+
+    // check if host could verify signature and was able to unpack UPP correctly
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("variant", _key, "message verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("2", _value, "protocol variant check failed");
+
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("uuid", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, _value, UBIRCH_PROTOCOL_UUID_SIZE, "UUID check failed");
+}
+
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
     GREENTEA_SETUP(600, "ProtocolTests");
     return greentea_test_setup_handler(number_of_cases);
@@ -184,6 +253,8 @@ int main() {
                  TestSimpleMessageSigned, greentea_case_failure_abort_handler),
             Case("ubirch protocol [signed] long message",
                  TestProtocolLongMessageSigned, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [signed] msgpack message",
+                 TestMsgpackMessageSigned, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
