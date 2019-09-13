@@ -1,5 +1,5 @@
 #include <unity/unity.h>
-#include "ubirch/ubirch_protocol_api.h"
+#include "ubirch/ubirch_protocol.h"
 #include <ubirch/ubirch_ed25519.h>
 #include <mbedtls/base64.h>
 
@@ -24,7 +24,7 @@ unsigned char ed25519_public_key[crypto_sign_PUBLICKEYBYTES] = {
         0x8f, 0xfd, 0xaa, 0x55, 0x93, 0xe6, 0x3e, 0x6a
 };
 
-void TestProtocolNewSign() {
+void TestProtocolNewSigned() {
     const unsigned char allZeros[UBIRCH_PROTOCOL_SIGN_SIZE] = {0};
 
     ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
@@ -175,7 +175,7 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
 int main() {
     Case cases[] = {
             Case("ubirch protocol [signed] new upp context",
-                 TestProtocolNewSign, greentea_case_failure_abort_handler),
+                 TestProtocolNewSigned, greentea_case_failure_abort_handler),
             Case("ubirch protocol [signed] pack message",
                  TestProtocolMessageSigned, greentea_case_failure_abort_handler),
             Case("ubirch protocol [signed] verify",

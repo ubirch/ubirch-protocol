@@ -1,6 +1,5 @@
 #include <unity/unity.h>
-#include "ubirch/ubirch_protocol_api.h"
-#include <armnacl.h>
+#include "ubirch/ubirch_protocol.h"
 #include <mbedtls/base64.h>
 
 #include "utest/utest.h"

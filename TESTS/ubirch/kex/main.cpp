@@ -1,5 +1,6 @@
 #include <unity/unity.h>
-#include "ubirch/ubirch_protocol_api.h"
+#include "ubirch/ubirch_protocol.h"
+#include "ubirch_protocol_kex.h"
 #include <ubirch/ubirch_ed25519.h>
 #include <mbedtls/base64.h>
 

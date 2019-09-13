@@ -22,7 +22,8 @@
  * ```
  */
 
-#include "ubirch_protocol_api.h"
+#include "ubirch_protocol.h"
+#include "ubirch_protocol_kex.h"
 
 /**
  * Start a new message. Writes the header data to ubirch protocol package.
