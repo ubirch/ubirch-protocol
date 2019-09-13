@@ -91,9 +91,10 @@ extern "C" {
 #define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes (same as size of hash)
 #define UBIRCH_PROTOCOL_UUID_SIZE   16      //!< the size of a UUID
 
-#define UBIRCH_PROTOCOL_TYPE_BIN 0x00       //!< payload is undefined and binary
-#define UBIRCH_PROTOCOL_TYPE_REG 0x01       //!< payload is defined as key register message
-#define UBIRCH_PROTOCOL_TYPE_HSK 0x02       //!< payload is a key handshake message
+#define UBIRCH_PROTOCOL_TYPE_BIN    0x00    //!< payload is undefined and binary
+#define UBIRCH_PROTOCOL_TYPE_REG    0x01    //!< payload is defined as key register message
+#define UBIRCH_PROTOCOL_TYPE_HSK    0x02    //!< payload is a key handshake message
+#define UBIRCH_PROTOCOL_TYPE_MSGPACK 0x03   //!< payload is a msgpack object
 
 #define UPP_BUFFER_INIT_SIZE 219            //!< initial allocation size for UPP data buffer, enough space for chained message with 64 byte payload
 
@@ -250,6 +251,14 @@ inline void ubirch_protocol_free(ubirch_protocol *upp) {
         }
         free(upp);
     }
+}
+
+static inline void printUPP(const char *data, size_t size) {
+    printf(" - - - UPP - - - \r\n");
+    for (size_t i = 0; i < size; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\r\n");
 }
 
 #ifdef __cplusplus
