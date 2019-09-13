@@ -63,8 +63,8 @@ static int8_t ubirch_protocol_start(ubirch_protocol *upp, ubirch_protocol_varian
 
     // 3 the last signature (if chained)
     if (variant == proto_chained) {
-        msgpack_pack_bin(&upp->packer, sizeof(upp->signature));
-        msgpack_pack_bin_body(&upp->packer, upp->signature, sizeof(upp->signature));
+        msgpack_pack_bin(&upp->packer, UBIRCH_PROTOCOL_SIGN_SIZE);
+        msgpack_pack_bin_body(&upp->packer, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
     }
 
     // 4 the payload type

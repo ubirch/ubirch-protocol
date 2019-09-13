@@ -13,17 +13,15 @@
 4. [Building](#building)
 5. [Testing](#testing)
 
-*This is an updated ubirch-protocol version using the latest msgpack-c implementation which correctly encodes
-string and binary values.*
           
 The ubirch-protocol is a protocol to ensure the integrity and identity of data
 flowing through the data acquisition and transformation networks. An implementation by 
 [ubirch](http://ubirch.com) handles data verification, and forwarding as well as blockchain 
 transactions to lock data points in time for proofable logs.
 
-> **Why individually signed data?** Without signatures on data, any sensor value stored in the blockchain is
-> trash. Without proof of identity (owner) and verification of integrity (unchanged) data may just have come anywhere and be modified in transit or on
-> backend servers.  
+> **Why individually signed data?** Without signatures on data, any sensor value stored in the blockchain is useless.
+> Without proof of identity (owner) and verification of integrity (unchanged) data may just have come anywhere 
+> and be modified in transit or on backend servers.  
 
 #### License 
 
@@ -61,15 +59,12 @@ array.
     - `0010|0011` - version 2, signed message with chained signatures, `[VE, ID, PS, TY, PL, SI]`
 - **UUID** - [128 bit, 16-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)   
 - **PREV-SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)
-- **TYPE** - [Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family), either positive fixnum or uint8
-   (1 byte 0x00 if unknown, see [Payload Type](#payload-type))
-- **PAYLOAD** - ANY msgpack type (incl. raw alternative data)
+- **TYPE** - [Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family), positive fixnum 
+   (1 byte, see [Payload Type](#payload-type))
+- **PAYLOAD** - [Byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family) with a length upto (2^32)-1 bytes
 - **SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family) 
   ([ED25519](https://ed25519.cr.yp.to) signature, 64 bytes)
    > Calculated over the [SHA512](https://en.wikipedia.org/wiki/SHA-2) of the binary representation of previous fields.
-
-An example is below, with the UUID (`abcdefghijklmnop`) and a subsequent message containing the chained previous
-signature:
 
 #### Payload Type
 
@@ -85,7 +80,7 @@ signature:
 ## Checking the Signature   
    
 The structure allows a recipient to take off the last 64 bytes of the message and check the signature of the
-message taking length - 67 bytes hashed with [SHA512](https://en.wikipedia.org/wiki/SHA-2).
+message taking length - 66 bytes hashed with [SHA512](https://en.wikipedia.org/wiki/SHA-2).
 
 Trivial Example (Python, chained message type):
 
@@ -115,49 +110,38 @@ Case must be taken, unpacking the message structure, to ensure no data beyond th
 
 ## API
 
-The ubirch protocol API is derived from the msgpack API, adding a context similar to the buffer 
-implementations (`sbuffer`), which wraps the packer to hash the data. A message is then created
-using the `ubirch_protocol_start()` function and signing it with `ubirch_protocol_finish()`.
+The Ubirch protocol API provides the following functions:
 
+- **`ubirch_protocol_new(sign)`** creates a new Ubirch protocol context, which contains a data buffer for the message 
+to be packed. A callback function for signing the message is passed as an argument. *If you only want to pack a plain 
+message without signature, NULL can be passed.*
 
-- **`ubirch_protocol_new(variant, type, data, writer, sign, uuid)`** creates a new protocol context with the provided 
-    variant (plain, signed, chained), data type, data and writer. Additionally a sign function and a uuid are necessary. 
-- **`ubirch_protocol_start(proto, packer)`** 
-    start a new message using the ubirch protocol context and the provided msgpack packer.
-- **`ubirch_protocol_finish(proto, packer)`** 
-    finish the message, signing the header and payload.
+- **`ubirch_protocol_message(upp_ctx, variant, uuid, payload_type, payload, payload_len);`** packs the message and 
+writes it to the context data buffer. This function takes the following arguments: the Ubirch protocol context, 
+the desired protocol variant (plain, signed, chained), a hint to the data type of the payload, the payload data and 
+the payload size in bytes. 
+
+- **`ubirch_protocol_verify(upp, upp_len, verify)`** takes a Ubirch protocol package and verifies it. 
+You need to provide a verify callback function.
+
+- **`ubirch_protocol_free(upp_ctx)`** frees the allocated memory of the protocol context.
+
     
 ### Simple Message Example
-
 ```c
-// creata a standard msgpack stream buffer
-msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-// create a ubirch protocol context from the buffer, its writer
-// and provide the signature function as well as the UUID
-// create variant chained and data type 0 (unknown, binary)
-ubirch_protocol *proto = ubirch_protocol_new(proto_signed, 0, sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
-// create a msgpack packer from the ubirch protocol
-msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+// create a ubirch protocol context and provide the sign function
+ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
 
-// pack a message by starting with the header
-ubirch_protocol_start(proto, pk);
-// add payload (must be a single element, use map/array for multiple data points)
-msgpack_pack_int(pk, 99);
-// finish the message (calculates signature)
-ubirch_protocol_finish(proto, pk);
-//
-// SEND THE MESSAGE (sbuf->data, sbuf->size)
-//
-// free packer and protocol and sbuffer
-msgpack_packer_free(pk);
-ubirch_protocol_free(proto); 
-msgpack_sbuffer_free(sbuf);
+// pack a message, pass the ubirch protocol context, protocol variant (plain, signed or chained), UUID, 
+// payload type (0 for binary), the payload and it's size.
+const char *msg = "message";
+ubirch_protocol_message(upp, proto_signed, uuid, 0, msg, sizeof(msg));
+
+// SEND THE MESSAGE (upp->data, upp->size)
+
+// free the protocol context
+ubirch_protocol_free(upp);
 ```
-
-The protocol context takes care of hashing and sending the data to
-the stream buffer. Instead of a stream buffer, the data may be
-written directly to the network using a custom write function instead of
-`msgpack_sbuffer_write`.
 
 #### Example: binary output (simple signed message)
 ```
@@ -172,46 +156,32 @@ written directly to the network using a custom write function instead of
 ### Chained Message Example
 
 > ⚠  Chained messages include the signature of the previous message
-> to create a safe chain of verifyable messages. You need to keep the
-> ubirch protocol context alive to create a message chain.  
+> to create a safe chain of verifiable messages. You need to keep the
+> Ubirch protocol context alive to create a message chain.  
 
-The example is very similar to above, except that the ubirch protocol
+The example is very similar to above, except that the Ubirch protocol
 context is not deleted after use.
 
 ```c
-// create buffer, writer, ubirch protocol context and packer
-msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-ubirch_protocol *proto = ubirch_protocol_new(proto_chained, 0,
-                                             sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
-msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+// create a ubirch protocol context and provide the sign function
+ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
 
 // FIRST MESSAGE
-ubirch_protocol_start(proto, pk);
-msgpack_pack_raw(pk, strlen(TEST_PAYLOAD));
-msgpack_pack_raw_body(pk, TEST_PAYLOAD, strlen(TEST_PAYLOAD));
-ubirch_protocol_finish(proto, pk);
-// STORE THE SIGNATURE (proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE)
-// clear buffer for next message
-//
-// SEND THE MESSAGE (sbuf->data, sbuf->size)
-//
-msgpack_sbuffer_clear(sbuf);
+const char *msg1 = "message1";
+ubirch_protocol_message(upp, proto_chained, uuid, 0, msg1, sizeof(msg1));
+
+// SEND THE FIRST MESSAGE (upp->data, upp->size)
 
 // SECOND MESSAGE
-// load the previos signature
-memcpy(proto->signature,PREVIOUS_SIGNATURE, UBIRCH_PROTOCOL_SIGN_SIZE);
-ubirch_protocol_start(proto, pk);
-msgpack_pack_raw(pk, strlen("CHAINED"));
-msgpack_pack_raw_body(pk, "CHAINED", strlen("CHAINED"));
-ubirch_protocol_finish(proto, pk);
-// STORE THE SIGNATURE (proto->signature, UBIRCH_PROTOCOL_SIGN_SIZE)
-//
-// .. KEEP ON SENDING THE MESSAGE (sbuf->data, sbuf->size)
-//
-// free packer and protocol and sbuffer
-msgpack_packer_free(pk);
-ubirch_protocol_free(proto); 
-msgpack_sbuffer_free(sbuf);
+const char *msg2 = "message2";
+ubirch_protocol_message(upp, proto_chained, uuid, 0, msg2, sizeof(msg2));
+
+// SEND THE SECOND MESSAGE (upp->data, upp->size)
+
+// ...more packing and sending, if you like
+
+// free the protocol context
+ubirch_protocol_free(upp);
 ```
 
 
@@ -259,12 +229,6 @@ The key registration message is the first step and simply publishes a key
 with some meta-data to the key service. It will later be used for looking
 up keys for a certain device, i.e. when doing an initial trust hand shake.
 
-- **`int msgpack_pack_key_register(msgpack_packer *pk, ubirch_key_info *info)`**
-    creates a msgpack message that can be used to register a given public key with the key service.
-    
-The info struct has fields for all necessary parts of a registration packet. All fields are mandatory, except
-`previousPubKeyId` and `pubKeyId`.     
-
 A key registration message is a msgpack map which can be directly converted to `JSON`:
 ```json
 {
@@ -279,20 +243,26 @@ A key registration message is a msgpack map which can be directly converted to `
 }
 ```
 > Some values are binary and should be converted to base64 or an ASCII UUID style in JSON.
+    
+The key info struct has fields for all necessary parts of a registration packet. 
+```c
+typedef struct ubirch_key_info {
+    char *algorithm;
+    unsigned int created;
+    unsigned char hwDeviceId[UBIRCH_PROTOCOL_UUID_SIZE];
+    char *previousPubKeyId;
+    unsigned char pubKey[UBIRCH_PROTOCOL_PUBKEY_SIZE];
+    char *pubKeyId;
+    unsigned int validNotAfter;
+    unsigned int validNotBefore;
+} ubirch_key_info;
+```
+All fields are mandatory, except `previousPubKeyId` and `pubKeyId`.     
 
 As the registration packet must be signed by the owner of the key, use the following way of wrapping it in a
 ubirch protocol message:
 
 ```c
-// create buffer, protocol and packer
-msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_REG,
-                                             sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
-msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
-
-// start the ubirch protocol message
-ubirch_protocol_start(proto, pk);
-
 // create key registration info
 ubirch_key_info info = {};
 info.algorithm = (char *)(UBIRCH_KEX_ALG_ECC_ED25519);
@@ -301,18 +271,18 @@ memcpy(info.hwDeviceId, UUID, sizeof(UUID));
 memcpy(info.pubKey, public_key, sizeof(public_key));
 info.validNotAfter = NOTAFTERTIMESTAMP;
 info.validNotBefore = NOTBEFORTIMESTAMP;
-msgpack_pack_key_register(pk, &info);
 
-// finish the ubirch protocol message
-ubirch_protocol_finish(proto, pk);
+// create protocol context
+ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+
+// pack key info
+ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG, (const unsigned char *) &info, sizeof(info));
 
 // send the data
-sendPacket(sbuf->data, sbuf->size);
+sendPacket(upp->data, upp->size);
 
 // free allocated ressources
-msgpack_packer_free(pk);
-ubirch_protocol_free(proto);
-msgpack_sbuffer_free(sbuf);
+ubirch_protocol_free(upp);
 ```
 
 ## Building

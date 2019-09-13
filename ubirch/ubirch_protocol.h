@@ -11,7 +11,7 @@
  * How to generate ubirch protocol messages:
  *
  * ```
- * // create a ubirch protocol context and provide the signature function
+ * // create a ubirch protocol context and provide the sign function
  * ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
  *
  * // to pack a message, pass the ubirch protocol context, the desired protocol variant (plain, signed or chained),
@@ -217,12 +217,14 @@ static inline int ubirch_protocol_write(void *data, const char *buf, size_t len)
 }
 
 inline ubirch_protocol *ubirch_protocol_new(ubirch_protocol_sign sign) {
+    // allocate memory for context on heap
     ubirch_protocol *upp = (ubirch_protocol *) malloc(sizeof(ubirch_protocol));
     if (upp == NULL) {
         return NULL;
     }
 
     // initialize upp context, allocate memory for data buffer
+    upp->size = 0;
     upp->data = (char *) malloc(UPP_BUFFER_INIT_SIZE);
     if (upp->data == NULL) {
         free(upp);
