@@ -83,7 +83,7 @@ static int8_t ubirch_protocol_start(ubirch_protocol *upp, ubirch_protocol_varian
  * @return -1 if upp is NULL
  */
 static int8_t ubirch_protocol_add_payload(ubirch_protocol *upp, uint8_t payload_type,
-                                          const unsigned char *payload, size_t payload_len) {
+                                          const char *payload, size_t payload_len) {
     if (upp == NULL) return -1;
 
     // 5 add the payload
@@ -133,7 +133,7 @@ static int8_t ubirch_protocol_finish(ubirch_protocol *upp, ubirch_protocol_varia
 
 int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant variant,
                                const unsigned char *uuid, uint8_t payload_type,
-                               const unsigned char *payload, size_t payload_len) {
+                               const char *payload, size_t payload_len) {
     int8_t error = 0;
     // check if UPP struct has been initialized
     if (upp == NULL || upp->data == NULL || upp->packer.data != upp) { return -1; }

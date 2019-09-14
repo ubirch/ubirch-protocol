@@ -170,7 +170,7 @@ static ubirch_protocol *ubirch_protocol_new(ubirch_protocol_sign sign);
 */
 int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant variant,
                                const unsigned char *uuid, uint8_t payload_type,
-                               const unsigned char *payload, size_t payload_len);
+                               const char *payload, size_t payload_len);
 
 /**
  * Verify a messages signature.

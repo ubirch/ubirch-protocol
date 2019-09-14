@@ -53,7 +53,7 @@ void TestPackKeyReg() {
 
     msgpack_pack_key_register(&pk, &info);
 
-    const unsigned char binaryMessage[] = {
+    const char binaryMessage[] = {
             0x86, 0xa9, 0x61, 0x6c, 0x67, 0x6f, 0x72, 0x69, 0x74, 0x68, 0x6d, 0xab, 0x45, 0x43, 0x43, 0x5f, 0x45, 0x44,
             0x32, 0x35, 0x35, 0x31, 0x39, 0xa7, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0xce, 0x5a, 0x86, 0xcc, 0xa8,
             0xaa, 0x68, 0x77, 0x44, 0x65, 0x76, 0x69, 0x63, 0x65, 0x49, 0x64, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65,
@@ -113,10 +113,10 @@ void TestSignKeyRegisterMessage() {
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
     int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
-                                         reinterpret_cast<const unsigned char *> (&info), sizeof(info));
+                                         reinterpret_cast<const char *> (&info), sizeof(info));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
-    const unsigned char expectedMessage[] = {
+    const char expectedMessage[] = {
             0x95, 0x22, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e,
             0x6f, 0x70, 0x01, 0x86, 0xa9, 0x61, 0x6c, 0x67, 0x6f, 0x72, 0x69, 0x74, 0x68, 0x6d, 0xab, 0x45, 0x43, 0x43,
             0x5f, 0x45, 0x44, 0x32, 0x35, 0x35, 0x31, 0x39, 0xa7, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0xce, 0x5a,
@@ -151,7 +151,7 @@ void TestKeyVerify() {
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
     int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
-                                         reinterpret_cast<const unsigned char *> (&info), sizeof(info));
+                                         reinterpret_cast<const char *> (&info), sizeof(info));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // verify message
@@ -178,7 +178,7 @@ void TestHostKeyRegMessage() {
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
     int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
-                                         reinterpret_cast<const unsigned char *> (&info), sizeof(info));
+                                         reinterpret_cast<const char *> (&info), sizeof(info));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // encode and send message to host
