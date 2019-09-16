@@ -2,15 +2,18 @@
 
 1. [0x00: binary or unknown payload type](#binary-or-unknown-payload-type)
 2. [0x01: key registration message](#key-registration-message)
-3. [0x32: ubirch standard sensor message](#ubirch-standard-sensor-message)
-4. [0x53: generic sensor message](#generic-sensor-message)
-5. [0x55: ubirch/trackle message response](#ubirch-trackle-message-response)
+3. [0x03: msgpack object payload type](#msgpack-payload-type)
+4. [0x32: ubirch standard sensor message](#ubirch-standard-sensor-message)
+5. [0x53: generic sensor message](#generic-sensor-message)
+6. [0x54: trackle message packet](#trackle-message-packet)
+7. [0x55: ubirch/trackle message response](#ubirch-trackle-message-response)
 
 
 | Payload Type | Description |
 |--------------|-------------|
 | `0x00` (`00`)| binary, or unknown payload type |
 | `0x01` (`01`)| key registration message |
+| `0x03` (`03`)| msgpack object payload type |
 | `0x32` (`50`)| ubirch standard sensor message (msgpack) |
 | `0x53` (`83`)| generic sensor message (json type key/value map) |
 | `0x54` (`84`)| trackle message packet |
@@ -20,6 +23,8 @@
 ## binary or unknown payload type
 todo
 ## key registration message
+todo
+## msgpack payload type
 todo
 ## ubirch standard sensor message
 

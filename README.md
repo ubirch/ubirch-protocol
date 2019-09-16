@@ -61,7 +61,8 @@ array.
 - **PREV-SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family)
 - **TYPE** - [Integer](https://github.com/msgpack/msgpack/blob/master/spec.md#int-format-family), positive fixnum 
    (1 byte, see [Payload Type](#payload-type))
-- **PAYLOAD** - [Byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family) with a length upto (2^32)-1 bytes
+- **PAYLOAD** - [Byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family) 
+with a length upto (2^32)-1 bytes or any msgpack type
 - **SIGNATURE** - [512 bit, 64-byte array](https://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family) 
   ([ED25519](https://ed25519.cr.yp.to) signature, 64 bytes)
    > Calculated over the [SHA512](https://en.wikipedia.org/wiki/SHA-2) of the binary representation of previous fields.
@@ -70,12 +71,13 @@ array.
 
 | Payload Type | Description |
 |--------------|-------------|
-| `0x00` (`00`)| [binary, or unknown payload type](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#binary-or-unknown-payload-type) |
-| `0x01` (`01`)| [key registration message](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#key-registration-message) |
-| `0x32` (`50`)| [ubirch standard sensor message (msgpack)](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#ubirch-standard-sensor-message) |
-| `0x53` (`83`)| [generic sensor message (json type key/value map)](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#generic-sensor-message) |
-| `0x54` (`84`)| [trackle message packet](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#trackle-message-packet) |
-| `0x55` (`85`)| [ubirch/trackle message response](https://github.com/ubirch/ubirch-protocol/blob/mods-for-esp32/README_PAYLOAD.md#ubirch-trackle-message-response) |
+| `0x00` (`00`)| [binary, or unknown payload type](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#binary-or-unknown-payload-type) |
+| `0x01` (`01`)| [key registration message](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#key-registration-message) |
+| `0x03` (`03`)| [msgpack object payload type](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#msgpack-payload-type) |
+| `0x32` (`50`)| [ubirch standard sensor message (msgpack)](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#ubirch-standard-sensor-message) |
+| `0x53` (`83`)| [generic sensor message (json type key/value map)](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#generic-sensor-message) |
+| `0x54` (`84`)| [trackle message packet](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#trackle-message-packet) |
+| `0x55` (`85`)| [ubirch/trackle message response](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#ubirch-trackle-message-response) |
 
 ## Checking the Signature   
    
@@ -116,15 +118,15 @@ The Ubirch protocol API provides the following functions:
 to be packed. A callback function for signing the message is passed as an argument. *If you only want to pack a plain 
 message without signature, NULL can be passed.*
 
-- **`ubirch_protocol_message(upp_ctx, variant, uuid, payload_type, payload, payload_len);`** packs the message and 
+- **`ubirch_protocol_message(&upp_ctx, variant, uuid, payload_type, payload, payload_len);`** packs the message and 
 writes it to the context data buffer. This function takes the following arguments: the Ubirch protocol context, 
 the desired protocol variant (plain, signed, chained), a hint to the data type of the payload, the payload data and 
 the payload size in bytes. 
 
-- **`ubirch_protocol_verify(upp, upp_len, verify)`** takes a Ubirch protocol package and verifies it. 
-You need to provide a verify callback function.
+- **`ubirch_protocol_free(&upp_ctx)`** frees the allocated memory of the protocol context.
 
-- **`ubirch_protocol_free(upp_ctx)`** frees the allocated memory of the protocol context.
+- **`ubirch_protocol_verify(&upp, upp_len, verify)`** takes a Ubirch protocol package and verifies it. 
+You need to provide a verify callback function.
 
     
 ### Simple Message Example
@@ -132,8 +134,8 @@ You need to provide a verify callback function.
 // create a ubirch protocol context and provide the sign function
 ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
 
-// pack a message, pass the ubirch protocol context, protocol variant (plain, signed or chained), UUID, 
-// payload type (0 for binary), the payload and it's size.
+// pack a message, pass the ubirch protocol context, protocol variant (plain, signed or chained),
+// UUID, payload type (0 for binary), the payload and it's size.
 const char *msg = "message";
 ubirch_protocol_message(upp, proto_signed, uuid, 0, msg, sizeof(msg));
 
@@ -276,7 +278,7 @@ info.validNotBefore = NOTBEFORTIMESTAMP;
 ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
 
 // pack key info
-ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG, (const unsigned char *) &info, sizeof(info));
+ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG, (const char *) &info, sizeof(info));
 
 // send the data
 sendPacket(upp->data, upp->size);
