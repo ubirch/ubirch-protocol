@@ -332,6 +332,25 @@ ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_MSGPACK, s
 ubirch_protocol_free(upp);
 ```
 
+The resulting UPP (signed) would look like this in JSON format:
+```json
+[
+    34,
+    "base64:YWJjZGVmZ2hpamtsbW5vcA==",
+    3,
+    {
+        "time": 1568392345,
+        "data": [
+            42,
+            -21,
+            84.125
+        ]
+    },
+    "base64:+zJH0co3x1K0XJ5rbc9p/+LAvhunmWsUBRMaiJzdg1l1QUjsbvNcF+SegwVgASmW9eTHg3vlCRovxm+5cGtdCQ=="
+]
+
+```
+
 ## Building
 
 
