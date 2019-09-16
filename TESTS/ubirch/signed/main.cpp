@@ -207,8 +207,6 @@ void TestMsgpackMessageSigned() {
     int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.data, sbuf.size);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
-    printUPP(upp->data, upp->size);
-
     // verify message
     ret = ubirch_protocol_verify(upp->data, upp->size, ed25519_verify);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "message verification failed");

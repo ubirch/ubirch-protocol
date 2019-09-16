@@ -253,14 +253,6 @@ inline void ubirch_protocol_free(ubirch_protocol *upp) {
     }
 }
 
-static inline void printUPP(const char *data, size_t size) {
-    printf(" - - - UPP - - - \r\n");
-    for (size_t i = 0; i < size; i++) {
-        printf("%02x", data[i]);
-    }
-    printf("\r\n");
-}
-
 #ifdef __cplusplus
 }
 #endif

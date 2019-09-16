@@ -197,8 +197,6 @@ void TestMsgpackMessagePlain() {
     int8_t ret = ubirch_protocol_message(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.data, sbuf.size);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
-    printUPP(upp->data, upp->size);
-
     // send message to host
     memset(_value, 0, sizeof(_value));
     int encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
