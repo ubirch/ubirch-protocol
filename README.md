@@ -10,6 +10,7 @@
     2. [Chained Message Example](#chained-message-example)
     3. [Message Responses](#message-responses)
     4. [Key Registration](#key-registration)    
+    5. [Msgpack type payload](#msgpack-type-payload)
 4. [Building](#building)
 5. [Testing](#testing)
 
@@ -284,6 +285,50 @@ ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG, (cons
 sendPacket(upp->data, upp->size);
 
 // free allocated ressources
+ubirch_protocol_free(upp);
+```
+
+### Msgpack type payload
+
+Besides packing a trivial byte array as payload, you can add a more complex payload as any msgpack type 
+by passing `0x03` as payload type hint and a pointer to a msgpack type payload to the ubirch_protocol_message function.
+Learn [here](https://github.com/msgpack/msgpack-c/wiki/v2_0_c_overview) how to create a msgpack type payload.
+Below is an example how you would pack a msgpack map, which contains a timestamp and a list of different values,
+in a Ubirch protocol message.
+
+```c
+// create a ubirch protocol context
+ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+
+// create a msgpack type payload
+msgpack_sbuffer sbuf; /* buffer */
+msgpack_packer pk;    /* packer */
+
+msgpack_sbuffer_init(&sbuf); /* initialize buffer */
+msgpack_packer_init(&pk, &sbuf, msgpack_sbuffer_write); /* initialize packer */
+
+// dummy map with 2 key-value-pairs
+msgpack_pack_map(&pk, 2);
+
+// 1 - timestamp
+msgpack_pack_str(&pk, strlen("time"));
+msgpack_pack_str_body(&pk, "time", strlen("time"));
+msgpack_pack_uint32(&pk, timestamp);
+
+// 2 - dummy data array
+msgpack_pack_str(&pk, strlen("data"));
+msgpack_pack_str_body(&pk, "data", strlen("data"));
+msgpack_pack_array(&pk, 3);
+msgpack_pack_uint8(&pk, 42);
+msgpack_pack_int16(&pk, -21);
+msgpack_pack_float(&pk, 84.125);
+
+// pack the message
+ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.data, sbuf.size);
+
+// SEND THE MESSAGE (upp->data, upp->size)
+
+// free the protocol context
 ubirch_protocol_free(upp);
 ```
 
