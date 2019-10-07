@@ -28,7 +28,7 @@ unsigned char ed25519_public_key[crypto_sign_PUBLICKEYBYTES] = {
 void TestProtocolNewSigned() {
     const unsigned char allZeros[UBIRCH_PROTOCOL_SIGN_SIZE] = {0};
 
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
 
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
     TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "creating UPP data buffer failed");
@@ -36,6 +36,7 @@ void TestProtocolNewSigned() {
     TEST_ASSERT_EQUAL_PTR_MESSAGE(upp, upp->packer.data, "packer data not initialized");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(ubirch_protocol_write, upp->packer.callback, "packer callback not initialized");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(ed25519_sign, upp->sign, "sign callback not initialized");
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(upp->uuid, UUID, UBIRCH_PROTOCOL_UUID_SIZE);
     TEST_ASSERT_EQUAL_UINT8_ARRAY_MESSAGE(allZeros, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE,
                                           "last signature should be 0");
 
@@ -53,10 +54,10 @@ void TestProtocolMessageSigned() {
             0x23, 0xc1, 0x22, 0x63, 0xf5, 0x01,
     };
 
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
@@ -67,10 +68,10 @@ void TestProtocolMessageSigned() {
 void TestProtocolVerifySigned() {
     const char msg[] = {0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42};
 
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // verify message
@@ -86,10 +87,10 @@ void TestSimpleMessageSigned() {
     const char *msg = "simple message";
 
     // create UPP
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // register public key with host
@@ -127,10 +128,10 @@ void TestProtocolLongMessageSigned() {
                       "commodo. Sit amet facilisis magna etiam tempor orci eu lobortis elementum. Cras tincidunt "
                       "lobortis feugiat vivamus. Eu scelerisque felis imperdiet proin fermentum leo.";
 
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     const char expected_message[] = {
@@ -171,7 +172,7 @@ void TestMsgpackMessageSigned() {
     static const time_t timestamp = 1568392345;
 
     // create a ubirch protocol context
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
     //create a msgpack object
@@ -204,7 +205,7 @@ void TestMsgpackMessageSigned() {
     msgpack_pack_float(&pk, 84.125);
 
     // pack message
-    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.data, sbuf.size);
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.data, sbuf.size);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // verify message

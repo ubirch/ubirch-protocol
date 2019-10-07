@@ -115,11 +115,11 @@ Case must be taken, unpacking the message structure, to ensure no data beyond th
 
 The Ubirch protocol API provides the following functions:
 
-- **`ubirch_protocol_new(sign)`** creates a new Ubirch protocol context, which contains a data buffer for the message 
-to be packed. A callback function for signing the message is passed as an argument. *If you only want to pack a plain 
-message without signature, NULL can be passed.*
+- **`ubirch_protocol_new(uuid, sign)`** creates a new Ubirch protocol context, which contains a data buffer for the message 
+to be packed. The sender UUID and a callback function for signing the message is passed as an argument. 
+*If you only want to pack a plain message without signature, NULL can be passed as second argument.*
 
-- **`ubirch_protocol_message(&upp_ctx, variant, uuid, payload_type, payload, payload_len);`** packs the message and 
+- **`ubirch_protocol_message(&upp_ctx, variant, payload_type, payload, payload_len);`** packs the message and 
 writes it to the context data buffer. This function takes the following arguments: the Ubirch protocol context, 
 the desired protocol variant (plain, signed, chained), a hint to the data type of the payload, the payload data and 
 the payload size in bytes. 
@@ -132,13 +132,13 @@ You need to provide a verify callback function.
     
 ### Simple Message Example
 ```c
-// create a ubirch protocol context and provide the sign function
-ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+// create a ubirch protocol context and provide the UUID and sign function
+ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
 
 // pack a message, pass the ubirch protocol context, protocol variant (plain, signed or chained),
-// UUID, payload type (0 for binary), the payload and it's size.
+// payload type (0 for binary), the payload and it's size.
 const char *msg = "message";
-ubirch_protocol_message(upp, proto_signed, uuid, 0, msg, sizeof(msg));
+ubirch_protocol_message(upp, proto_signed, 0, msg, sizeof(msg));
 
 // SEND THE MESSAGE (upp->data, upp->size)
 
@@ -166,22 +166,22 @@ The example is very similar to above, except that the Ubirch protocol
 context is not deleted after use.
 
 ```c
-// create a ubirch protocol context and provide the sign function
-ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+// create a ubirch protocol context and provide the UUID and sign function
+ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
 
 // FIRST MESSAGE
 const char *msg1 = "message1";
-ubirch_protocol_message(upp, proto_chained, uuid, 0, msg1, sizeof(msg1));
+ubirch_protocol_message(upp, proto_chained, 0, msg1, sizeof(msg1));
 
 // SEND THE FIRST MESSAGE (upp->data, upp->size)
 
 // SECOND MESSAGE
 const char *msg2 = "message2";
-ubirch_protocol_message(upp, proto_chained, uuid, 0, msg2, sizeof(msg2));
+ubirch_protocol_message(upp, proto_chained, 0, msg2, sizeof(msg2));
 
 // SEND THE SECOND MESSAGE (upp->data, upp->size)
 
-// ...more packing and sending, if you like
+// ...more packing and sending, if you want
 
 // free the protocol context
 ubirch_protocol_free(upp);
@@ -276,10 +276,10 @@ info.validNotAfter = NOTAFTERTIMESTAMP;
 info.validNotBefore = NOTBEFORTIMESTAMP;
 
 // create protocol context
-ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
 
 // pack key info
-ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG, (const char *) &info, sizeof(info));
+ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_REG, (const char *) &info, sizeof(info));
 
 // send the data
 sendPacket(upp->data, upp->size);
@@ -298,7 +298,7 @@ in a Ubirch protocol message.
 
 ```c
 // create a ubirch protocol context
-ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
 
 // create a msgpack type payload
 msgpack_sbuffer sbuf; /* buffer */
@@ -324,7 +324,7 @@ msgpack_pack_int16(&pk, -21);
 msgpack_pack_float(&pk, 84.125);
 
 // pack the message
-ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.data, sbuf.size);
+ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.data, sbuf.size);
 
 // SEND THE MESSAGE (upp->data, upp->size)
 

@@ -109,10 +109,10 @@ void TestSignKeyRegisterMessage() {
     info.validNotAfter = static_cast<long>(timestamp + 60000);
     info.validNotBefore = static_cast<long>(timestamp);
 
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_REG,
                                          reinterpret_cast<const char *> (&info), sizeof(info));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
@@ -147,10 +147,10 @@ void TestKeyVerify() {
     info.validNotBefore = static_cast<long>(timestamp);
 
     // create ubirch key registration message
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_REG,
                                          reinterpret_cast<const char *> (&info), sizeof(info));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
@@ -174,10 +174,10 @@ void TestHostKeyRegMessage() {
     size_t encoded_size;
 
     // create ubirch key registration message
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_signed, UUID, UBIRCH_PROTOCOL_TYPE_REG,
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_REG,
                                          reinterpret_cast<const char *> (&info), sizeof(info));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 

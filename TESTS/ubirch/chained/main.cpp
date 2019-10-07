@@ -39,10 +39,10 @@ void TestProtocolMessageChained() {
             0x2a, 0xe0, 0x6f, 0x11, 0x54, 0x70, 0x9c, 0xd5, 0x44, 0x1b, 0xf2, 0x3b, 0x63, 0x42, 0x7e, 0x2b, 0x52, 0x0b,
     };
 
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_chained, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
@@ -53,10 +53,10 @@ void TestProtocolMessageChained() {
 void TestProtocolVerifyChained() {
     const char msg[] = {0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42};
 
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_chained, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // verify message
@@ -72,10 +72,10 @@ void TestSimpleMessageChained() {
     const char *msg = "simple message";
 
     // create UPP
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_chained, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // register public key with host
@@ -121,11 +121,11 @@ void TestChainedMessages() {
     greentea_send_kv("publicKey", _value);
 
     // create UPP
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
     const char *message1 = "message 1";
-    ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, message1, strlen(message1));
+    ret = ubirch_protocol_message(upp, proto_chained, UBIRCH_PROTOCOL_TYPE_BIN, message1, strlen(message1));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // check last signature
@@ -157,7 +157,7 @@ void TestChainedMessages() {
 
     // pack new UPP
     const char *message2 = "message 2 (is a little bit longer)";
-    ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, message2, strlen(message2));
+    ret = ubirch_protocol_message(upp, proto_chained, UBIRCH_PROTOCOL_TYPE_BIN, message2, strlen(message2));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // check last signature
@@ -189,7 +189,7 @@ void TestChainedMessages() {
 
     // pack new UPP
     const char *message3 = "msg3";
-    ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, message3, strlen(message3));
+    ret = ubirch_protocol_message(upp, proto_chained, UBIRCH_PROTOCOL_TYPE_BIN, message3, strlen(message3));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // check last signature
@@ -234,11 +234,11 @@ void TestChainedMessagesStatic() {
     greentea_send_kv("publicKey", _value);
 
     // create UPP
-    ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
     for (int i = 0; i < 5; i++) {
-        ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN,
+        ret = ubirch_protocol_message(upp, proto_chained, UBIRCH_PROTOCOL_TYPE_BIN,
                                       staticValue, strlen(staticValue));
         TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 

@@ -13,7 +13,7 @@ static const unsigned char UUID[16] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', '
 void TestProtocolNew() {
     const unsigned char allZeros[UBIRCH_PROTOCOL_SIGN_SIZE] = {0};
 
-    ubirch_protocol *upp = ubirch_protocol_new(NULL);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, NULL);
 
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
     TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "creating UPP data buffer failed");
@@ -21,6 +21,7 @@ void TestProtocolNew() {
     TEST_ASSERT_EQUAL_PTR_MESSAGE(upp, upp->packer.data, "packer data not initialized");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(ubirch_protocol_write, upp->packer.callback, "packer callback not initialized");
     TEST_ASSERT_NULL(upp->sign);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(upp->uuid, UUID, UBIRCH_PROTOCOL_UUID_SIZE);
     TEST_ASSERT_EQUAL_UINT8_ARRAY_MESSAGE(allZeros, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE,
                                           "last signature should be 0");
 
@@ -34,10 +35,10 @@ void TestProtocolMessagePlain() {
             0x6f, 0x70, 0x00, 0xc4, 0x07, 0x24, 0x98, 0x42, 0x21, 0x42, 0x98, 0x24
     };
 
-    ubirch_protocol *upp = ubirch_protocol_new(NULL);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, NULL);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_plain, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
     TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
@@ -51,10 +52,10 @@ void TestSimpleMessagePlain() {
     size_t encoded_size;
     const char *msg = "simple message";
 
-    ubirch_protocol *upp = ubirch_protocol_new(NULL);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, NULL);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_plain, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     memset(_value, 0, sizeof(_value));
@@ -82,17 +83,17 @@ void TestProtocolUninitialized() {
     const char msg[] = {0x24, 0x98};
     ubirch_protocol upp;
 
-    int8_t ret = ubirch_protocol_message(&upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(&upp, proto_plain, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(-1, ret, "expected to fail");
 }
 
 void TestProtocolUnsupported() {
     const char msg[] = {0x24, 0x98};
-    ubirch_protocol *upp = ubirch_protocol_new(NULL);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, NULL);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, (ubirch_protocol_variant) 0, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg,
+    int8_t ret = ubirch_protocol_message(upp, (ubirch_protocol_variant) 0, UBIRCH_PROTOCOL_TYPE_BIN, msg,
                                          sizeof(msg));
 
     TEST_ASSERT_EQUAL_INT_MESSAGE(-3, ret, "expected to fail");
@@ -109,10 +110,10 @@ void TestProtocolLongMessagePlain() {
                       "sapien. Non diam phasellus vestibulum lorem sed risus. Nunc non blandit massa enim nec. Leo a "
                       "diam sollicitudin tempor id eu nisl nunc. Non enim praesent elementum facilisis leo vel.";
 
-    ubirch_protocol *upp = ubirch_protocol_new(NULL);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, NULL);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_plain, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     const char expected_message[] = {
@@ -161,7 +162,7 @@ void TestMsgpackMessagePlain() {
     static const time_t timestamp = 1568392345;
 
     // create a ubirch protocol context
-    ubirch_protocol *upp = ubirch_protocol_new(NULL);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, NULL);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
     //create a msgpack object
@@ -194,7 +195,7 @@ void TestMsgpackMessagePlain() {
     msgpack_pack_float(&pk, 84.125);
 
     // pack message
-    int8_t ret = ubirch_protocol_message(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.data, sbuf.size);
+    int8_t ret = ubirch_protocol_message(upp, proto_plain, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.data, sbuf.size);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
     // send message to host
@@ -217,10 +218,10 @@ void TestMsgpackMessagePlain() {
 
 void TestProtocolFree() {      //FIXME not passing
     const char msg[] = {0x24, 0x98};
-    ubirch_protocol *upp = ubirch_protocol_new(NULL);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, NULL);
     TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    int8_t ret = ubirch_protocol_message(upp, proto_plain, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    int8_t ret = ubirch_protocol_message(upp, proto_plain, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
 
     ubirch_protocol_free(upp);

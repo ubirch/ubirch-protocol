@@ -30,13 +30,11 @@
  *
  * @param upp the ubirch protocol context
  * @param variant protocol variant
- * @param uuid the uuid associated with the data
  * @param payload_type the payload data type indicator (0 - binary)
  * @return -1 if upp is NULL
  * @return -2 if the protocol version is not supported
  */
-static int8_t ubirch_protocol_start(ubirch_protocol *upp, ubirch_protocol_variant variant,
-                                    const unsigned char *uuid, uint8_t payload_type) {
+static int8_t ubirch_protocol_start(ubirch_protocol *upp, ubirch_protocol_variant variant, uint8_t payload_type) {
     if (upp == NULL) return -1;
 
     // the message consists of 3 header elements, the payload and (not included) the signature
@@ -59,7 +57,7 @@ static int8_t ubirch_protocol_start(ubirch_protocol *upp, ubirch_protocol_varian
 
     // 2 - device ID
     msgpack_pack_bin(&upp->packer, UBIRCH_PROTOCOL_UUID_SIZE);
-    msgpack_pack_bin_body(&upp->packer, uuid, UBIRCH_PROTOCOL_UUID_SIZE);
+    msgpack_pack_bin_body(&upp->packer, upp->uuid, UBIRCH_PROTOCOL_UUID_SIZE);
 
     // 3 the last signature (if chained)
     if (variant == proto_chained) {
@@ -131,8 +129,7 @@ static int8_t ubirch_protocol_finish(ubirch_protocol *upp, ubirch_protocol_varia
     return 0;
 }
 
-int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant variant,
-                               const unsigned char *uuid, uint8_t payload_type,
+int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant variant, uint8_t payload_type,
                                const char *payload, size_t payload_len) {
     int8_t error = 0;
     // check if UPP struct has been initialized
@@ -147,7 +144,7 @@ int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant var
     upp->size = 0;
 
     // pack UPP header
-    error = ubirch_protocol_start(upp, variant, uuid, payload_type);
+    error = ubirch_protocol_start(upp, variant, payload_type);
     if (error) { return -3; }
 
     // add the payload
