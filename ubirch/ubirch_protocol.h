@@ -11,13 +11,13 @@
  * How to generate ubirch protocol messages:
  *
  * ```
- * // create a ubirch protocol context and provide the sign function
- * ubirch_protocol *upp = ubirch_protocol_new(ed25519_sign);
+ * // create a ubirch protocol context and provide the UUID and sign function
+ * ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
  *
  * // to pack a message, pass the ubirch protocol context, the desired protocol variant (plain, signed or chained),
- * // the UUID, a hint to the message payload type (binary or key registration) and the payload followed by
+ * // a hint to the message payload type (binary or key registration) and the payload followed by
  * // it's size in bytes. The payload may be a byte array or ubirch key info.
- * int8_t ret = ubirch_protocol_message(upp, proto_chained, UUID, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+ * int8_t ret = ubirch_protocol_message(upp, proto_chained, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
  *
  * // generate a chained message, which contains the signature of the previous one, by calling the message function
  * // again, passing the same context to it.
