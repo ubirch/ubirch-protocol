@@ -138,7 +138,7 @@ ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
 // pack a message, pass the ubirch protocol context, protocol variant (plain, signed or chained),
 // payload type (0 for binary), the payload and it's size.
 const char *msg = "message";
-ubirch_protocol_message(upp, proto_signed, 0, msg, sizeof(msg));
+ubirch_protocol_message(upp, proto_signed, 0, msg, strlen(msg));
 
 // SEND THE MESSAGE (upp->data, upp->size)
 
@@ -171,13 +171,13 @@ ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
 
 // FIRST MESSAGE
 const char *msg1 = "message1";
-ubirch_protocol_message(upp, proto_chained, 0, msg1, sizeof(msg1));
+ubirch_protocol_message(upp, proto_chained, 0, msg1, strlen(msg1));
 
 // SEND THE FIRST MESSAGE (upp->data, upp->size)
 
 // SECOND MESSAGE
 const char *msg2 = "message2";
-ubirch_protocol_message(upp, proto_chained, 0, msg2, sizeof(msg2));
+ubirch_protocol_message(upp, proto_chained, 0, msg2, strlen(msg2));
 
 // SEND THE SECOND MESSAGE (upp->data, upp->size)
 

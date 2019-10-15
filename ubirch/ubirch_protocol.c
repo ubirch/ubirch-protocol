@@ -34,7 +34,7 @@
  * @return -1 if upp is NULL
  * @return -2 if the protocol version is not supported
  */
-static int8_t ubirch_protocol_start(ubirch_protocol *upp, ubirch_protocol_variant variant, uint8_t payload_type) {
+static int8_t ubirch_protocol_start(ubirch_protocol *upp, ubirch_protocol_variant variant) {
     if (upp == NULL) return -1;
 
     // the message consists of 3 header elements, the payload and (not included) the signature
@@ -59,14 +59,11 @@ static int8_t ubirch_protocol_start(ubirch_protocol *upp, ubirch_protocol_varian
     msgpack_pack_bin(&upp->packer, UBIRCH_PROTOCOL_UUID_SIZE);
     msgpack_pack_bin_body(&upp->packer, upp->uuid, UBIRCH_PROTOCOL_UUID_SIZE);
 
-    // 3 the last signature (if chained)
+    // 3 - the last signature (if chained)
     if (variant == proto_chained) {
         msgpack_pack_bin(&upp->packer, UBIRCH_PROTOCOL_SIGN_SIZE);
         msgpack_pack_bin_body(&upp->packer, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
     }
-
-    // 4 the payload type
-    msgpack_pack_uint8(&upp->packer, payload_type);
 
     return 0;
 }
@@ -84,7 +81,10 @@ static int8_t ubirch_protocol_add_payload(ubirch_protocol *upp, uint8_t payload_
                                           const char *payload, size_t payload_len) {
     if (upp == NULL) return -1;
 
-    // 5 add the payload
+    // 4 - the payload type
+    msgpack_pack_uint8(&upp->packer, payload_type);
+
+    // 5 - add the payload
     if (payload_type == UBIRCH_PROTOCOL_TYPE_REG) {
         // create a key registration packet and add it to UPP
         ubirch_key_info *info = (ubirch_key_info *) payload;
@@ -97,6 +97,7 @@ static int8_t ubirch_protocol_add_payload(ubirch_protocol *upp, uint8_t payload_
         msgpack_pack_bin(&upp->packer, payload_len);
         msgpack_pack_bin_body(&upp->packer, payload, payload_len);
     }
+    // TODO more payload types
 
     return 0;
 }
@@ -121,7 +122,7 @@ static int8_t ubirch_protocol_finish(ubirch_protocol *upp, ubirch_protocol_varia
             return -2;
         }
 
-        // 6 add signature hash
+        // 6 - add signature hash
         msgpack_pack_bin(&upp->packer, UBIRCH_PROTOCOL_SIGN_SIZE);
         msgpack_pack_bin_body(&upp->packer, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
     }
@@ -144,7 +145,7 @@ int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant var
     upp->size = 0;
 
     // pack UPP header
-    error = ubirch_protocol_start(upp, variant, payload_type);
+    error = ubirch_protocol_start(upp, variant);
     if (error) { return -3; }
 
     // add the payload
