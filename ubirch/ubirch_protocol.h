@@ -58,6 +58,10 @@
 extern "C" {
 #endif
 
+#ifndef MSGPACK_ZONE_CHUNK_SIZE
+#define MSGPACK_ZONE_CHUNK_SIZE 128
+#endif
+
 // we use an mbed port of msgpack which tries to include arpa/inet.h if __MBED__ is not defined
 // so we fake it here, if we compile for another system. It does not have any other impact.
 #ifndef __MBED__
@@ -65,21 +69,13 @@ extern "C" {
 #include <msgpack.h>
 #undef __MBED__
 #else
-
 #include <msgpack.h>
-
 #endif
 
 #if defined(MBEDTLS_CONFIG_FILE)
-
 #include <mbedtls/sha512.h>
-
 #else
 #include "digest/sha512.h"
-#endif
-
-#ifndef MSGPACK_ZONE_CHUNK_SIZE
-#define MSGPACK_ZONE_CHUNK_SIZE 128
 #endif
 
 #define UBIRCH_PROTOCOL_VERSION     2       //!< current ubirch protocol version
@@ -111,7 +107,7 @@ typedef enum ubirch_protocol_variant {
  *
  * @param buf the data to sign
  * @param len the length of the data buffer
- * @param signature the buffer to hold the returned signature (64 byte)
+ * @param signature the signature output (64 byte)
  * @return 0 on success
  * @return -1 if the signing failed
  */
@@ -147,10 +143,10 @@ typedef struct ubirch_protocol {
 
 /**
  * Create new ubirch protocol context. Allocates memory for context and data buffer on heap,
- * initializes msgpack_packer, sets user sign callback and initializes signature of previous message to 0.
+ * initializes msgpack_packer, sets user sign callback and UUID and initializes previous signature to 0.
  *
  * @param uuid the uuid of the sender
- * @param sign a callback used for signing a message, can be NULL if no signing required (i.e. plain protocol variant)
+ * @param sign the signing function, can be NULL if no signing required (i.e. plain protocol variant)
  * @return a new initialized ubirch protocol context
  */
 static ubirch_protocol *ubirch_protocol_new(const unsigned char *uuid, ubirch_protocol_sign sign);
@@ -173,22 +169,22 @@ int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant var
                                const char *payload, size_t payload_len);
 
 /**
+ * Free memory for a ubirch protocol context.
+ * @param upp the protocol context
+ */
+static void ubirch_protocol_free(ubirch_protocol *upp);
+
+/**
  * Verify a messages signature.
  *
  * @param data the message to verify
  * @param data_len the size of the message
- * @param verify the private key to use for verification
+ * @param verify the verification function
  * @return 0 if the verification is successful
  * @return -1 if the signature verification has failed
  * @return -2 if upp is NULL or the message length is wrong (too short to actually do a check)
  */
 int8_t ubirch_protocol_verify(char *data, size_t data_len, ubirch_protocol_check verify);
-
-/**
- * Free memory for a ubirch protocol context.
- * @param upp the protocol context
- */
-static void ubirch_protocol_free(ubirch_protocol *upp);
 
 /**
  * Callback for msgpack_packer to write data to UPP data buffer.
