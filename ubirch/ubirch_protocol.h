@@ -161,9 +161,8 @@ static ubirch_protocol *ubirch_protocol_new(const unsigned char *uuid, ubirch_pr
  * @param payload_len the size of the payload in bytes
  * @return 0 if successful
  * @return -1 if upp is not initialized
- * @return -2 if no sign callback was provided
- * @return -3 if the protocol version is not supported
- * @return -4 if the signing failed
+ * @return -2 if the protocol version is not supported
+ * @return -3 if the signing failed or no signing callback has been provided
 */
 int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant variant, uint8_t payload_type,
                                const char *payload, size_t payload_len);
@@ -214,25 +213,21 @@ static inline int ubirch_protocol_write(void *data, const char *buf, size_t len)
 }
 
 inline ubirch_protocol *ubirch_protocol_new(const unsigned char *uuid, ubirch_protocol_sign sign) {
-    // allocate memory for context on heap
+    // allocate memory for context
     ubirch_protocol *upp = (ubirch_protocol *) malloc(sizeof(ubirch_protocol));
     if (upp == NULL) {
         return NULL;
     }
-
-    // initialize upp context, allocate memory for data buffer
-    upp->size = 0;
+    // allocate memory for data buffer
     upp->data = (char *) malloc(UPP_BUFFER_INIT_SIZE);
     if (upp->data == NULL) {
         free(upp);
         return NULL;
     }
+    // initialize context
+    upp->size = 0;
     upp->alloc = UPP_BUFFER_INIT_SIZE;
-
-    // initialize packer to write data to UPP data buffer
     msgpack_packer_init(&upp->packer, upp, ubirch_protocol_write);
-
-    // set user sign function, UUID and last signature
     upp->sign = sign;
     memcpy(upp->uuid, uuid, UBIRCH_PROTOCOL_UUID_SIZE);
     memset(upp->signature, 0, UBIRCH_PROTOCOL_SIGN_SIZE);

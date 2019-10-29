@@ -37,7 +37,7 @@
 static int8_t ubirch_protocol_start(ubirch_protocol *upp, ubirch_protocol_variant variant) {
     if (upp == NULL) return -1;
 
-    // the message consists of 3 header elements, the payload and (not included) the signature
+    // the message consists of 2 or 3 header elements, the payload and the signature (depends on variant)
     switch (variant) {
         case proto_plain:
             msgpack_pack_array(&upp->packer, 4);
@@ -87,8 +87,7 @@ static int8_t ubirch_protocol_add_payload(ubirch_protocol *upp, uint8_t payload_
     // 5 - add the payload
     if (payload_type == UBIRCH_PROTOCOL_TYPE_REG) {
         // create a key registration packet and add it to UPP
-        ubirch_key_info *info = (ubirch_key_info *) payload;
-        msgpack_pack_key_register(&upp->packer, info);
+        msgpack_pack_key_register(&upp->packer, (ubirch_key_info *) payload);
     } else if (payload_type == UBIRCH_PROTOCOL_TYPE_MSGPACK) {
         // if the payload is a msgpack type, write it directly to UPP without using msgpack_packer
         ubirch_protocol_write(upp, payload, payload_len);
@@ -109,19 +108,19 @@ static int8_t ubirch_protocol_add_payload(ubirch_protocol *upp, uint8_t payload_
  * @param variant protocol variant
  * @return 0 if successful
  * @return -1 if upp is NULL
- * @return -2 if the signing failed
+ * @return -2 if the signing failed or no signing callback has been provided
  */
 static int8_t ubirch_protocol_finish(ubirch_protocol *upp, ubirch_protocol_variant variant) {
     if (upp == NULL) return -1;
 
-    // only add signature if we have a chained or signed message
+    // add signature only for chained or signed message
     if (variant == proto_signed || variant == proto_chained) {
+        if (upp->sign == NULL) { return -2; }
         unsigned char sha512sum[UBIRCH_PROTOCOL_SIGN_SIZE];
         mbedtls_sha512((const unsigned char *) upp->data, upp->size, sha512sum, 0);
         if (upp->sign(sha512sum, sizeof(sha512sum), upp->signature)) {
             return -2;
         }
-
         // 6 - add signature hash
         msgpack_pack_bin(&upp->packer, UBIRCH_PROTOCOL_SIGN_SIZE);
         msgpack_pack_bin_body(&upp->packer, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE);
@@ -136,36 +135,29 @@ int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant var
     // check if UPP struct has been initialized
     if (upp == NULL || upp->data == NULL || upp->packer.data != upp) { return -1; }
 
-    // for protocol variants with signature, check if context has a sign callback
-    if (variant == proto_signed || variant == proto_chained) {
-        if (upp->sign == NULL) { return -2; }
-    }
-
     // clear buffer
     upp->size = 0;
 
     // pack UPP header
     error = ubirch_protocol_start(upp, variant);
-    if (error) { return -3; }
+    if (error) { return -2; }
 
     // add the payload
     ubirch_protocol_add_payload(upp, payload_type, payload, payload_len);
 
     // sign the package
     error = ubirch_protocol_finish(upp, variant);
-    if (error) { return -4; }
+    if (error) { return -3; }
 
     return 0;
 }
 
 int8_t ubirch_protocol_verify(char *data, size_t data_len, ubirch_protocol_check verify) {
-    if (data == NULL) { return -2; }
+    // make sure we have something to check, if it is just the signature, fail
+    if (data == NULL || data_len <= UBIRCH_PROTOCOL_SIGN_SIZE + 2) { return -2; }
 
     // separate message and signature
     const size_t unsigned_message_len = data_len - (UBIRCH_PROTOCOL_SIGN_SIZE + 2);
-
-    // make sure we have something to check, if it is just the signature, fail
-    if (unsigned_message_len <= 0) { return -2; }
 
     // hash the message data
     unsigned char sha512sum[UBIRCH_PROTOCOL_SIGN_SIZE];
