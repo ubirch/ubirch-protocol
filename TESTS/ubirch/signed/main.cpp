@@ -81,6 +81,33 @@ void TestProtocolVerifySigned() {
     ubirch_protocol_free(upp);
 }
 
+void TestProtocolVerifyFail() {
+    const char msg[] = {0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42};
+
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+
+    // change a byte in the message, so the signature becomes invalid
+    upp->data[0] = 0;
+
+    // verify message (should fail)
+    ret = ubirch_protocol_verify(upp->data, upp->size, ed25519_verify);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, ret, "message verification failed");
+
+    ubirch_protocol_free(upp);
+}
+
+void TestProtocolVerifyShort() {
+    char msg[] = {0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42};
+
+    // verify message
+    int8_t ret = ubirch_protocol_verify(msg, sizeof(msg), ed25519_verify);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-2, ret, "message verification failed");
+}
+
 void TestSimpleMessageSigned() {
     char _key[20], _value[300];
     size_t encoded_size;
@@ -245,6 +272,10 @@ int main() {
                  TestProtocolMessageSigned, greentea_case_failure_abort_handler),
             Case("ubirch protocol [signed] verify",
                  TestProtocolVerifySigned, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [signed] verify fail",
+                 TestProtocolVerifyFail, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [signed] verify too short",
+                 TestProtocolVerifyShort, greentea_case_failure_abort_handler),
             Case("ubirch protocol [signed] simple message",
                  TestSimpleMessageSigned, greentea_case_failure_abort_handler),
             Case("ubirch protocol [signed] long message",

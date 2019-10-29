@@ -96,7 +96,7 @@ void TestProtocolUnsupported() {
     int8_t ret = ubirch_protocol_message(upp, (ubirch_protocol_variant) 0, UBIRCH_PROTOCOL_TYPE_BIN, msg,
                                          sizeof(msg));
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(-3, ret, "expected to fail");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-2, ret, "expected to fail");
 
     ubirch_protocol_free(upp);
 }
@@ -216,19 +216,6 @@ void TestMsgpackMessagePlain() {
     TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, _value, UBIRCH_PROTOCOL_UUID_SIZE, "UUID check failed");
 }
 
-void TestProtocolFree() {      //FIXME not passing
-    const char msg[] = {0x24, 0x98};
-    ubirch_protocol *upp = ubirch_protocol_new(UUID, NULL);
-    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
-
-    int8_t ret = ubirch_protocol_message(upp, proto_plain, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing failed");
-
-    ubirch_protocol_free(upp);
-
-    TEST_ASSERT_NULL_MESSAGE(upp, "upp not free");
-}
-
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
     GREENTEA_SETUP(600, "ProtocolTests");
@@ -252,8 +239,6 @@ int main() {
                  TestProtocolLongMessagePlain, greentea_case_failure_abort_handler),
             Case("ubirch protocol [plain] msgpack message",
                  TestMsgpackMessagePlain, greentea_case_failure_abort_handler),
-//            Case("ubirch protocol [plain] free allocated heap",
-//                 TestProtocolSimpleAPIFree, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
