@@ -162,7 +162,8 @@ static ubirch_protocol *ubirch_protocol_new(const unsigned char *uuid, ubirch_pr
  * @return 0 if successful
  * @return -1 if upp is not initialized
  * @return -2 if the protocol version is not supported
- * @return -3 if the signing failed or no signing callback has been provided
+ * @return -3 if the payload type is not supported
+ * @return -4 if the signing failed or no signing callback has been provided
 */
 int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant variant, uint8_t payload_type,
                                const char *payload, size_t payload_len);
@@ -181,7 +182,7 @@ static void ubirch_protocol_free(ubirch_protocol *upp);
  * @param verify the verification function
  * @return 0 if the verification is successful
  * @return -1 if the signature verification has failed
- * @return -2 if upp is NULL or the message length is wrong (too short to actually do a check)
+ * @return -2 if data is NULL pointer or the message length is wrong (too short to actually do a check)
  */
 int8_t ubirch_protocol_verify(char *data, size_t data_len, ubirch_protocol_check verify);
 

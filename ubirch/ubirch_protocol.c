@@ -76,6 +76,7 @@ static int8_t ubirch_protocol_start(ubirch_protocol *upp, ubirch_protocol_varian
  * @param payload the payload for the UPP, can be key registration info or byte array.
  * @param payload_len the size of the payload in bytes
  * @return -1 if upp is NULL
+ * @return -2 if unknown payload type
  */
 static int8_t ubirch_protocol_add_payload(ubirch_protocol *upp, uint8_t payload_type,
                                           const char *payload, size_t payload_len) {
@@ -85,16 +86,20 @@ static int8_t ubirch_protocol_add_payload(ubirch_protocol *upp, uint8_t payload_
     msgpack_pack_uint8(&upp->packer, payload_type);
 
     // 5 - add the payload
-    if (payload_type == UBIRCH_PROTOCOL_TYPE_REG) {
+    if (payload_type == UBIRCH_PROTOCOL_TYPE_BIN) {
+        // add payload as byte array to UPP
+        msgpack_pack_bin(&upp->packer, payload_len);
+        msgpack_pack_bin_body(&upp->packer, payload, payload_len);
+    } else if (payload_type == UBIRCH_PROTOCOL_TYPE_REG) {
+        // TODO check if payload can be casted to ubirch_key_info *
         // create a key registration packet and add it to UPP
         msgpack_pack_key_register(&upp->packer, (ubirch_key_info *) payload);
     } else if (payload_type == UBIRCH_PROTOCOL_TYPE_MSGPACK) {
         // if the payload is a msgpack type, write it directly to UPP without using msgpack_packer
         ubirch_protocol_write(upp, payload, payload_len);
     } else {
-        // add payload as byte array to UPP
-        msgpack_pack_bin(&upp->packer, payload_len);
-        msgpack_pack_bin_body(&upp->packer, payload, payload_len);
+        // payload type not implemented
+        return -2;
     }
     // TODO more payload types
 
@@ -143,11 +148,12 @@ int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant var
     if (error) { return -2; }
 
     // add the payload
-    ubirch_protocol_add_payload(upp, payload_type, payload, payload_len);
+    error = ubirch_protocol_add_payload(upp, payload_type, payload, payload_len);
+    if (error) { return -3; }
 
     // sign the package
     error = ubirch_protocol_finish(upp, variant);
-    if (error) { return -3; }
+    if (error) { return -4; }
 
     return 0;
 }

@@ -137,6 +137,17 @@ void TestSignKeyRegisterMessage() {
     ubirch_protocol_free(upp);
 }
 
+void TestInvalidKeyRegisterMessage() {  // TODO make this pass
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    const char *info = "this is clearly not a key info";
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_REG, info, strlen(info));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-3, ret, "packing UPP failed");
+
+    ubirch_protocol_free(upp);
+}
+
 void TestKeyVerify() {
     ubirch_key_info info = {};
     info.algorithm = const_cast<char *>(UBIRCH_KEX_ALG_ECC_ED25519);
@@ -211,6 +222,8 @@ int main() {
                  TestPackKeyReg, greentea_case_failure_abort_handler),
             Case("ubirch protocol [kex] signed key register message",
                  TestSignKeyRegisterMessage, greentea_case_failure_abort_handler),
+//            Case("ubirch protocol [kex] invalid key register message",
+//                 TestInvalidKeyRegisterMessage, greentea_case_failure_abort_handler),
             Case("ubirch protocol [kex] verify signed key register message",
                  TestKeyVerify, greentea_case_failure_abort_handler),
             Case("ubirch protocol [kex] verify key register message with host",
