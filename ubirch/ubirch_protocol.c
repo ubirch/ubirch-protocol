@@ -91,7 +91,6 @@ static int8_t ubirch_protocol_add_payload(ubirch_protocol *upp, uint8_t payload_
         msgpack_pack_bin(&upp->packer, payload_len);
         msgpack_pack_bin_body(&upp->packer, payload, payload_len);
     } else if (payload_type == UBIRCH_PROTOCOL_TYPE_REG) {
-        // TODO check if payload can be casted to ubirch_key_info *
         // create a key registration packet and add it to UPP
         msgpack_pack_key_register(&upp->packer, (ubirch_key_info *) payload);
     } else if (payload_type == UBIRCH_PROTOCOL_TYPE_MSGPACK) {
