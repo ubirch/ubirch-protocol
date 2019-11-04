@@ -16,6 +16,8 @@ extern "C" {
 #define UBIRCH_API_VERIFICATION_SERVICE "https://verify.%s.ubirch.com/api/upp"
 #define UBIRCH_API_DATA_SERVICE         "https://data.%s.ubirch.com/v1"
 
+#define NUMBER_OF_HEADERS 3
+
 typedef enum ubirch_api_method {
     http_request_get,
     http_request_post,
@@ -30,8 +32,8 @@ typedef enum ubirch_api_service {
 } ubirch_api_service;
 
 typedef struct ubirch_api_headers {
-    char *keys[3];
-    char *values[3];
+    char *keys[NUMBER_OF_HEADERS];
+    char *values[NUMBER_OF_HEADERS];
 } ubirch_api_headers;
 
 typedef int (*send_http_request)(ubirch_api_method method, const char *url, ubirch_api_headers);
@@ -39,6 +41,7 @@ typedef int (*send_http_request)(ubirch_api_method method, const char *url, ubir
 typedef struct ubirch_api {
     unsigned char uuid[UBIRCH_PROTOCOL_UUID_SIZE];  //!< the UUID of the sender
     ubirch_api_headers headers;
+    char *env;
     send_http_request send_request;
 } ubirch_api;
 
@@ -75,34 +78,53 @@ inline const char *ubirch_api_get_uuid_string(const unsigned char *uuid) {
 }
 
 inline void ubirch_api_init_headers(ubirch_api *api, const char *auth_base64) {
-    api->headers.keys = {
+    const char *keys[] = {
             "X-Ubirch-Hardware-Id",
             "X-Ubirch-Credential",
             "X-Ubirch-Auth-Type"
     };
 
     const char *uuid_string = ubirch_api_get_uuid_string(api->uuid);
-    api->headers.values = {
+    const char *values[] = {
             uuid_string,
             auth_base64,
             "ubirch"
     };
+
+    for (uint8_t i = 0; i < NUMBER_OF_HEADERS; i++) {
+        api->headers.keys[i] = (char *) malloc(strlen(keys[i]));
+        api->headers.values[i] = (char *) malloc(strlen(values[i]));
+        strcpy(api->headers.keys[i], keys[i]);
+        strcpy(api->headers.values[i], values[i]);
+    }
     return;
 }
 
-inline ubirch_api *ubirch_api_new(const unsigned char *uuid, const char *auth_base64, send_http_request send_request) {
+inline ubirch_api *ubirch_api_new(const unsigned char *uuid, const char *auth_base64,
+                                  const char *env, send_http_request send_request) {
     ubirch_api *api = (ubirch_api *) malloc(sizeof(ubirch_api));
     if (api == NULL) {
         return NULL;
     }
-
     memcpy(api->uuid, uuid, UBIRCH_PROTOCOL_UUID_SIZE);
-
+    api->env = (char *) malloc(strlen(env));
+    strcpy(api->env, env);
     ubirch_api_init_headers(api, auth_base64);
-
     api->send_request = send_request;
 
     return api;
+}
+
+inline void ubirch_api_free(ubirch_api *api) {
+    if (api != NULL) {
+        for (uint8_t i = 0; i < NUMBER_OF_HEADERS; i++) {
+            if (api->headers.keys[i] != NULL) {
+                free(api->headers.keys[i]);
+                free(api->headers.values[i]);
+            }
+        }
+        free(api);
+    }
 }
 
 #ifdef __cplusplus

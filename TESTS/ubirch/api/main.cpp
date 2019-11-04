@@ -34,7 +34,16 @@ void TestAPIGetServiceURL() {
 
 void TestAPInew() {
     const char *auth_base64 = "pseudo_base64_auth_string";
-    ubirch_api *api = ubirch_api_new(UUID, auth_base64, NULL);
+    ubirch_api *api = ubirch_api_new(UUID, auth_base64, "demo", NULL);
+
+    TEST_ASSERT_EQUAL_STRING("X-Ubirch-Hardware-Id", api->headers.keys[0]);
+    TEST_ASSERT_EQUAL_STRING("61626364-6566-6768-696a-6b6c", api->headers.values[0]);
+    TEST_ASSERT_EQUAL_STRING("X-Ubirch-Credential", api->headers.keys[1]);
+    TEST_ASSERT_EQUAL_STRING(auth_base64, api->headers.values[1]);
+    TEST_ASSERT_EQUAL_STRING("X-Ubirch-Auth-Type", api->headers.keys[2]);
+    TEST_ASSERT_EQUAL_STRING("ubirch", api->headers.values[2]);
+
+    free(api);
 }
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
@@ -46,6 +55,8 @@ int main() {
     Case cases[] = {
             Case("ubirch API get service URL",
                  TestAPIGetServiceURL, greentea_case_failure_abort_handler),
+            Case("ubirch API new",
+                 TestAPInew, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
