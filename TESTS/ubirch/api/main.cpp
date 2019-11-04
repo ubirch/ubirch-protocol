@@ -16,16 +16,25 @@
 #define UBIRCH_API_DATA_SERVICE_DEMO         "https://data.demo.ubirch.com/v1"
 #define UBIRCH_API_DATA_SERVICE_DEV          "https://data.dev.ubirch.com/v1"
 
+static const unsigned char UUID[16] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'};
+
 using namespace utest::v1;
 
 void TestAPIGetServiceURL() {
-    const char *key_url_demo = ubirch_api_get_service_url(ubirch_key_service, "demo");
+    char *key_url_demo = ubirch_api_get_service_url(ubirch_key_service, "demo");
     TEST_ASSERT_EQUAL_INT(strlen(UBIRCH_API_KEY_SERVICE_DEMO), strlen(key_url_demo));
     TEST_ASSERT_EQUAL_STRING(UBIRCH_API_KEY_SERVICE_DEMO, key_url_demo);
+    free(key_url_demo);
 
-    const char *niomon_url_dev = ubirch_api_get_service_url(ubirch_niomon_service, "dev");
+    char *niomon_url_dev = ubirch_api_get_service_url(ubirch_niomon_service, "dev");
     TEST_ASSERT_EQUAL_INT(strlen(UBIRCH_API_NIOMON_SERVICE_DEV), strlen(niomon_url_dev));
     TEST_ASSERT_EQUAL_STRING(UBIRCH_API_NIOMON_SERVICE_DEV, niomon_url_dev);
+    free(niomon_url_dev);
+}
+
+void TestAPInew() {
+    const char *auth_base64 = "pseudo_base64_auth_string";
+    ubirch_api *api = ubirch_api_new(UUID, auth_base64, NULL);
 }
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
