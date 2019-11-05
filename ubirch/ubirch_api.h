@@ -68,24 +68,24 @@ inline char *ubirch_api_get_service_url(ubirch_api_service service, const char *
 }
 
 inline const char *ubirch_api_get_uuid_string(const unsigned char *uuid) {
-    char *uuid_string = (char *) malloc(UBIRCH_PROTOCOL_UUID_SIZE + 5);
-    sprintf(uuid_string,
-            "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+    char uuid_string[36];
+    const char *format = "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x";
+    sprintf(uuid_string, format,
             uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5], uuid[6], uuid[7],
             uuid[8], uuid[9], uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]
     );
-    return uuid_string;
+    return strdup(uuid_string);
 }
 
 inline void ubirch_api_init_headers(ubirch_api *api, const char *auth_base64) {
-    const char *keys[] = {
+    const char *keys[NUMBER_OF_HEADERS] = {
             "X-Ubirch-Hardware-Id",
             "X-Ubirch-Credential",
             "X-Ubirch-Auth-Type"
     };
 
     const char *uuid_string = ubirch_api_get_uuid_string(api->uuid);
-    const char *values[] = {
+    const char *values[NUMBER_OF_HEADERS] = {
             uuid_string,
             auth_base64,
             "ubirch"
@@ -117,6 +117,9 @@ inline ubirch_api *ubirch_api_new(const unsigned char *uuid, const char *auth_ba
 
 inline void ubirch_api_free(ubirch_api *api) {
     if (api != NULL) {
+        if (api->env != NULL) {
+            free(api->env);
+        }
         for (uint8_t i = 0; i < NUMBER_OF_HEADERS; i++) {
             if (api->headers.keys[i] != NULL) {
                 free(api->headers.keys[i]);
