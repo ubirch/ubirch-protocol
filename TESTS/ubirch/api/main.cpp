@@ -46,6 +46,8 @@ void TestAPInew() {
     TEST_ASSERT_EQUAL_STRING(auth_base64, api->headers.values[1]);
     TEST_ASSERT_EQUAL_STRING("X-Ubirch-Auth-Type", api->headers.keys[2]);
     TEST_ASSERT_EQUAL_STRING("ubirch", api->headers.values[2]);
+    TEST_ASSERT_EQUAL_STRING("Content-Type", api->headers.keys[3]);
+    TEST_ASSERT_EQUAL_STRING("application/octet-stream", api->headers.values[3]);
 
     free(api);
 }

@@ -16,7 +16,7 @@ extern "C" {
 #define UBIRCH_API_VERIFICATION_SERVICE "https://verify.%s.ubirch.com/api/upp"
 #define UBIRCH_API_DATA_SERVICE         "https://data.%s.ubirch.com/v1"
 
-#define NUMBER_OF_HEADERS 3
+#define NUMBER_OF_HEADERS 4
 
 typedef enum ubirch_api_service {
     ubirch_key_service,
@@ -26,16 +26,16 @@ typedef enum ubirch_api_service {
 } ubirch_api_service;
 
 typedef struct ubirch_api_headers {
-    char *keys[NUMBER_OF_HEADERS];
-    char *values[NUMBER_OF_HEADERS];
+    char **keys;
+    char **values;
 } ubirch_api_headers;
 
 /**
  * Callback for sending http post requests
  * @return the response status code
  */
-typedef int (*send_post_request)(const char *url, ubirch_api_headers headers, char *data,
-                                 size_t data_len);
+typedef int (*send_post_request)(const char *url, ubirch_api_headers headers, size_t number_of_headers,
+                                 char *data, size_t data_len);
 
 /**
  * Callback for sending http get requests
@@ -56,7 +56,8 @@ ubirch_api *ubirch_api_new(const unsigned char *uuid, const char *auth_base64, c
 
 /**
  * Check if public key is registered at ubirch key service
- * @return 0 if not registered, 1 if registered
+ * @return 0 if not registered
+ * @return 1 if registered
  */
 int8_t is_key_registered(ubirch_api *api);
 

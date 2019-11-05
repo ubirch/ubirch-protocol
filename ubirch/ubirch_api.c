@@ -40,14 +40,19 @@ static void ubirch_api_init_headers(ubirch_api *api, const char *auth_base64) {
     const char *keys[NUMBER_OF_HEADERS] = {
             "X-Ubirch-Hardware-Id",
             "X-Ubirch-Credential",
-            "X-Ubirch-Auth-Type"
+            "X-Ubirch-Auth-Type",
+            "Content-Type"
     };
 
     const char *values[NUMBER_OF_HEADERS] = {
             api->uuid_string,
             auth_base64,
-            "ubirch"
+            "ubirch",
+            "application/octet-stream"
     };
+
+    api->headers.keys = (char **) malloc(NUMBER_OF_HEADERS * sizeof(char *));
+    api->headers.values = (char **) malloc(NUMBER_OF_HEADERS * sizeof(char *));
 
     for (uint8_t i = 0; i < NUMBER_OF_HEADERS; i++) {
         api->headers.keys[i] = (char *) malloc(strlen(keys[i]));
@@ -82,9 +87,35 @@ int8_t is_key_registered(ubirch_api *api) {
     int http_status = api->get(url);
     free(url);
 
-    if (http_status == 200) {
-        return 1;
-    } else {
-        return 0;
-    }
+    return (http_status == 200) ? 1 : 0;
+}
+
+int8_t ubirch_api_register_key(ubirch_api *api, char *key_reg_upp, size_t len) {
+    char *url = ubirch_api_get_service_url(ubirch_key_service, api->env);
+    url = realloc(url, strlen(url) + strlen("/mpack"));
+    strcat(url, "/mpack");
+    int http_status = api->post(url, api->headers, NUMBER_OF_HEADERS, key_reg_upp, len);
+    free(url);
+
+    return (http_status == 200) ? 0 : -1;
+}
+
+int8_t ubirch_api_niomon_send(ubirch_api *api, char *upp, size_t len) {
+    char *url = ubirch_api_get_service_url(ubirch_niomon_service, api->env);
+    int http_status = api->post(url, api->headers, NUMBER_OF_HEADERS, upp, len);
+    free(url);
+
+    return (http_status == 200) ? 0 : -1;
+}
+
+int8_t ubirch_api_verify(ubirch_api *api, char *data, size_t len) {
+    char *url = ubirch_api_get_service_url(ubirch_verification_service, api->env);
+    // set 'Content-Type' header for verification service
+    strcpy(api->headers.values[3], "text/plain");
+    int http_status = api->post(url, api->headers, NUMBER_OF_HEADERS, data, len);
+    free(url);
+    // reset 'Content-Type' header
+    strcpy(api->headers.values[3], "application/octet-stream");
+
+    return (http_status == 200) ? 0 : -1;
 }
