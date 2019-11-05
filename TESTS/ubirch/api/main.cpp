@@ -20,17 +20,17 @@ static const unsigned char UUID[16] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', '
 
 using namespace utest::v1;
 
-void TestAPIGetServiceURL() {
-    char *key_url_demo = ubirch_api_get_service_url(ubirch_key_service, "demo");
-    TEST_ASSERT_EQUAL_INT(strlen(UBIRCH_API_KEY_SERVICE_DEMO), strlen(key_url_demo));
-    TEST_ASSERT_EQUAL_STRING(UBIRCH_API_KEY_SERVICE_DEMO, key_url_demo);
-    free(key_url_demo);
-
-    char *niomon_url_dev = ubirch_api_get_service_url(ubirch_niomon_service, "dev");
-    TEST_ASSERT_EQUAL_INT(strlen(UBIRCH_API_NIOMON_SERVICE_DEV), strlen(niomon_url_dev));
-    TEST_ASSERT_EQUAL_STRING(UBIRCH_API_NIOMON_SERVICE_DEV, niomon_url_dev);
-    free(niomon_url_dev);
-}
+//void TestAPIGetServiceURL() {
+//    char *key_url_demo = ubirch_api_get_service_url(ubirch_key_service, "demo");
+//    TEST_ASSERT_EQUAL_INT(strlen(UBIRCH_API_KEY_SERVICE_DEMO), strlen(key_url_demo));
+//    TEST_ASSERT_EQUAL_STRING(UBIRCH_API_KEY_SERVICE_DEMO, key_url_demo);
+//    free(key_url_demo);
+//
+//    char *niomon_url_dev = ubirch_api_get_service_url(ubirch_niomon_service, "dev");
+//    TEST_ASSERT_EQUAL_INT(strlen(UBIRCH_API_NIOMON_SERVICE_DEV), strlen(niomon_url_dev));
+//    TEST_ASSERT_EQUAL_STRING(UBIRCH_API_NIOMON_SERVICE_DEV, niomon_url_dev);
+//    free(niomon_url_dev);
+//}
 
 void TestAPInew() {
     const char *auth_base64 = "pseudo_base64_auth_string";
@@ -56,8 +56,8 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
 
 int main() {
     Case cases[] = {
-            Case("ubirch API get service URL",
-                 TestAPIGetServiceURL, greentea_case_failure_abort_handler),
+//            Case("ubirch API get service URL",
+//                 TestAPIGetServiceURL, greentea_case_failure_abort_handler),
             Case("ubirch API new",
                  TestAPInew, greentea_case_failure_abort_handler),
     };
