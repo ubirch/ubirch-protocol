@@ -17,6 +17,7 @@
 #define UBIRCH_API_DATA_SERVICE_DEV          "https://data.dev.ubirch.com/v1"
 
 static const unsigned char UUID[16] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'};
+static const char *auth_base64 = "pseudo_base64_auth_string";
 
 using namespace utest::v1;
 
@@ -34,7 +35,7 @@ using namespace utest::v1;
 
 void TestAPInew() {
     const char *auth_base64 = "pseudo_base64_auth_string";
-    ubirch_api *api = ubirch_api_new(UUID, auth_base64, "demo", NULL);
+    ubirch_api *api = ubirch_api_new(UUID, auth_base64, "demo", NULL, NULL);
 
     TEST_ASSERT_EQUAL_STRING("X-Ubirch-Hardware-Id", api->headers.keys[0]);
 
@@ -49,6 +50,18 @@ void TestAPInew() {
     free(api);
 }
 
+int test_get(const char *url) {
+    const char *expected = "https://key.demo.ubirch.com/api/keyService/v1/pubkey/current/hardwareId/61626364-6566-6768-696a-6b6c6d6e6f70";
+    TEST_ASSERT_EQUAL_STRING(expected, url);
+    return 200;
+}
+
+void TestAPIIsKeyRegistered() {
+    ubirch_api *api = ubirch_api_new(UUID, auth_base64, "demo", NULL, test_get);
+    int8_t ret = is_key_registered(api);
+    TEST_ASSERT_EQUAL_INT8(1, ret);
+}
+
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
     GREENTEA_SETUP(600, "ProtocolTests");
     return greentea_test_setup_handler(number_of_cases);
@@ -60,6 +73,8 @@ int main() {
 //                 TestAPIGetServiceURL, greentea_case_failure_abort_handler),
             Case("ubirch API new",
                  TestAPInew, greentea_case_failure_abort_handler),
+            Case("ubirch API is key registered",
+                 TestAPIIsKeyRegistered, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
