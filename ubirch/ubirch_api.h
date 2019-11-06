@@ -43,6 +43,9 @@ typedef int (*send_post_request)(const char *url, ubirch_api_headers headers, si
  */
 typedef int (*send_get_request)(const char *url);
 
+/**
+ * The ubirch api context
+ */
 typedef struct ubirch_api {
     char *uuid_string;  //!< the string representation of the device UUID
     ubirch_api_headers headers;
@@ -56,11 +59,46 @@ ubirch_api *ubirch_api_new(const unsigned char *uuid, const char *auth_base64, c
 
 /**
  * Check if public key is registered at ubirch key service
+ * @param api
  * @return 0 if not registered
  * @return 1 if registered
  */
 int8_t is_key_registered(ubirch_api *api);
 
+/**
+ * Register the device public key at the ubirch backend
+ * @param api the ubirch api context
+ * @param key_reg_upp the msgpack encoded key registration message (UPP)
+ * @param len the size of the message
+ * @return 0 if key registration successful
+ * @return -1 if key registration failed
+ */
+int8_t ubirch_api_register_key(ubirch_api *api, char *key_reg_upp, size_t len);
+
+/**
+ * Send data to the ubirch niomon service. Requires encoding before sending.
+ * @param api the ubirch api context
+ * @param upp the msgpack encoded message (UPP)
+ * @param len the size of the message
+ * @return 0 if sending successful
+ * @return -1 if sending failed
+ */
+int8_t ubirch_api_niomon_send(ubirch_api *api, char *upp, size_t len);
+
+/**
+ * Verify a given hash with the ubirch backend. Requires base64 encoding before sending.
+ * @param api the ubirch api context
+ * @param data the base64 encoded hash of the message to verify
+ * @param len the size of the base64 encoded hash
+ * @return 0 if verification successful
+ * @return -1 if verification failed
+ */
+int8_t ubirch_api_verify(ubirch_api *api, char *data, size_t len);
+
+/**
+ * Free memory for a ubirch api context.
+ * @param api the api context
+ */
 inline void ubirch_api_free(ubirch_api *api) {
     if (api != NULL) {
         if (api->uuid_string != NULL) {
