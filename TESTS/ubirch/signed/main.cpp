@@ -1,7 +1,8 @@
 #include <unity/unity.h>
-#include <ubirch/ubirch_protocol.h>
+#include "ubirch/ubirch_protocol.h"
 #include <ubirch/ubirch_ed25519.h>
 #include <mbedtls/base64.h>
+#include <msgpack.h>
 
 #include "utest/utest.h"
 #include "greentea-client/test_env.h"
@@ -24,226 +25,237 @@ unsigned char ed25519_public_key[crypto_sign_PUBLICKEYBYTES] = {
         0x8f, 0xfd, 0xaa, 0x55, 0x93, 0xe6, 0x3e, 0x6a
 };
 
-void TestProtocolInit() {
-    char dummybuffer[10];
-    ubirch_protocol proto = {};
-    ubirch_protocol_init(&proto, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
-                         dummybuffer, msgpack_sbuffer_write, ed25519_sign, UUID);
+void TestProtocolNewSigned() {
+    const unsigned char allZeros[UBIRCH_PROTOCOL_SIGN_SIZE] = {0};
 
-    TEST_ASSERT_EQUAL_PTR(dummybuffer, proto.packer.data);
-    TEST_ASSERT_EQUAL_PTR(msgpack_sbuffer_write, proto.packer.callback);
-    TEST_ASSERT_EQUAL_HEX16(proto_signed, proto.version);
-    TEST_ASSERT_EQUAL_PTR(ed25519_sign, proto.sign);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(UUID, proto.uuid, 16);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
+
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp->data, "creating UPP data buffer failed");
+    TEST_ASSERT_EQUAL_INT(UPP_BUFFER_INIT_SIZE, upp->alloc);
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(upp, upp->packer.data, "packer data not initialized");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(ubirch_protocol_write, upp->packer.callback, "packer callback not initialized");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(ed25519_sign, upp->sign, "sign callback not initialized");
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(upp->uuid, UUID, UBIRCH_PROTOCOL_UUID_SIZE);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY_MESSAGE(allZeros, upp->signature, UBIRCH_PROTOCOL_SIGN_SIZE,
+                                          "last signature should be 0");
+
+    ubirch_protocol_free(upp);
 }
 
-void TestProtocolNew() {
-    char dummybuffer[10];
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
-                                                 dummybuffer, msgpack_sbuffer_write, ed25519_sign, UUID);
-
-    TEST_ASSERT_EQUAL_PTR(dummybuffer, proto->packer.data);
-    TEST_ASSERT_EQUAL_PTR(msgpack_sbuffer_write, proto->packer.callback);
-    TEST_ASSERT_EQUAL_HEX16(proto_signed, proto->version);
-    TEST_ASSERT_EQUAL_PTR(ed25519_sign, proto->sign);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(proto->uuid, UUID, 16);
-
-    ubirch_protocol_free(proto);
-}
-
-void TestProtocolWrite() {
-    msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
-                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
-    msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
-
-    // intialize the protocol hash manually
-    mbedtls_sha512_init(&proto->hash);
-    mbedtls_sha512_starts(&proto->hash, 0);
-
-    // pack a random (sort of) number
-    msgpack_pack_int(pk, 2489);
-
-    unsigned char expected_data[] = {0xcd, 0x09, 0xb9};
-    TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_data), sbuf->size, "written data does not match");
-    TEST_ASSERT_EQUAL_HEX8_ARRAY(expected_data, sbuf->data, sizeof(expected_data));
-
-    unsigned char sha512sum[UBIRCH_PROTOCOL_HASH_SIZE];
-    mbedtls_sha512_finish(&proto->hash, sha512sum);
-    unsigned char expected_hash[UBIRCH_PROTOCOL_HASH_SIZE] = {
-            0x69, 0x70, 0x5a, 0x70, 0x90, 0xd4, 0xbd, 0x2b, 0x17, 0xeb, 0xe3, 0xe5, 0xaa, 0x29, 0x8a, 0x1f, 0x00, 0x64,
-            0xc7, 0xee, 0x70, 0xae, 0x22, 0x1a, 0xee, 0x0a, 0x9a, 0xaa, 0xa9, 0x56, 0x28, 0xa8, 0x64, 0x36, 0xc8, 0x59,
-            0x20, 0xc6, 0x74, 0x33, 0x24, 0x41, 0x37, 0x3b, 0xba, 0xc7, 0x4a, 0xa3, 0xd7, 0x3e, 0xa6, 0x1c, 0x8c, 0xc4,
-            0x11, 0xc9, 0x82, 0x2e, 0x94, 0x03, 0x17, 0x12, 0x3a, 0x4e
-    };
-    TEST_ASSERT_EQUAL_HEX8_ARRAY(expected_hash, sha512sum, sizeof(sha512sum));
-
-    msgpack_packer_free(pk);
-    ubirch_protocol_free(proto);
-    msgpack_sbuffer_free(sbuf);
-}
-
-void TestProtocolMessageStart() {
-    msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
-                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
-    msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
-
-    TEST_ASSERT_NOT_NULL_MESSAGE(sbuf, "sbuf NULL");
-    TEST_ASSERT_NOT_NULL_MESSAGE(proto, "protocol NULL");
-    TEST_ASSERT_NOT_NULL_MESSAGE(pk, "packer NULL");
-
-    TEST_ASSERT_EQUAL_INT(0, ubirch_protocol_start(proto, pk));
-
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, proto->hash.is384, "sha512 initialization failed");
-    TEST_ASSERT_EQUAL_INT_MESSAGE(21, sbuf->size, "header size wrong");
-    TEST_ASSERT_EQUAL_HEX_MESSAGE(0x95, sbuf->data[0], "msgpack format wrong (expected 5-array)");
-
-    const int expected_version = UBIRCH_PROTOCOL_VERSION << 4 | UBIRCH_PROTOCOL_SIGNED;
-    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(&expected_version, sbuf->data + 1, 1, "protocol version wrong");
-    TEST_ASSERT_EQUAL_HEX8_MESSAGE(0xc4, sbuf->data[2], "message uuid marker wrong");
-    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, sbuf->data + 4, 16, "message uuid wrong");
-
-    unsigned char sha512sum[UBIRCH_PROTOCOL_HASH_SIZE];
-    mbedtls_sha512_finish(&proto->hash, sha512sum);
-
-    unsigned char expected_hash[UBIRCH_PROTOCOL_HASH_SIZE] = {
-            0xee, 0x0a, 0x2f, 0x85, 0xde, 0x07, 0x0a, 0xfa, 0xcf, 0x14, 0x5f, 0xb8, 0xee, 0x60, 0xa2, 0x77, 0x72, 0xce,
-            0x12, 0xe3, 0x71, 0xf1, 0xe1, 0x1f, 0x68, 0x98, 0xf0, 0x6f, 0x6c, 0x06, 0xee, 0x12, 0xb8, 0x96, 0x13, 0x3b,
-            0x4e, 0x33, 0xb3, 0x30, 0xc2, 0x68, 0xb2, 0xe9, 0x01, 0x08, 0x2d, 0x01, 0x20, 0x59, 0x3a, 0x48, 0x70, 0xcb,
-            0x44, 0x6b, 0xa0, 0x7b, 0xbf, 0xde, 0x6a, 0xa3, 0x20, 0xd7
-    };
-    TEST_ASSERT_EQUAL_HEX8_ARRAY(expected_hash, sha512sum, sizeof(sha512sum));
-
-    msgpack_packer_free(pk);
-    ubirch_protocol_free(proto);
-    msgpack_sbuffer_free(sbuf);
-}
-
-void TestProtocolMessageFinishWithoutStart() {
-    msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
-                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
-    msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
-
-    // add some dummy data without start
-    msgpack_pack_int(pk, 2498);
-
-    int finish_ok = ubirch_protocol_finish(proto, pk);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(-2, finish_ok, "message finish without start must fail");
-
-    msgpack_packer_free(pk);
-    ubirch_protocol_free(proto);
-    msgpack_sbuffer_free(sbuf);
-}
-
-void TestProtocolMessageFinish() {
-    msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
-                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
-    msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
-
-    ubirch_protocol_start(proto, pk);
-    msgpack_pack_int(pk, 2498);
-    int finish_ok = ubirch_protocol_finish(proto, pk);
-
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, finish_ok, "message finish failed");
-    TEST_ASSERT_EQUAL_INT_MESSAGE(90, sbuf->size, "message length wrong");
-
-    const unsigned char expected_message[90] = {
+void TestProtocolMessageSigned() {
+    const char msg[] = {0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42};
+    const char expected_message[] = {
             0x95, 0x22, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e,
-            0x6f, 0x70, 0x00, 0xcd, 0x09, 0xc2, 0xc4, 0x40, 0x2e, 0x5f, 0xa0, 0xc3, 0xdd, 0xb7, 0xca, 0x79, 0xb0, 0x32,
-            0xef, 0x8f, 0xbe, 0xad, 0x59, 0x8e, 0x70, 0xc7, 0xc0, 0x6c, 0xd4, 0x7c, 0x6d, 0x6b, 0x25, 0x51, 0x2b, 0xc7,
-            0xcc, 0x88, 0x0a, 0x06, 0x5e, 0xd7, 0x37, 0xf5, 0xc1, 0x94, 0xa4, 0x62, 0x35, 0x5a, 0xc7, 0xd3, 0x57, 0xd5,
-            0x68, 0x85, 0xfb, 0x08, 0xad, 0x76, 0xd6, 0x76, 0xb7, 0xb0, 0x94, 0xc0, 0x11, 0xde, 0x26, 0x2d, 0xaf, 0x0c
+            0x6f, 0x70, 0x00, 0xc4, 0x07, 0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42, 0xc4, 0x40, 0x92, 0x7b, 0xd0, 0x65,
+            0x12, 0x97, 0x94, 0x2a, 0x92, 0x6a, 0x54, 0x63, 0xe0, 0xfc, 0x1a, 0x78, 0xa3, 0x5a, 0x61, 0x13, 0x31, 0xcb,
+            0x62, 0x4c, 0xde, 0x6d, 0x28, 0xcf, 0xe1, 0xfa, 0x76, 0xf9, 0x64, 0xda, 0xbb, 0xb4, 0x54, 0xda, 0x5a, 0x1e,
+            0x3c, 0x8d, 0x0c, 0x98, 0xe2, 0x09, 0x1e, 0xff, 0x5e, 0xfc, 0x54, 0x04, 0xf1, 0xc3, 0x83, 0x41, 0x1b, 0x5c,
+            0x23, 0xc1, 0x22, 0x63, 0xf5, 0x01,
     };
-    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, sbuf->data, sbuf->size, "message serialization failed");
 
-    msgpack_packer_free(pk);
-    ubirch_protocol_free(proto);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    // unpack and verify
-    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
-    if (msgpack_unpacker_buffer_capacity(unpacker) < sbuf->size) {
-        msgpack_unpacker_reserve_buffer(unpacker, sbuf->size);
-    }
-    memcpy(msgpack_unpacker_buffer(unpacker), sbuf->data, sbuf->size);
-    msgpack_unpacker_buffer_consumed(unpacker, sbuf->size);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
-    msgpack_unpacker_free(unpacker);
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
 
-    msgpack_sbuffer_free(sbuf);
+    ubirch_protocol_free(upp);
 }
 
-void TestSimpleMessage() {
+void TestProtocolVerifySigned() {
+    const char msg[] = {0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42};
+
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+
+    // verify message
+    ret = ubirch_protocol_verify(upp->data, upp->size, ed25519_verify);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "message verification failed");
+
+    ubirch_protocol_free(upp);
+}
+
+void TestProtocolVerifyFail() {
+    const char msg[] = {0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42};
+
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN, msg, sizeof(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+
+    // change a byte in the message, so the signature becomes invalid
+    upp->data[0] = 0;
+
+    // verify message (should fail)
+    ret = ubirch_protocol_verify(upp->data, upp->size, ed25519_verify);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-1, ret, "message verification failed");
+
+    ubirch_protocol_free(upp);
+}
+
+void TestProtocolVerifyShort() {
+    char msg[] = {0x24, 0x98, 0x3f, 0xff, 0xf3, 0x89, 0x42};
+
+    // verify message
+    int8_t ret = ubirch_protocol_verify(msg, sizeof(msg), ed25519_verify);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(-2, ret, "message verification failed");
+}
+
+void TestSimpleMessageSigned() {
     char _key[20], _value[300];
     size_t encoded_size;
+    const char *msg = "simple message";
 
+    // create UPP
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+
+    // register public key with host
     memset(_value, 0, sizeof(_value));
     mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size, ed25519_public_key,
                           crypto_sign_PUBLICKEYBYTES);
     greentea_send_kv("publicKey", _value);
 
-    msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
-                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
-    msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
-
-    ubirch_protocol_start(proto, pk);
-    msgpack_pack_int(pk, 99);
-    ubirch_protocol_finish(proto, pk);
-
+    // send message to host
     memset(_value, 0, sizeof(_value));
-    mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
-                          (unsigned char *) sbuf->data, sbuf->size);
+    int encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                                             (unsigned char *) upp->data, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, encode_error, "mbedtls_base64_encode returned error");;
     greentea_send_kv("checkMessage", _value, encoded_size);
 
+    ubirch_protocol_free(upp);
+
+    // check if host could verify signature and was able to unpack UPP correctly
     greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
-    TEST_ASSERT_EQUAL_STRING_MESSAGE("verify", _key, "signature verification failed");
-    TEST_ASSERT_EQUAL_STRING_MESSAGE("2", _value, "signed protocol variant failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("variant", _key, "message verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("2", _value, "protocol variant check failed");
 
-    msgpack_packer_free(pk);
-    ubirch_protocol_free(proto);
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("uuid", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, _value, UBIRCH_PROTOCOL_UUID_SIZE, "UUID check failed");
 
-    // unpack and verify
-    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
-    if (msgpack_unpacker_buffer_capacity(unpacker) < sbuf->size) {
-        msgpack_unpacker_reserve_buffer(unpacker, sbuf->size);
-    }
-    memcpy(msgpack_unpacker_buffer(unpacker), sbuf->data, sbuf->size);
-    msgpack_unpacker_buffer_consumed(unpacker, sbuf->size);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
-    msgpack_unpacker_free(unpacker);
-
-    msgpack_sbuffer_free(sbuf);
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("payload", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(msg, _value, "payload check failed");
 }
 
-void TestVerifyMessage() {
-    // create a new message a sign it
-    msgpack_sbuffer *sbuf = msgpack_sbuffer_new();
-    ubirch_protocol *proto = ubirch_protocol_new(proto_signed, UBIRCH_PROTOCOL_TYPE_BIN,
-                                                 sbuf, msgpack_sbuffer_write, ed25519_sign, UUID);
-    msgpack_packer *pk = msgpack_packer_new(proto, ubirch_protocol_write);
+void TestProtocolLongMessageSigned() {
+    /* this message is 259 bytes long */
+    const char *msg = "Libero enim sed faucibus turpis in eu. Aliquet risus feugiat in ante metus dictum at tempor "
+                      "commodo. Sit amet facilisis magna etiam tempor orci eu lobortis elementum. Cras tincidunt "
+                      "lobortis feugiat vivamus. Eu scelerisque felis imperdiet proin fermentum leo.";
 
-    ubirch_protocol_start(proto, pk);
-    msgpack_pack_int(pk, 99);
-    ubirch_protocol_finish(proto, pk);
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
 
-    msgpack_packer_free(pk);
-    ubirch_protocol_free(proto);
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_BIN, msg, strlen(msg));
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
 
-    // unpack and verify
-    msgpack_unpacker *unpacker = msgpack_unpacker_new(16);
-    if (msgpack_unpacker_buffer_capacity(unpacker) < sbuf->size) {
-        msgpack_unpacker_reserve_buffer(unpacker, sbuf->size);
-    }
-    memcpy(msgpack_unpacker_buffer(unpacker), sbuf->data, sbuf->size);
-    msgpack_unpacker_buffer_consumed(unpacker, sbuf->size);
+    const char expected_message[] = {
+            0x95, 0x22, 0xc4, 0x10, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e,
+            0x6f, 0x70, 0x00, 0xc5, 0x01, 0x03, 0x4c, 0x69, 0x62, 0x65, 0x72, 0x6f, 0x20, 0x65, 0x6e, 0x69, 0x6d, 0x20,
+            0x73, 0x65, 0x64, 0x20, 0x66, 0x61, 0x75, 0x63, 0x69, 0x62, 0x75, 0x73, 0x20, 0x74, 0x75, 0x72, 0x70, 0x69,
+            0x73, 0x20, 0x69, 0x6e, 0x20, 0x65, 0x75, 0x2e, 0x20, 0x41, 0x6c, 0x69, 0x71, 0x75, 0x65, 0x74, 0x20, 0x72,
+            0x69, 0x73, 0x75, 0x73, 0x20, 0x66, 0x65, 0x75, 0x67, 0x69, 0x61, 0x74, 0x20, 0x69, 0x6e, 0x20, 0x61, 0x6e,
+            0x74, 0x65, 0x20, 0x6d, 0x65, 0x74, 0x75, 0x73, 0x20, 0x64, 0x69, 0x63, 0x74, 0x75, 0x6d, 0x20, 0x61, 0x74,
+            0x20, 0x74, 0x65, 0x6d, 0x70, 0x6f, 0x72, 0x20, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x64, 0x6f, 0x2e, 0x20, 0x53,
+            0x69, 0x74, 0x20, 0x61, 0x6d, 0x65, 0x74, 0x20, 0x66, 0x61, 0x63, 0x69, 0x6c, 0x69, 0x73, 0x69, 0x73, 0x20,
+            0x6d, 0x61, 0x67, 0x6e, 0x61, 0x20, 0x65, 0x74, 0x69, 0x61, 0x6d, 0x20, 0x74, 0x65, 0x6d, 0x70, 0x6f, 0x72,
+            0x20, 0x6f, 0x72, 0x63, 0x69, 0x20, 0x65, 0x75, 0x20, 0x6c, 0x6f, 0x62, 0x6f, 0x72, 0x74, 0x69, 0x73, 0x20,
+            0x65, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x75, 0x6d, 0x2e, 0x20, 0x43, 0x72, 0x61, 0x73, 0x20, 0x74, 0x69,
+            0x6e, 0x63, 0x69, 0x64, 0x75, 0x6e, 0x74, 0x20, 0x6c, 0x6f, 0x62, 0x6f, 0x72, 0x74, 0x69, 0x73, 0x20, 0x66,
+            0x65, 0x75, 0x67, 0x69, 0x61, 0x74, 0x20, 0x76, 0x69, 0x76, 0x61, 0x6d, 0x75, 0x73, 0x2e, 0x20, 0x45, 0x75,
+            0x20, 0x73, 0x63, 0x65, 0x6c, 0x65, 0x72, 0x69, 0x73, 0x71, 0x75, 0x65, 0x20, 0x66, 0x65, 0x6c, 0x69, 0x73,
+            0x20, 0x69, 0x6d, 0x70, 0x65, 0x72, 0x64, 0x69, 0x65, 0x74, 0x20, 0x70, 0x72, 0x6f, 0x69, 0x6e, 0x20, 0x66,
+            0x65, 0x72, 0x6d, 0x65, 0x6e, 0x74, 0x75, 0x6d, 0x20, 0x6c, 0x65, 0x6f, 0x2e, 0xc4, 0x40, 0x1c, 0x16, 0xef,
+            0x7c, 0x23, 0x7f, 0x05, 0x89, 0x0f, 0xa5, 0xbe, 0x06, 0x92, 0x1b, 0xf6, 0x0c, 0x4c, 0x90, 0xb7, 0x84, 0x1b,
+            0x74, 0x7c, 0x87, 0x38, 0xb0, 0x5b, 0x41, 0xe0, 0x94, 0x50, 0x31, 0xc4, 0x66, 0xe8, 0x39, 0x3b, 0xbd, 0xc0,
+            0xd9, 0x36, 0x28, 0x03, 0x6c, 0x0b, 0x8c, 0xaf, 0x80, 0x48, 0xd6, 0xc4, 0x3f, 0xf5, 0x15, 0xd2, 0x32, 0x73,
+            0x7c, 0xde, 0x33, 0x35, 0xff, 0x9e, 0x0d,
+    };
+    TEST_ASSERT_EQUAL_INT_MESSAGE(sizeof(expected_message), upp->size, "message length wrong");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(expected_message, upp->data, upp->size, "message serialization failed");
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ubirch_protocol_verify(unpacker, ed25519_verify), "message verification failed");
+    // verify message
+    ret = ubirch_protocol_verify(upp->data, upp->size, ed25519_verify);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "message verification failed");
 
-    msgpack_unpacker_free(unpacker);
-    msgpack_sbuffer_free(sbuf);
+    ubirch_protocol_free(upp);
+}
+
+void TestMsgpackMessageSigned() {
+    char _key[20], _value[300];
+    size_t encoded_size;
+    static const time_t timestamp = 1568392345;
+
+    // create a ubirch protocol context
+    ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign);
+    TEST_ASSERT_NOT_NULL_MESSAGE(upp, "creating UPP context failed");
+
+    //create a msgpack object
+    msgpack_sbuffer sbuf; /* buffer */
+    msgpack_packer pk;    /* packer */
+
+    msgpack_sbuffer_init(&sbuf); /* initialize buffer */
+    msgpack_packer_init(&pk, &sbuf, msgpack_sbuffer_write); /* initialize packer */
+
+    //dummy map with 3 key-value-pairs
+    msgpack_pack_map(&pk, 3);
+
+    // 1 - UUID
+    msgpack_pack_str(&pk, strlen("uuid"));
+    msgpack_pack_str_body(&pk, "uuid", strlen("uuid"));
+    msgpack_pack_bin(&pk, UBIRCH_PROTOCOL_UUID_SIZE);
+    msgpack_pack_bin_body(&pk, UUID, UBIRCH_PROTOCOL_UUID_SIZE);
+
+    // 2 - timestamp
+    msgpack_pack_str(&pk, strlen("time"));
+    msgpack_pack_str_body(&pk, "time", strlen("time"));
+    msgpack_pack_uint32(&pk, timestamp);
+
+    // 3 - dummy data array
+    msgpack_pack_str(&pk, strlen("data"));
+    msgpack_pack_str_body(&pk, "data", strlen("data"));
+    msgpack_pack_array(&pk, 3);
+    msgpack_pack_uint8(&pk, 42);
+    msgpack_pack_int16(&pk, -21);
+    msgpack_pack_float(&pk, 84.125);
+
+    // pack message
+    int8_t ret = ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.data, sbuf.size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "packing UPP failed");
+
+    // verify message
+    ret = ubirch_protocol_verify(upp->data, upp->size, ed25519_verify);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, ret, "message verification failed");
+
+    // send message to host
+    memset(_value, 0, sizeof(_value));
+    int encode_error = mbedtls_base64_encode((unsigned char *) _value, sizeof(_value), &encoded_size,
+                                             (unsigned char *) upp->data, upp->size);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, encode_error, "mbedtls_base64_encode returned error");;
+    greentea_send_kv("checkMessage", _value, encoded_size);
+
+    ubirch_protocol_free(upp);
+
+    // check if host could verify signature and was able to unpack UPP correctly
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("variant", _key, "message verification failed");
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("2", _value, "protocol variant check failed");
+
+    greentea_parse_kv(_key, _value, sizeof(_key), sizeof(_value));
+    TEST_ASSERT_EQUAL_STRING_MESSAGE("uuid", _key, "unexpected key");
+    TEST_ASSERT_EQUAL_HEX8_ARRAY_MESSAGE(UUID, _value, UBIRCH_PROTOCOL_UUID_SIZE, "UUID check failed");
 }
 
 utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
@@ -254,23 +266,22 @@ utest::v1::status_t greentea_test_setup(const size_t number_of_cases) {
 
 int main() {
     Case cases[] = {
-            Case("ubirch protocol [signed] init",
-                 TestProtocolInit, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] new",
-                 TestProtocolNew, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] write",
-                 TestProtocolWrite, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] message signed",
-                 TestSimpleMessage, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] message start",
-                 TestProtocolMessageStart, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] message finish (fails)",
-                 TestProtocolMessageFinishWithoutStart, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] message finish",
-                 TestProtocolMessageFinish, greentea_case_failure_abort_handler),
-            Case("ubirch protocol [signed] message verify",
-                 TestVerifyMessage, greentea_case_failure_abort_handler),
-
+            Case("ubirch protocol [signed] new upp context",
+                 TestProtocolNewSigned, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [signed] pack message",
+                 TestProtocolMessageSigned, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [signed] verify",
+                 TestProtocolVerifySigned, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [signed] verify fail",
+                 TestProtocolVerifyFail, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [signed] verify too short",
+                 TestProtocolVerifyShort, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [signed] simple message",
+                 TestSimpleMessageSigned, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [signed] long message",
+                 TestProtocolLongMessageSigned, greentea_case_failure_abort_handler),
+            Case("ubirch protocol [signed] msgpack message",
+                 TestMsgpackMessageSigned, greentea_case_failure_abort_handler),
     };
 
     Specification specification(greentea_test_setup, cases, greentea_test_teardown_handler);
