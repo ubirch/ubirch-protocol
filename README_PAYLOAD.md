@@ -13,7 +13,6 @@
 |--------------|-------------|
 | `0x00` (`00`)| binary, or unknown payload type |
 | `0x01` (`01`)| key registration message |
-| `0x03` (`03`)| msgpack object payload type |
 | `0x32` (`50`)| ubirch standard sensor message (msgpack) |
 | `0x53` (`83`)| generic sensor message (json type key/value map) |
 | `0x54` (`84`)| trackle message packet |
@@ -23,8 +22,6 @@
 ## binary or unknown payload type
 todo
 ## key registration message
-todo
-## msgpack payload type
 todo
 ## ubirch standard sensor message
 

@@ -74,7 +74,6 @@ with a length upto (2^32)-1 bytes or any msgpack type
 |--------------|-------------|
 | `0x00` (`00`)| [binary, or unknown payload type](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#binary-or-unknown-payload-type) |
 | `0x01` (`01`)| [key registration message](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#key-registration-message) |
-| `0x03` (`03`)| [msgpack object payload type](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#msgpack-payload-type) |
 | `0x32` (`50`)| [ubirch standard sensor message (msgpack)](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#ubirch-standard-sensor-message) |
 | `0x53` (`83`)| [generic sensor message (json type key/value map)](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#generic-sensor-message) |
 | `0x54` (`84`)| [trackle message packet](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#trackle-message-packet) |

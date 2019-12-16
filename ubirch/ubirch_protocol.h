@@ -90,7 +90,7 @@ extern "C" {
 #define UBIRCH_PROTOCOL_TYPE_BIN    0x00    //!< payload is undefined and binary
 #define UBIRCH_PROTOCOL_TYPE_REG    0x01    //!< payload is defined as key register message
 #define UBIRCH_PROTOCOL_TYPE_HSK    0x02    //!< payload is a key handshake message
-#define UBIRCH_PROTOCOL_TYPE_MSGPACK 0x03   //!< payload is a msgpack object
+#define UBIRCH_PROTOCOL_TYPE_MSGPACK 0x32   //!< payload is a msgpack object
 
 #define UPP_BUFFER_INIT_SIZE 219            //!< initial allocation size for UPP data buffer, enough space for chained message with 64 byte payload
 
