@@ -1,5 +1,6 @@
 set(COMPONENT_SRCS
         ubirch/ubirch_protocol_kex.c
+        ubirch/ubirch_protocol.c
         ubirch/digest/sha512.c
         )
 set(COMPONENT_ADD_INCLUDEDIRS
@@ -7,7 +8,7 @@ set(COMPONENT_ADD_INCLUDEDIRS
         ubirch/digest
         )
 set(COMPONENT_REQUIRES
-        ubirch-mbed-msgpack
+        msgpack-c
         ubirch-mbed-nacl-cm0
         )
 register_component()
