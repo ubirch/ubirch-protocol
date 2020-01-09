@@ -87,10 +87,13 @@ extern "C" {
 #define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes (same as size of hash)
 #define UBIRCH_PROTOCOL_UUID_SIZE   16      //!< the size of a UUID
 
-#define UBIRCH_PROTOCOL_TYPE_BIN    0x00    //!< payload is undefined and binary
-#define UBIRCH_PROTOCOL_TYPE_REG    0x01    //!< payload is defined as key register message
-#define UBIRCH_PROTOCOL_TYPE_HSK    0x02    //!< payload is a key handshake message
-#define UBIRCH_PROTOCOL_TYPE_MSGPACK 0x32   //!< payload is a msgpack object
+#define UBIRCH_PROTOCOL_TYPE_BIN     0x00    //!< payload is undefined and binary
+#define UBIRCH_PROTOCOL_TYPE_REG     0x01    //!< payload is defined as key register message
+#define UBIRCH_PROTOCOL_TYPE_HSK     0x02    //!< payload is a key handshake message
+#define UBIRCH_PROTOCOL_TYPE_MSGPACK 0x32   //!< payload is a ubirch standard sensor message (msgpack)
+#define UBIRCH_PROTOCOL_TYPE_MAP     0x53   //!< payload is a generic sensor message (json type key/value map)
+#define UBIRCH_PROTOCOL_TYPE_TRACKLE_MSG    0x54   //!< payload is a trackle message packet
+#define UBIRCH_PROTOCOL_TYPE_RESP    0x55   //!< payload is a ubirch/trackle message response
 
 #define UPP_BUFFER_INIT_SIZE 219            //!< initial allocation size for UPP data buffer, enough space for chained message with 64 byte payload
 
