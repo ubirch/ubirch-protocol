@@ -93,15 +93,16 @@ static int8_t ubirch_protocol_add_payload(ubirch_protocol *upp, uint8_t payload_
     } else if (payload_type == UBIRCH_PROTOCOL_TYPE_REG) {
         // create a key registration packet and add it to UPP
         msgpack_pack_key_register(&upp->packer, (ubirch_key_info *) payload);
-    } else if (payload_type == UBIRCH_PROTOCOL_TYPE_MSGPACK) {
+    } else if (payload_type == UBIRCH_PROTOCOL_TYPE_MSGPACK ||
+               payload_type == UBIRCH_PROTOCOL_TYPE_MAP ||
+               payload_type == UBIRCH_PROTOCOL_TYPE_TRACKLE_MSG ||
+               payload_type == UBIRCH_PROTOCOL_TYPE_RESP) {
         // if the payload is a msgpack type, write it directly to UPP without using msgpack_packer
         ubirch_protocol_write(upp, payload, payload_len);
     } else {
         // payload type not implemented
         return -2;
     }
-    // TODO more payload types
-
     return 0;
 }
 
