@@ -84,7 +84,8 @@ extern "C" {
 #define UBIRCH_PROTOCOL_CHAINED     0x03    //!< chained signed messages
 
 #define UBIRCH_PROTOCOL_PUBKEY_SIZE 32      //!< public key size
-#define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes (same as size of hash)
+#define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes
+#define UBIRCH_PROTOCOL_HASH_SIZE   64      //!< size of the hash
 #define UBIRCH_PROTOCOL_UUID_SIZE   16      //!< the size of a UUID
 
 #define UBIRCH_PROTOCOL_TYPE_BIN     0x00    //!< payload is undefined and binary
