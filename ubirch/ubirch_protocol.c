@@ -158,19 +158,18 @@ int8_t ubirch_protocol_message(ubirch_protocol *upp, ubirch_protocol_variant var
     return 0;
 }
 
-int8_t ubirch_protocol_verify(char *data, size_t data_len, ubirch_protocol_check verify) {
-    // make sure we have something to check, if it is just the signature, fail
-    if (data == NULL || data_len <= UBIRCH_PROTOCOL_SIGN_SIZE + 2) { return -2; }
+int8_t ubirch_protocol_verify(char *message, size_t message_size, ubirch_protocol_check verify) {
+    const size_t msgpack_sig_length = UBIRCH_PROTOCOL_SIGN_SIZE + 2;
 
-    // separate message and signature
-    const size_t unsigned_message_len = data_len - (UBIRCH_PROTOCOL_SIGN_SIZE + 2);
+    // make sure we have something to check, if it is just the signature, fail
+    if (message == NULL || message_size <= msgpack_sig_length) { return -2; }
 
     // hash the message data
     unsigned char sha512sum[UBIRCH_PROTOCOL_SIGN_SIZE];
-    mbedtls_sha512((const unsigned char *) data, unsigned_message_len, sha512sum, 0);
+    mbedtls_sha512((const unsigned char *) message, message_size - msgpack_sig_length, sha512sum, 0);
 
     // get a pointer to the signature
-    const unsigned char *signature = (const unsigned char *) data + (data_len - UBIRCH_PROTOCOL_SIGN_SIZE);
+    const unsigned char *signature = (const unsigned char *) message + (message_size - UBIRCH_PROTOCOL_SIGN_SIZE);
 
     // verify signature with user verify function
     return verify(sha512sum, UBIRCH_PROTOCOL_SIGN_SIZE, signature);
