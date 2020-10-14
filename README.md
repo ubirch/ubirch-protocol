@@ -283,7 +283,7 @@ ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_REG, (const char
 // send the data
 sendPacket(upp->data, upp->size);
 
-// free allocated ressources
+// free allocated resources
 ubirch_protocol_free(upp);
 ```
 
@@ -327,11 +327,12 @@ ubirch_protocol_message(upp, proto_signed, UBIRCH_PROTOCOL_TYPE_MSGPACK, sbuf.da
 
 // SEND THE MESSAGE (upp->data, upp->size)
 
-// free the protocol context
+// free allocated resources
+msgpack_sbuffer_destroy(&sbuf);
 ubirch_protocol_free(upp);
 ```
 
-The resulting UPP (signed) would look like this in JSON format:
+JSON:
 ```json
 [
     34,
@@ -347,7 +348,6 @@ The resulting UPP (signed) would look like this in JSON format:
     },
     "base64:+zJH0co3x1K0XJ5rbc9p/+LAvhunmWsUBRMaiJzdg1l1QUjsbvNcF+SegwVgASmW9eTHg3vlCRovxm+5cGtdCQ=="
 ]
-
 ```
 
 ## Building

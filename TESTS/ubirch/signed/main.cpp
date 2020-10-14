@@ -246,6 +246,8 @@ void TestMsgpackMessageSigned() {
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, encode_error, "mbedtls_base64_encode returned error");;
     greentea_send_kv("checkMessage", _value, encoded_size);
 
+    // free allocated resources
+    msgpack_sbuffer_destroy(&sbuf);
     ubirch_protocol_free(upp);
 
     // check if host could verify signature and was able to unpack UPP correctly
