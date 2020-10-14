@@ -84,12 +84,12 @@ extern "C" {
 #define UBIRCH_PROTOCOL_CHAINED     0x03    //!< chained signed messages
 
 #define UBIRCH_PROTOCOL_PUBKEY_SIZE 32      //!< public key size
-#define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< our signatures has 64 bytes
+#define UBIRCH_PROTOCOL_SIGN_SIZE   64      //!< size of the UPP signature
 #define UBIRCH_PROTOCOL_HASH_SIZE   64      //!< size of the hash
 #define UBIRCH_PROTOCOL_UUID_SIZE   16      //!< the size of a UUID
 
-#define UBIRCH_PROTOCOL_TYPE_BIN     0x00    //!< payload is undefined and binary
-#define UBIRCH_PROTOCOL_TYPE_REG     0x01    //!< payload is defined as key register message
+#define UBIRCH_PROTOCOL_TYPE_BIN     0x00    //!< payload is binary
+#define UBIRCH_PROTOCOL_TYPE_REG     0x01    //!< payload is a key register message
 #define UBIRCH_PROTOCOL_TYPE_HSK     0x02    //!< payload is a key handshake message
 #define UBIRCH_PROTOCOL_TYPE_MSGPACK 0x32   //!< payload is a ubirch standard sensor message (msgpack)
 #define UBIRCH_PROTOCOL_TYPE_MAP     0x53   //!< payload is a generic sensor message (json type key/value map)
@@ -98,8 +98,8 @@ extern "C" {
 
 #define UPP_BUFFER_INIT_SIZE 219            //!< initial allocation size for UPP data buffer, enough space for chained message with 64 byte payload
 
-
-typedef enum ubirch_protocol_variant {
+typedef enum ubirch_protocol_variant
+{
     proto_plain = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_PLAIN),
     proto_signed = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_SIGNED),
     proto_chained = ((UBIRCH_PROTOCOL_VERSION << 4) | UBIRCH_PROTOCOL_CHAINED)
