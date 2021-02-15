@@ -84,7 +84,7 @@ with a length upto (2^32)-1 bytes or any msgpack type
 The structure allows a recipient to take off the last 64 bytes of the message and check the signature of the
 message taking length - 66 bytes hashed with [SHA512](https://en.wikipedia.org/wiki/SHA-2).
 
-Trivial Example (Python, chained message type):
+Trivial Example (Python, signed message type):
 
 ```python
 import msgpack
