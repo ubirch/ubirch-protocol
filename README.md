@@ -78,6 +78,9 @@ with a length upto (2^32)-1 bytes or any msgpack type
 | `0x53` (`83`)| [generic sensor message (json type key/value map)](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#generic-sensor-message) |
 | `0x54` (`84`)| [trackle message packet](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#trackle-message-packet) |
 | `0x55` (`85`)| [ubirch/trackle message response](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#ubirch-trackle-message-response) |
+| `0xFA` (`250`)| [disable processing] |
+| `0xFB` (`251`)| [enable processing] |
+| `0xFC` (`253`)| [delete] |
 
 ## Checking the Signature   
    
