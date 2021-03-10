@@ -80,7 +80,7 @@ with a length upto (2^32)-1 bytes or any msgpack type
 | `0x55` (`85`)| [ubirch/trackle message response](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#ubirch-trackle-message-response) |
 | `0xFA` (`250`)| [disable processing] |
 | `0xFB` (`251`)| [enable processing] |
-| `0xFC` (`253`)| [delete] |
+| `0xFC` (`252`)| [delete] |
 
 ## Checking the Signature   
    
