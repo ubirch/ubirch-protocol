@@ -32,6 +32,7 @@
 
 #include "ubirch_protocol.h"
 #include <msgpack.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +43,7 @@ extern "C" {
 #define UBIRCH_KEX_ALGORITHM        "algorithm"
 #define UBIRCH_KEX_CREATED          "created"
 #define UBIRCH_KEX_UUID             "hwDeviceId"
-#define UBIRCH_KEX_PREV_PUBKEY_ID   "previousPubKeyId"
+#define UBIRCH_KEX_PREV_PUBKEY_ID   "prevPubKeyId"
 #define UBIRCH_KEX_PUBKEY           "pubKey"
 #define UBIRCH_KEX_PUBKEY_ID        "pubKeyId"
 #define UBIRCH_KEX_VALID_NOT_AFTER  "validNotAfter"
@@ -52,7 +53,7 @@ typedef struct ubirch_key_info {
     char *algorithm;
     unsigned int created;
     unsigned char hwDeviceId[UBIRCH_PROTOCOL_UUID_SIZE];
-    char *previousPubKeyId;
+    char *prevPubKeyId;
     unsigned char pubKey[UBIRCH_PROTOCOL_PUBKEY_SIZE];
     char *pubKeyId;
     unsigned int validNotAfter;
@@ -74,7 +75,7 @@ typedef struct ubirch_key_info {
  *      "algorithm": "ECC_ED25519",
  *      "created": 1234567890,
  *      "hwDeviceID": "... (convert to UUID style)",
- *      "previousPubKeyId": "(convert to base64, optional)",
+ *      "prevPubKeyId": "(convert to base64, optional)",
  *      "pubKey": "... (convert to base64)",
  *      "pubKeyId": "(convert to base64, optional)",
  *      "validNotAfter": 1234567899,
@@ -110,6 +111,21 @@ typedef struct ubirch_key_info {
 int msgpack_pack_key_register(msgpack_packer *pk, ubirch_key_info *info);
 
 
+typedef struct ubirch_update_key_info {
+    char *algorithm;
+    time_t created;
+    unsigned char *hwDeviceId;
+    char *prevPubKeyId;
+    char *pubKey;
+    time_t validNotAfter;
+    time_t validNotBefore;
+} ubirch_update_key_info;
+
+/*
+ *
+ * returns len of string
+ */
+int json_pack_key_update(ubirch_update_key_info *update, char *json_string_buffer, size_t json_string_buffer_size);
 
 #ifdef __cplusplus
 }
