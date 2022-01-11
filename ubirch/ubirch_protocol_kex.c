@@ -64,7 +64,7 @@ inline int msgpack_pack_key_register(msgpack_packer *pk, ubirch_key_info *info) 
     // 2 - pack the created date
     msgpack_pack_str(pk, strlen(proto_reg_key_created));
     msgpack_pack_str_body(pk, proto_reg_key_created, strlen(proto_reg_key_created));
-    msgpack_pack_unsigned_int(pk, info->created);
+    msgpack_pack_fix_int64(pk, info->created);
 
     // 3 - pack the device hardware id
     msgpack_pack_str(pk, strlen(proto_reg_key_uuid));
@@ -97,12 +97,12 @@ inline int msgpack_pack_key_register(msgpack_packer *pk, ubirch_key_info *info) 
     // 6 - pack the valid not after date
     msgpack_pack_str(pk, strlen(proto_reg_key_valid_not_after));
     msgpack_pack_str_body(pk, proto_reg_key_valid_not_after, strlen(proto_reg_key_valid_not_after));
-    msgpack_pack_unsigned_int(pk, info->validNotAfter);
+    msgpack_pack_fix_int64(pk, info->validNotAfter);
 
     // 7 - pack the valid not before date
     msgpack_pack_str(pk, strlen(proto_reg_key_valid_not_before));
     msgpack_pack_str_body(pk, proto_reg_key_valid_not_before, strlen(proto_reg_key_valid_not_before));
-    msgpack_pack_unsigned_int(pk, info->validNotBefore);
+    msgpack_pack_fix_int64(pk, info->validNotBefore);
 
     return 0;
 }

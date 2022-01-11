@@ -51,13 +51,13 @@ extern "C" {
 
 typedef struct ubirch_key_info {
     char *algorithm;
-    unsigned int created;
+    int64_t created;
     unsigned char hwDeviceId[UBIRCH_PROTOCOL_UUID_SIZE];
     char *prevPubKeyId;
     unsigned char pubKey[UBIRCH_PROTOCOL_PUBKEY_SIZE];
     char *pubKeyId;
-    unsigned int validNotAfter;
-    unsigned int validNotBefore;
+    int64_t validNotAfter;
+    int64_t validNotBefore;
 } ubirch_key_info;
 
 /**
