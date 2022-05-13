@@ -53,8 +53,40 @@ but also can have a precision of milliseconds (seconds * 1000 + milliseconds)
 ## generic sensor message
 todo
 ## trackle message packet
-todo
+
+```
++=========+======+==================+======+=========+-------------+
+| VERSION | UUID | [PREV-SIGNATURE] | TYPE | PAYLOAD | [SIGNATURE] |
++=========+======+==================+======+=========+-------------+
+```
+Version is: 0001|0011 => 1.3 (signed message with chained signatures)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types
+Type is: 0x54 (84)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#payload-type
+Example Payload:
+```
+ [ "v1.0.2-PROD-20180326103205 (v5.6.6)",
+  6496,
+  3,
+  {
+    1594155266: 3665,
+    1594155326: 3682
+   },
+   {
+    "min": 3500,
+    "max": 4200,
+    "i": 60000,
+    "il": 1800000
+   }
+  ]
+```
+
 ## ubirch trackle message response
+```
++=========+======+==================+======+=========+-------------+
+| VERSION | UUID | [PREV-SIGNATURE] | TYPE | PAYLOAD | [SIGNATURE] |
++=========+======+==================+======+=========+-------------+
+```
+Version is: 0001|0011 => 1.3 (signed message with chained signatures)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types
+Type is: 0x55 (85) https://github.com/ubirch/ubirch-protocol/blob/master/README.md#payload-type
 
 The ubirch message response payload is based on the 
 [msgpack map format](https://github.com/msgpack/msgpack/blob/master/spec.md#map-format-family),
