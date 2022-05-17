@@ -108,7 +108,7 @@ map{"key(1)": value(1),"key(2)": value(2),...,"key(n)": value(n)}
 
 - a common example is the following:
 ```
- { // <msgpack.map[4] device configuration
+ { // <msgpack.map[5] device configuration
       "min": 3500,  // <msgpack.raw>, <msgpack.int>
       "max": 4200,  // <msgpack.raw>, <msgpack.int>
       "i": 60000,  // <msgpack.raw>, <msgpack.int>
