@@ -56,7 +56,7 @@ todo
 
 ```
 +=========+======+==================+======+=========+-------------+
-| VERSION | UUID | [PREV-SIGNATURE] | TYPE | PAYLOAD | [SIGNATURE] |
+| VERSION | UUID |  PREV-SIGNATURE  | TYPE | PAYLOAD |  SIGNATURE  |
 +=========+======+==================+======+=========+-------------+
 ```
 Version is: 0001|0011 => 1.3 (signed message with chained signatures)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types
@@ -82,7 +82,7 @@ Example Payload:
 ## ubirch trackle message response
 ```
 +=========+======+==================+======+=========+-------------+
-| VERSION | UUID | [PREV-SIGNATURE] | TYPE | PAYLOAD | [SIGNATURE] |
+| VERSION | UUID |  PREV-SIGNATURE  | TYPE | PAYLOAD |  SIGNATURE  |
 +=========+======+==================+======+=========+-------------+
 ```
 Version is: 0001|0011 => 1.3 (signed message with chained signatures)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types
