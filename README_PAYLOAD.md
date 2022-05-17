@@ -66,8 +66,8 @@ trackle message payload:
 ```
   [ // <msgpack.array[5]
     "v1.0.2-PROD-20180326103205 (v5.6.6)", // <msgpack.raw> Version String
-    5, // <msgpack.uint32> wakeup cycles
-    3, // <msgpack.unit32> error state
+    5, // <msgpack.uint32> wakeup cycles, increased once per measuring interval
+    3, // <msgpack.unit32> device status (3 = ready)
     { // <msgpack.map[5]> (size = number of measurements)
       1643329410: 3565, // <msgpack.int32>, <msgpack.int16> timestamp, temperature in °C * 100
       1643329470: 3600, // <msgpack.int32>, <msgpack.int16> timestamp, temperature in °C * 100
