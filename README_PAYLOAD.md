@@ -61,21 +61,26 @@ todo
 ```
 Version is: 0001|0011 => 1.3 (signed message with chained signatures)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types
 Type is: 0x54 (84)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#payload-type
-Example Payload:
+
+trackle message payload:
 ```
- [ "v1.0.2-PROD-20180326103205 (v5.6.6)",
-  6496,
-  3,
-  {
-    1594155266: 3665,
-    1594155326: 3682
-   },
-   {
-    "min": 3500,
-    "max": 4200,
-    "i": 60000,
-    "il": 1800000
-   }
+  [ // <msgpack.array[5]
+    "v1.0.2-PROD-20180326103205 (v5.6.6)", // <msgpack.raw> Version String
+    5, // <msgpack.uint32> wakeup cycles, increased once per measuring interval
+    3, // <msgpack.unit32> device status (3 = ready)
+    { // <msgpack.map[5]> (size = number of measurements)
+      1643329410: 3565, // <msgpack.int32>, <msgpack.int16> timestamp, temperature in °C * 100
+      1643329470: 3600, // <msgpack.int32>, <msgpack.int16> timestamp, temperature in °C * 100
+      1643329530: 3625, // <msgpack.int32>, <msgpack.int16> timestamp, temperature in °C * 100
+      1643329590: 3646, // <msgpack.int32>, <msgpack.int16> timestamp, temperature in °C * 100
+      1643329650: 3662 // <msgpack.int32>, <msgpack.int16> timestamp, temperature in °C * 100
+    },
+    { // <msgpack.map[4] device configuration
+      "min": 3500,  // <msgpack.raw>, <msgpack.int>
+      "max": 4200,  // <msgpack.raw>, <msgpack.int>
+      "i": 60000,  // <msgpack.raw>, <msgpack.int>
+      "il": 1800000  // <msgpack.raw>, <msgpack.int>
+    }
   ]
 ```
 
