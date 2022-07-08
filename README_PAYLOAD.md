@@ -7,16 +7,18 @@
 5. [0x53: generic sensor message](#generic-sensor-message)
 6. [0x54: trackle message packet](#trackle-message-packet)
 7. [0x55: ubirch/trackle message response](#ubirch-trackle-message-response)
+8. [0x56: short trackle message packet](#short-trackle-message-packet)
 
 
-| Payload Type | Description |
-|--------------|-------------|
-| `0x00` (`00`)| binary, or unknown payload type |
-| `0x01` (`01`)| key registration message |
-| `0x32` (`50`)| ubirch standard sensor message (msgpack) |
-| `0x53` (`83`)| generic sensor message (json type key/value map) |
-| `0x54` (`84`)| trackle message packet |
-| `0x55` (`85`)| ubirch/trackle message response |
+| Payload Type | Description                                                          |
+|--------------|----------------------------------------------------------------------|
+| `0x00` (`00`)| binary, or unknown payload type                                      |
+| `0x01` (`01`)| key registration message                                             |
+| `0x32` (`50`)| ubirch standard sensor message (msgpack)                             |
+| `0x53` (`83`)| generic sensor message (json type key/value map)                     |
+| `0x54` (`84`)| trackle message packet                                               |
+| `0x55` (`85`)| ubirch/trackle message response                                      |
+| `0x56` (`86`)| short trackle message packet (with hash instead of original payload) |
 
 
 ## binary or unknown payload type
@@ -59,7 +61,7 @@ todo
 | VERSION | UUID |  PREV-SIGNATURE  | TYPE | PAYLOAD |  SIGNATURE  |
 +=========+======+==================+======+=========+-------------+
 ```
-Version is: 0001|0011 => 1.3 (signed message with chained signatures)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types
+Version is: 0001|0011 => 1|3 (signed message with chained signatures)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types
 Type is: 0x54 (84)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#payload-type
 
 trackle message payload:
@@ -90,7 +92,7 @@ trackle message payload:
 | VERSION | UUID |  PREV-SIGNATURE  | TYPE | PAYLOAD |  SIGNATURE  |
 +=========+======+==================+======+=========+-------------+
 ```
-Version is: 0001|0011 => 1.3 (signed message with chained signatures)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types
+Version is: 0001|0011 => 1|3 (signed message with chained signatures)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types
 Type is: 0x55 (85) https://github.com/ubirch/ubirch-protocol/blob/master/README.md#payload-type
 
 The ubirch message response payload is based on the 
@@ -115,4 +117,31 @@ map{"key(1)": value(1),"key(2)": value(2),...,"key(n)": value(n)}
       "il": 1800000,  // <msgpack.raw>, <msgpack.int>
       "EOL":true //  <msgpack.raw>, <msgpack.boolean>
  }
+```
+
+## short-trackle-message-packet
+
+This trackle message is a shortened version of an original trackle-message-packet. The original payload (device status,
+temperatures and configuration) is being replaced, by a hash over all fields (but the signature obviously). This hash
+is in the original trackle-message-packet used to calculate the signature. 
+
+This new shortened trackle message format allows us to process the trackle message in the Trust Service without
+having to handle the unhashed payload. 
+
+```
++=========+======+==================+======+=========+-------------+
+| VERSION | UUID |  PREV-SIGNATURE  | TYPE | HASH |  SIGNATURE     |
++=========+======+==================+======+=========+-------------+
+```
+VERSION: 0010|0011 => 2|3 (signed message with chained signatures)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types
+UUID: hwDevice from the original trackle-message-packet
+PREV-SIGNATURE: the previous signature from the original trackle-message-packet
+TYPE: 0x56 (86)  https://github.com/ubirch/ubirch-protocol/blob/master/README.md#payload-type
+HASH: SHA-512 hash over the original trackle-message-packet fields: version, uuid, prev-signature, type and hash.
+SIGNATURE: the signature of the original trackle-message-packet 
+
+trackle message payload:
+```
+  [ ???
+  ]
 ```
