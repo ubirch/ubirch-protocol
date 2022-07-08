@@ -133,12 +133,12 @@ having to handle the original payload.
 | VERSION | UUID |  PREV-SIGNATURE  | TYPE |  HASH  |  SIGNATURE  |
 +---------+------+------------------+------+========+-------------+
 ```
-VERSION: 0010|0011 => 2|3 (signed message with chained signatures), see [Field Types](https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types)
-UUID: hwDevice from the original trackle-message-packet
-PREV-SIGNATURE: the previous signature from the original trackle-message-packet
-TYPE: 0x56 (86), see see [Payload Type](https://github.com/ubirch/ubirch-protocol/blob/master/README.md#payload-type)
-HASH: SHA-512 hash over the [original trackle-message-packet](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#trackle-message-packet) 
-fields: `VERSION`, `UUID`, `PREV-SIGNATURE`, `TYPE` and `PAYLOAD`. The correct msgpack format is `<msgpack.bin8>`
-SIGNATURE: the signature of the original trackle-message-packet
+VERSION: 0010|0011 => 2|3 (signed message with chained signatures), see [Field Types](https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types)  
+UUID: hwDevice from the original trackle-message-packet  
+PREV-SIGNATURE: the previous signature from the original trackle-message-packet  
+TYPE: 0x56 (86), see see [Payload Type](https://github.com/ubirch/ubirch-protocol/blob/master/README.md#payload-type)  
+HASH: SHA-512 hash over the [original trackle-message-packet](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#trackle-message-packet)
+fields: `VERSION`, `UUID`, `PREV-SIGNATURE`, `TYPE` and `PAYLOAD`. The correct msgpack format is `<msgpack.bin8>`  
+SIGNATURE: the signature of the original trackle-message-packet  
 
 >**Note:** To verify this UPP, only the `HASH` value has to be verified, the other fields are not relevant.
