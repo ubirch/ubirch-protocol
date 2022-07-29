@@ -63,7 +63,7 @@ todo
 ```
 Version is: 0001|0011 => 1|3 (signed message with chained signatures)  see [Field Types](https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types)
 Type is: 0x54 (84), see [Payload Type](https://github.com/ubirch/ubirch-protocol/blob/master/README.md#payload-type)
-
+Signature is of type RawString as it is Ubirch msgPack version 1.
 trackle message payload:
 ```
   [                                        // <msgpack.array[5]
@@ -139,6 +139,6 @@ having to handle the original payload.
 **TYPE**: 0x56 (86), see see [Payload Type](https://github.com/ubirch/ubirch-protocol/blob/master/README.md#payload-type)  
 **HASH**: SHA-512 hash over the [original trackle-message-packet](https://github.com/ubirch/ubirch-protocol/blob/master/README_PAYLOAD.md#trackle-message-packet)
 fields: `VERSION`, `UUID`, `PREV-SIGNATURE`, `TYPE` and `PAYLOAD`. The correct msgpack format is `<msgpack.bin8>`  
-**SIGNATURE**: the signature of the original trackle-message-packet  
+**SIGNATURE**: the signature of the original trackle-message-packet but packed binary.
 
 >**Note:** To verify this UPP, only the `HASH` value has to be verified, the other fields are not relevant.
