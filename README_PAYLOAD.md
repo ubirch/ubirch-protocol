@@ -121,6 +121,8 @@ map{"key(1)": value(1),"key(2)": value(2),...,"key(n)": value(n)}
 
 ## hashed trackle message packet
 
+### currently proposed new concept:
+
 This trackle message is the hashed version of an original trackle-message-packet. The original payload (device status,
 temperatures and configuration) is being replaced, by a hash over all fields (but the signature obviously). This hash
  in the original trackle-message-packet is used to calculate the signature. 
@@ -129,9 +131,17 @@ This new hashed trackle message format allows us to process the trackle message 
 having to handle the original payload. 
 
 ```
-+---------+------+------------------+------+========+-------------+
-| VERSION | UUID |  PREV-SIGNATURE  | TYPE |  HASH  |  SIGNATURE  |
-+---------+------+------------------+------+========+-------------+
+                                           temps., conf., status, ... 
+                                           \______ _________________/
+                                                  V
++=========+=========+==================+======+=========+---------------------+
+| VERSION | UUID_hw |  PREV-SIGNATURE  | TYPE | PAYLOAD |  SIGNATURE_hw_calc  |  <--- original trackle message:
++=========+=========+==================+======+=========+---------------------+
+\_____________________(SHA512 hashing)__________________/
+                                                     V
++---------+---------+-----------------------+------+========+--------------------+
+| VERSION | UUID_hw |  PREV-SIGNATURE_copy  | TYPE |  HASH  |  SIGNATURE_hw_copy |   <--- hashed trackle message
++---------+---------+-----------------------+------+========+--------------------+
 ```
 **VERSION**: 0010|0011 => 2|3 (signed message with chained signatures), see [Field Types](https://github.com/ubirch/ubirch-protocol/blob/master/README.md#field-types)  
 **UUID**: hwDevice from the original trackle-message-packet  
@@ -142,3 +152,58 @@ fields: `VERSION`, `UUID`, `PREV-SIGNATURE`, `TYPE` and `PAYLOAD`. The correct m
 **SIGNATURE**: the signature of the original trackle-message-packet  
 
 >**Note:** To verify this UPP, only the `HASH` value has to be verified, the other fields are not relevant.
+
+### advantages/disadvantages with new approach: 
+* \- Fields VERSION, UUID, PREV-SIGNATURE, TYPE in hashed trackle message are not secured by signature anymore
+  * this creates untrusted input, manipulation opportunities, increases attack surface
+  * e.g. attackers can change prev_signature and still get packet accepted
+  * if data is looked up and compared to the untrusted value, then the untrusted value is not actually needed
+* \- Breaks compatibility/needs new verification scheme
+* \- Upp is not verifiable in itself
+* \- Verification process is basically a database lookup and not a signature anymore (makes insider attacks which change database entries possible. i.e. normal UPPs can be trusted even if someone manipulates the ubirch DB, this new format does not have that ability)
+* \- Unclear what happens if the hashing algorithm or signature creation changes/must change in the future (e.g. post-quantum crypto algorithms)
+* \+ allows verification via lookup of trackle device key and signature of hash
+* \+ allows to distinguish individual trackle devices
+
+### alternatives
+* adding both hash and signature (concatenated) to payload field:
+```
++=========+=========+==================+======+=========+---------------------+
+| VERSION | UUID_hw |  PREV-SIGNATURE  | TYPE | PAYLOAD |  SIGNATURE_hw_calc  |  <--- original trackle message:
++=========+=========+==================+======+=========+---------------------+
+\_______________________________________________________/\___________________/   
+                          \_____(hashing)________________________   /          
+                                                                 \ /
+                                                                  V
++=========+==============+==========================+======+==========================+--------------------+
+| VERSION | UUID_gateway |  PREV-SIGNATURE_gateway  | TYPE |   HASH,SIGNATURE_hw_copy |  SIGNATURE_gateway |   <--- hashed trackle message
++=========+==============+==========================+======+==========================+--------------------+
+```
+  * \- cannot distinguish between devices anymore only from 'first-level' UPP
+  * \- needs gateway AND device public key
+  * \+ creates valid UPP signature
+  * \+ all fields are secured
+  * \+ doubles-using the payload field is kind of hacky
+* verify trackle UPP,create new standard UPP with gateway UUID + gateway signature
+```
+                                           temps., conf., status, ... 
+                                           \______ _________________/
+                                                  V
++=========+=========+==================+======+=========+---------------------+
+| VERSION | UUID_hw |  PREV-SIGNATURE  | TYPE | PAYLOAD |  SIGNATURE_hw_calc  |  <--- original trackle message:
++=========+=========+==================+======+=========+---------------------+
+\__________________________________________________________(hashing)__________/
+                                                               V
++=========+==============+==========================+======+========+--------------------+
+| VERSION | UUID_gateway |  PREV-SIGNATURE_gateway  | TYPE |  HASH  |  SIGNATURE_gateway |   <--- hashed trackle message
++=========+==============+==========================+======+========+--------------------+
+```
+  * \- cannot distinguish between devices anymore only from 'first-level' UPP
+  * \- needs gateway AND device public key
+  * \+ creates valid UPP signature
+  * \+ all fields are secured
+  * \+ pretty standard UPP
+  * \- signature of original trackle message is not directly available
+* repack trackle data as new 'data payload' and create a UPP from that
+  * this is actually equivalent to the 'hash complete trackle UPP and create new UPP from it' approach from above, just with extra steps
+* best way would of course be to have the devices pack and send the UPP already in an anonymized form (one UPP for data backend, one UPP for blockchain anchoring), but I guess that is out of the question
