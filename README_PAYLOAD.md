@@ -163,10 +163,10 @@ fields: `VERSION`, `UUID`, `PREV-SIGNATURE`, `TYPE` and `PAYLOAD`. The correct m
 * \- Verification process is basically a database lookup and not a signature anymore (makes insider attacks which change database entries possible. i.e. normal UPPs can be trusted even if someone manipulates the ubirch DB, this new format does not have that ability)
 * \- Unclear what happens if the hashing algorithm or signature creation changes/must change in the future (e.g. post-quantum crypto algorithms)
 * \+ allows verification via lookup of trackle device key and signature of hash
-* \+ allows to distinguish individual trackle devices
+* \+ allows to distinguish individual trackle devices (is this actually good privacy-wise?)
 
 ### alternatives
-* adding both hash and signature (concatenated) to payload field:
+1. adding both hash and signature (concatenated) to payload field:
 ```
 +=========+=========+==================+======+=========+---------------------+
 | VERSION | UUID_hw |  PREV-SIGNATURE  | TYPE | PAYLOAD |  SIGNATURE_hw_calc  |  <--- original trackle message:
@@ -183,8 +183,9 @@ fields: `VERSION`, `UUID`, `PREV-SIGNATURE`, `TYPE` and `PAYLOAD`. The correct m
   * \- needs gateway AND device public key
   * \+ creates valid UPP signature
   * \+ all fields are secured
-  * \+ doubles-using the payload field is kind of hacky
-* verify trackle UPP,create new standard UPP with gateway UUID + gateway signature
+  * \+ double-using the payload field is kind of hacky
+  * ? chain becomes global instead of device-based for first-level UPP
+2. verify trackle UPP,create new standard UPP with gateway UUID + gateway signature
 ```
                                            temps., conf., status, ... 
                                            \______ _________________/
@@ -204,6 +205,8 @@ fields: `VERSION`, `UUID`, `PREV-SIGNATURE`, `TYPE` and `PAYLOAD`. The correct m
   * \+ all fields are secured
   * \+ pretty standard UPP
   * \- signature of original trackle message is not directly available
-* repack trackle data as new 'data payload' and create a UPP from that
+  * ? chain becomes global instead of device-based for first-level UPP
+3. repack trackle data as new 'data payload' and create a UPP from that
+  * pack payload with [UUID, prev_sig, original_trackle_payload_data, ...] and create a UPP from it via hashing as with standard UPPs
   * this is actually equivalent to the 'hash complete trackle UPP and create new UPP from it' approach from above, just with extra steps
-* best way would of course be to have the devices pack and send the UPP already in an anonymized form (one UPP for data backend, one UPP for blockchain anchoring), but I guess that is out of the question
+4. best way would of course be to have the devices pack and send the UPP already in an anonymized form (one UPP for data backend with values, one anonymized UPP for blockchain anchoring), but I guess that is out of the question
