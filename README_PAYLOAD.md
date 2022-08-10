@@ -210,3 +210,4 @@ fields: `VERSION`, `UUID`, `PREV-SIGNATURE`, `TYPE` and `PAYLOAD`. The correct m
   * pack payload with [UUID, prev_sig, original_trackle_payload_data, ...] and create a UPP from it via hashing as with standard UPPs
   * this is actually equivalent to the 'hash complete trackle UPP and create new UPP from it' approach from above, just with extra steps
 4. best way would of course be to have the devices pack and send the UPP already in an anonymized form (one UPP for data backend with values, one anonymized UPP for blockchain anchoring), but I guess that is out of the question
+5. give the phone app a new UUID and private key and have it repack the plaintext data into a new UPP to send to Niomon
